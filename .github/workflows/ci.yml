@@ -1,14 +1,19 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main, develop]
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      # Required for auth and database
+      BETTER_AUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      BETTER_AUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       # Checkout repo
@@ -21,11 +26,11 @@ jobs:
         with:
           bun-version: latest
 
-      # Install dependencies with Bun
+      # Install dependencies
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # Prettier formatting check
+      # Prettier check
       - name: Run Prettier check
         run: bun run format:check
 
@@ -33,6 +38,6 @@ jobs:
       - name: Run ESLint
         run: bun run lint
 
-      # Build project
+      # Build Next.js project
       - name: Build Next.js project
         run: bun run build
