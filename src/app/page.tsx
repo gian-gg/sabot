@@ -1,3 +1,5 @@
 export default function Home() {
-  return <div>Hello, World!</div>;
+  return (
+    <div className="rounded-lg bg-blue-500 p-4 text-white">Hello World</div>
+  );
 }
