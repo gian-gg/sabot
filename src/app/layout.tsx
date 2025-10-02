@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "jiji",
-  description: "Yet another finance app, this time with AI.",
+  title: 'jiji',
+  description: 'Yet another finance app, this time with AI.',
 };
 
 export default function RootLayout({
