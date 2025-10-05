@@ -1,3 +1,3 @@
-# jiji v2
+# untitled
 
-first ai powered project cuz bored lol
+- #hacktoberfest

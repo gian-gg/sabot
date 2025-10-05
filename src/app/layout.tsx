@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'jiji',
-  description: 'Yet another finance app, this time with AI.',
+  title: 'untitled',
+  description: '#hacktoberfest',
 };
 
 export default function RootLayout({
