@@ -47,7 +47,7 @@ export function LoginForm({
     toast.promise(signIn(email, password), {
       loading: 'Loading...',
       success: () => {
-        router.push('/wallet');
+        router.push('/dashboard');
         return 'Sign in successful';
       },
       error: (error: Error) => {
