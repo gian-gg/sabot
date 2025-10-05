@@ -111,8 +111,12 @@ export function LoginForm({
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         Made with ♥ by{' '}
-        <a href="https://github.com/gian-gg" target="_blank" rel="noreferrer">
-          gian.gg
+        <a
+          href="https://github.com/gian-gg/sabot"
+          target="_blank"
+          rel="noreferrer"
+        >
+          sabot
         </a>
       </div>
     </div>
