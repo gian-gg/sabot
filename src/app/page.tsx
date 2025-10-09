@@ -14,7 +14,6 @@ import { ROUTES } from '@/constants/routes';
 
 export default async function LoginPage() {
   const session = await getSession();
-  console.log(session);
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4">
