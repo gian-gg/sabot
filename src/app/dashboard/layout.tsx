@@ -2,6 +2,8 @@ import { getSession } from '@/lib/auth/server';
 import React from 'react';
 import { redirect } from 'next/navigation';
 
+import { ROUTES } from '@/constants/routes';
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -9,7 +11,7 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   if (!session) {
-    redirect('/');
+    redirect(ROUTES.HOME);
   }
   return <div>{children}</div>;
 }

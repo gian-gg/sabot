@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { getSession } from '@/lib/auth/server';
 import { redirect } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 
 export default async function AuthLayout({
   title,
@@ -22,7 +23,7 @@ export default async function AuthLayout({
 } & React.ComponentProps<'div'>) {
   const session = await getSession();
   if (session) {
-    redirect('/dashboard');
+    redirect(ROUTES.DASHBOARD.ROOT);
   }
 
   return (

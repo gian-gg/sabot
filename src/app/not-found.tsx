@@ -9,6 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+import { ROUTES } from '@/constants/routes';
+
 export default async function LoginPage() {
   return (
     <div className="bg-muted flex h-screen w-screen items-center justify-center">
@@ -19,7 +21,7 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <Button className="w-full" asChild>
-            <Link href="/">Go Back Home</Link>
+            <Link href={ROUTES.HOME}>Go Back Home</Link>
           </Button>
         </CardContent>
         <CardFooter className="text-center">

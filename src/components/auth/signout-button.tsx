@@ -6,6 +6,8 @@ import { signOut } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { ROUTES } from '@/constants/routes';
+
 const SignOut = () => {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -15,7 +17,7 @@ const SignOut = () => {
     toast.promise(signOut(), {
       loading: 'Signing out...',
       success: () => {
-        router.push('/');
+        router.push(ROUTES.HOME);
         return 'Signed out successfully!';
       },
       error: (error: Error) => {

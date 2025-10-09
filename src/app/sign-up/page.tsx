@@ -2,6 +2,8 @@ import AuthLayout from '@/components/auth/auth-layout';
 import { SignUpForm } from '@/components/auth/signup-form';
 import Link from 'next/link';
 
+import { ROUTES } from '@/constants/routes';
+
 export default function SignUpPage() {
   return (
     <AuthLayout
@@ -11,7 +13,7 @@ export default function SignUpPage() {
       <SignUpForm />
       <p className="text-muted-foreground mt-6 text-center text-sm">
         Already have an account?{' '}
-        <Link className="text-primary underline" href="/sign-in">
+        <Link className="text-primary underline" href={ROUTES.AUTH.SIGN_IN}>
           Sign In
         </Link>
       </p>

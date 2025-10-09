@@ -9,6 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+import { ROUTES } from '@/constants/routes';
+
 export default async function LoginPage() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4">
@@ -19,10 +21,10 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <Button asChild className="w-full">
-            <Link href="/sign-up">Get Started</Link>
+            <Link href={ROUTES.AUTH.SIGN_UP}>Get Started</Link>
           </Button>
           <Button variant="outline" className="w-full" asChild>
-            <Link target="_blank" href="https://github.com/gian-gg/sabot">
+            <Link target="_blank" href={ROUTES.SOCIALS.GITHUB}>
               GitHub Repo
             </Link>
           </Button>
@@ -35,11 +37,7 @@ export default async function LoginPage() {
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         Made with ♥ by{' '}
-        <a
-          href="https://github.com/gian-gg/sabot"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={ROUTES.SOCIALS.GITHUB} target="_blank" rel="noreferrer">
           untitled
         </a>
       </div>

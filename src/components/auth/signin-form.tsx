@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import ForgotPassword from './forgot-password';
 import GoogleButton from './google-button';
 
+import { ROUTES } from '@/constants/routes';
+
 export function SignInForm() {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -39,7 +41,7 @@ export function SignInForm() {
     toast.promise(signIn(email, password), {
       loading: 'Loading...',
       success: () => {
-        router.push('/dashboard');
+        router.push(ROUTES.DASHBOARD.ROOT);
         return 'Sign in successful';
       },
       error: (error: Error) => {
