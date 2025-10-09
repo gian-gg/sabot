@@ -17,7 +17,7 @@ const SignOut = () => {
     toast.promise(signOut(), {
       loading: 'Signing out...',
       success: () => {
-        router.push(ROUTES.HOME);
+        router.push(ROUTES.ROOT);
         return 'Signed out successfully!';
       },
       error: (error: Error) => {

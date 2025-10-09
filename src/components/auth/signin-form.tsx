@@ -41,7 +41,7 @@ export function SignInForm() {
     toast.promise(signIn(email, password), {
       loading: 'Loading...',
       success: () => {
-        router.push(ROUTES.DASHBOARD.ROOT);
+        router.push(ROUTES.HOME.ROOT);
         return 'Sign in successful';
       },
       error: (error: Error) => {

@@ -23,7 +23,7 @@ export default async function AuthLayout({
 } & React.ComponentProps<'div'>) {
   const session = await getSession();
   if (session) {
-    redirect(ROUTES.DASHBOARD.ROOT);
+    redirect(ROUTES.HOME.ROOT);
   }
 
   return (

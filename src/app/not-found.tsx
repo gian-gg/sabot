@@ -21,7 +21,7 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <Button className="w-full" asChild>
-            <Link href={ROUTES.HOME}>Go Back Home</Link>
+            <Link href={ROUTES.ROOT}>Go Back</Link>
           </Button>
         </CardContent>
         <CardFooter className="text-center">

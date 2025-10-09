@@ -1,12 +1,12 @@
 export const ROUTES = {
-  HOME: '/',
+  ROOT: '/',
   NOT_FOUND: '/not-found',
   AUTH: {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',
   },
-  DASHBOARD: {
-    ROOT: '/dashboard',
+  HOME: {
+    ROOT: '/home',
   },
   SOCIALS: {
     GITHUB: 'https://github.com/gian-gg/sabot',

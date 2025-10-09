@@ -11,7 +11,8 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   if (!session) {
-    redirect(ROUTES.HOME);
+    redirect(ROUTES.ROOT);
   }
+
   return <div>{children}</div>;
 }
