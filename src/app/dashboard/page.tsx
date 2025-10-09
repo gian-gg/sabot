@@ -1,5 +1,5 @@
 import React from 'react';
-import SignOut from '@/components/auth/sign-out';
+import SignOut from '@/components/auth/signout-button';
 
 const Home = () => {
   return (

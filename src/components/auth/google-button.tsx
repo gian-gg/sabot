@@ -20,7 +20,7 @@ const GoogleButton = () => {
           fill="currentColor"
         />
       </svg>
-      Login with Google
+      Continue with Google
     </Button>
   );
 };
