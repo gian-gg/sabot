@@ -8,10 +8,14 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { getSession } from '@/lib/auth/server';
 
 import { ROUTES } from '@/constants/routes';
 
 export default async function LoginPage() {
+  const session = await getSession();
+  console.log(session);
+
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4">
       <Card className="w-lg">
@@ -21,7 +25,11 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <Button asChild className="w-full">
-            <Link href={ROUTES.AUTH.SIGN_UP}>Get Started</Link>
+            {session ? (
+              <Link href={ROUTES.HOME.ROOT}>Home</Link>
+            ) : (
+              <Link href={ROUTES.AUTH.SIGN_UP}>Get Started</Link>
+            )}
           </Button>
           <Button variant="outline" className="w-full" asChild>
             <Link target="_blank" href={ROUTES.SOCIALS.GITHUB}>
