@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="bg-muted flex h-screen w-screen antialiased">
         {children}
         <Toaster richColors />
       </body>

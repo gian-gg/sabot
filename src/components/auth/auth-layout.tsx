@@ -26,8 +26,8 @@ export default async function AuthLayout({
   }
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-6">
+      <Card className={cn('flex w-full max-w-sm gap-6', className)}>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>

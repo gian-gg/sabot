@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default async function LoginPage() {
   return (
-    <div className="bg-muted flex h-screen w-screen flex-col items-center justify-center gap-4">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4">
       <Card className="w-lg">
         <CardHeader>
           <CardTitle>sabot</CardTitle>
