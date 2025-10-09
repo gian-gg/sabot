@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import GoogleButton from './google-button';
 
 export function SignUpForm({}: React.ComponentProps<'div'>) {
-  const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
+  // const router = useRouter();
+  // const [isPending, setIsPending] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,7 +54,7 @@ export function SignUpForm({}: React.ComponentProps<'div'>) {
               required
             />
           </div>
-          <Button type="submit" className="mt-4 w-full" disabled={isPending}>
+          <Button type="submit" className="mt-4 w-full">
             Sign Up
           </Button>
         </div>
