@@ -11,13 +11,13 @@ import Link from 'next/link';
 
 import { ROUTES } from '@/constants/routes';
 
-export default async function NotFoundPage() {
+export default async function ErrorPage() {
   return (
     <div className="bg-muted flex h-screen w-screen items-center justify-center">
       <Card className="w-lg">
         <CardHeader>
-          <CardTitle className="text-destructive">404 Error</CardTitle>
-          <CardDescription>Resource not found.</CardDescription>
+          <CardTitle className="text-destructive">Error</CardTitle>
+          <CardDescription>Something went Wrong</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <Button className="w-full" asChild>

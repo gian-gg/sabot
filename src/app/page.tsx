@@ -9,6 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth/server';
+import GoogleButton from '@/components/auth/google-button';
+import { Home } from 'lucide-react';
 
 import { ROUTES } from '@/constants/routes';
 
@@ -17,7 +19,7 @@ export default async function LoginPage() {
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-      <Card className="w-lg">
+      <Card className="w-md">
         <CardHeader>
           <CardTitle>sabot</CardTitle>
           <CardDescription>Lorem ipsum dolor sit amet.</CardDescription>
@@ -25,9 +27,11 @@ export default async function LoginPage() {
         <CardContent className="space-y-2">
           <Button asChild className="w-full">
             {session ? (
-              <Link href={ROUTES.HOME.ROOT}>Home</Link>
+              <Link href={ROUTES.HOME.ROOT}>
+                <Home /> Home
+              </Link>
             ) : (
-              <Link href={ROUTES.AUTH.SIGN_UP}>Get Started</Link>
+              <GoogleButton />
             )}
           </Button>
           <Button variant="outline" className="w-full" asChild>
