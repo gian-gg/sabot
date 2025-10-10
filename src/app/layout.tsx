@@ -7,14 +7,14 @@ export const metadata: Metadata = {
   description: '#hacktoberfest',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className="bg-muted flex h-screen w-screen antialiased">
+      <body className="dark antialiased">
         {children}
         <Toaster richColors />
       </body>

@@ -1,57 +1,69 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import React from 'react';
+import { mockTransactions } from '@/lib/mock-data/transactions';
+import { PublicLedger } from '@/components/home/public-ledger';
+import { MarketplaceCarousel } from '@/components/home/marketplace-carousel';
 import { getSession } from '@/lib/auth/server';
-import GoogleButton from '@/components/auth/google-button';
-import { Home } from 'lucide-react';
+import GetStartedButton from '@/components/auth/get-started-button';
+import { Header } from '@/components/home/header';
+import Footer from '@/components/home/footer';
 
-import { ROUTES } from '@/constants/routes';
-
-export default async function LoginPage() {
+export default async function Home() {
   const session = await getSession();
+  // Sort transactions by timestamp (newest first)
+  const transactions = [...mockTransactions].sort(
+    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+  );
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-      <Card className="w-md">
-        <CardHeader>
-          <CardTitle>sabot</CardTitle>
-          <CardDescription>Lorem ipsum dolor sit amet.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button asChild className="w-full">
-            {session ? (
-              <Link href={ROUTES.HOME.ROOT}>
-                <Home /> Home
-              </Link>
-            ) : (
-              <GoogleButton />
-            )}
-          </Button>
-          <Button variant="outline" className="w-full" asChild>
-            <Link target="_blank" href={ROUTES.SOCIALS.GITHUB}>
-              GitHub Repo
-            </Link>
-          </Button>
-        </CardContent>
-        <CardFooter className="text-center">
-          <p className="text-muted-foreground text-sm">
-            Lorem ipsum dolor sit amet.
-          </p>
-        </CardFooter>
-      </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        Made with ♥ by{' '}
-        <a href={ROUTES.SOCIALS.GITHUB} target="_blank" rel="noreferrer">
-          untitled
-        </a>
+    <>
+      <Header // lets fix this later
+        session={session}
+      />
+
+      {/* Light Source Effect - Fixed at top, behind header */}
+      <div className="pointer-events-none fixed -top-[200px] left-1/2 z-0 h-[350px] w-[500px] -translate-x-1/2">
+        <div className="absolute top-0 left-1/2 h-[300px] w-[400px] -translate-x-1/2 rounded-full bg-white/10 blur-[100px]" />
+        <div className="absolute top-[20px] left-1/2 h-[200px] w-[250px] -translate-x-1/2 rounded-full bg-white/15 blur-[70px]" />
+        <div className="absolute top-[40px] left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-[40px]" />
       </div>
-    </div>
+
+      {/* Main Content - Scrollable with top padding for fixed header */}
+      <main className="mt-20 flex min-h-screen flex-col overflow-x-hidden px-10">
+        <div className="flex flex-1 flex-col gap-20 overflow-x-hidden">
+          {/* Hero Section */}
+          <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
+            <div className="relative mx-auto max-w-[500px] text-center">
+              <h1 className="mb-3 leading-[1.2] font-medium tracking-tight text-white sm:text-5xl">
+                When trust is uncertain, bring in Sabot
+              </h1>
+              {/* <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+              Your third-party safety layer for verified, transparent, and
+              scam-free online transactions.
+            </p> */}
+              <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+                Your third-party safety layer transparent transactions.
+              </p>
+
+              {/* CTA Button */}
+              <div className="flex items-center justify-center">
+                <GetStartedButton session={session} />
+              </div>
+            </div>
+          </section>
+
+          {/* Transaction Ledger Preview */}
+          <section className="px-4 pb-16 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1100px]">
+              <PublicLedger transactions={transactions} />
+            </div>
+          </section>
+
+          {/* Marketplace Carousel */}
+          <MarketplaceCarousel />
+        </div>
+      </main>
+
+      <Footer />
+    </>
   );
 }

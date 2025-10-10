@@ -3,16 +3,39 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { signInWithGoogle } from '@/lib/auth/client';
+import { SessionType } from '@/types/user';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
 
-const GoogleButton = () => {
+const GetStartedButton = ({ session }: SessionType) => {
   const handleClick = () => {
     signInWithGoogle().catch(() => {
       toast.error('Error signing in with Google');
     });
   };
 
+  if (session) {
+    return (
+      <Link href="/home">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+        >
+          <Home />
+          Go to Home
+        </Button>
+      </Link>
+    );
+  }
+
   return (
-    <Button type="button" className="w-full" onClick={handleClick}>
+    <Button
+      type="button"
+      variant="ghost"
+      className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+      onClick={handleClick}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width={24}
@@ -41,4 +64,4 @@ const GoogleButton = () => {
   );
 };
 
-export default GoogleButton;
+export default GetStartedButton;

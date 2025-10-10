@@ -1,3 +1,14 @@
+interface SessionType {
+  session: {
+    user: {
+      name: string;
+      email: string;
+      image?: string;
+      id?: string;
+    };
+  } | null;
+}
+
 export interface User {
   id: string;
   name: string;
