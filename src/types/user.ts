@@ -1,4 +1,4 @@
-interface SessionType {
+export interface SessionType {
   session: {
     user: {
       name: string;

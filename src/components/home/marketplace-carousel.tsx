@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 const marketplaces = [
   { name: 'Facebook Marketplace', logo: '/icons/marketplace.svg' },
@@ -36,7 +37,7 @@ export function MarketplaceCarousel() {
                 key={`first-${index}`}
                 className="mx-8 flex-shrink-0 transition-opacity hover:opacity-80"
               >
-                <img
+                <Image
                   src={marketplace.logo}
                   alt={marketplace.name}
                   className="h-12 w-auto object-contain"
@@ -49,7 +50,7 @@ export function MarketplaceCarousel() {
                 key={`second-${index}`}
                 className="mx-8 flex-shrink-0 transition-opacity hover:opacity-80"
               >
-                <img
+                <Image
                   src={marketplace.logo}
                   alt={marketplace.name}
                   className="h-12 w-auto object-contain"

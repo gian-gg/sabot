@@ -4,9 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
-import { SessionType } from '@/types/user';
 
-export function Header({ session }: SessionType) {
+export function Header() {
   const [mouseX, setMouseX] = useState(0);
 
   useEffect(() => {

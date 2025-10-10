@@ -16,9 +16,7 @@ export default async function Home() {
 
   return (
     <>
-      <Header // lets fix this later
-        session={session}
-      />
+      <Header />
 
       {/* Light Source Effect - Fixed at top, behind header */}
       <div className="pointer-events-none fixed -top-[200px] left-1/2 z-0 h-[350px] w-[500px] -translate-x-1/2">
@@ -46,7 +44,20 @@ export default async function Home() {
 
               {/* CTA Button */}
               <div className="flex items-center justify-center">
-                <GetStartedButton session={session} />
+                <GetStartedButton
+                  session={
+                    // fix this later
+                    session
+                      ? {
+                          ...session,
+                          user: {
+                            ...session.user,
+                            image: session.user.image ?? undefined,
+                          },
+                        }
+                      : null
+                  }
+                />
               </div>
             </div>
           </section>
