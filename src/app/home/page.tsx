@@ -31,16 +31,19 @@ export default async function Home() {
       </div>
 
       {/* Main Content - Scrollable with top padding for fixed header */}
-      <div className="flex-1 overflow-x-hidden pt-[57px]">
+      <div className="flex flex-1 flex-col gap-20 overflow-x-hidden pt-[57px]">
         {/* Hero Section */}
         <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
-          <div className="relative mx-auto max-w-[900px] text-center">
-            <h1 className="mb-3 text-3xl leading-[1.2] font-bold tracking-tight text-white sm:text-4xl">
+          <div className="relative mx-auto max-w-[500px] text-center">
+            <h1 className="mb-3 leading-[1.2] font-medium tracking-tight text-white sm:text-5xl">
               When trust is uncertain, bring in Sabot
             </h1>
-            <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+            {/* <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
               Your third-party safety layer for verified, transparent, and
               scam-free online transactions.
+            </p> */}
+            <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+              Your third-party safety layer transparent transactions.
             </p>
 
             {/* CTA Button */}
