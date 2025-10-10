@@ -1,250 +1,246 @@
 import React from 'react';
 import Link from 'next/link';
-import { Shield, Plus, ChevronRight } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
-import {
-  Card,
-  CardHeader,
-  CardDescription,
-  CardContent,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { mockTransactions } from '@/lib/mock-data/transactions';
-import {
-  Transaction,
-  TransactionStatus,
-  TransactionType,
-} from '@/types/transaction';
-
-// Helper function to get status badge variant
-function getStatusBadgeVariant(
-  status: TransactionStatus
-): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (status) {
-    case 'completed':
-      return 'default';
-    case 'active':
-      return 'secondary';
-    case 'pending':
-      return 'outline';
-    case 'reported':
-      return 'destructive';
-    default:
-      return 'default';
-  }
-}
-
-// Helper function to get transaction type display name
-function getTransactionTypeLabel(type: TransactionType): string {
-  switch (type) {
-    case 'electronics':
-      return 'Electronics';
-    case 'services':
-      return 'Services';
-    case 'fashion':
-      return 'Fashion';
-    case 'home-goods':
-      return 'Home Goods';
-    case 'vehicles':
-      return 'Vehicles';
-    case 'collectibles':
-      return 'Collectibles';
-    case 'other':
-      return 'Other';
-    default:
-      return 'Unknown';
-  }
-}
-
-// Helper function to format timestamp
-function formatTimestamp(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-// Helper function to blur name (keep first name + initial)
-function blurName(fullName: string): string {
-  const parts = fullName.split(' ');
-  if (parts.length === 1) return fullName;
-  return `${parts[0]} ${parts[1].charAt(0)}.`;
-}
+import { Header } from '@/components/home/header';
+import { PublicLedger } from '@/components/home/public-ledger';
+import { MarketplaceCarousel } from '@/components/home/marketplace-carousel';
+import { getSession } from '@/lib/auth/server';
+import { ShieldCheck, Github, Twitter, Mail } from 'lucide-react';
 
 export default async function Home() {
+  // Get session for auth state
+  const session = await getSession();
+
   // Sort transactions by timestamp (newest first)
   const transactions = [...mockTransactions].sort(
     (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
   );
 
   return (
-    <div className="min-h-screen bg-neutral-950">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/60 shadow-lg backdrop-blur-2xl">
-        <div className="mx-auto max-w-[1280px] px-6 py-4 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* Brand */}
-            <Link
-              href={ROUTES.ROOT}
-              className="flex items-center gap-2 transition-opacity duration-150 hover:opacity-80"
-            >
-              <Shield className="h-8 w-8 text-white" />
-              <h1 className="text-2xl font-bold tracking-tight text-white">
-                Sabot
-              </h1>
-            </Link>
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-black">
+      {/* Header - Glassmorphic Navigation */}
+      <Header session={session} />
 
-            {/* Navigation */}
-            <div className="flex items-center gap-3">
-              <Button variant="outline" asChild>
-                <Link href={ROUTES.AUTH.SIGN_IN}>Sign In</Link>
-              </Button>
-              <Button asChild>
-                <Link href={ROUTES.AUTH.SIGN_UP}>Get Started</Link>
+      {/* Light Source Effect - Fixed at top, behind header */}
+      <div className="pointer-events-none fixed -top-[200px] left-1/2 z-0 h-[350px] w-[500px] -translate-x-1/2">
+        <div className="absolute top-0 left-1/2 h-[300px] w-[400px] -translate-x-1/2 rounded-full bg-white/10 blur-[100px]" />
+        <div className="absolute top-[20px] left-1/2 h-[200px] w-[250px] -translate-x-1/2 rounded-full bg-white/15 blur-[70px]" />
+        <div className="absolute top-[40px] left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-[40px]" />
+      </div>
+
+      {/* Main Content - Scrollable */}
+      <div className="flex-1 overflow-x-hidden">
+        {/* Hero Section */}
+        <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
+          <div className="relative mx-auto max-w-[900px] text-center">
+            <h1 className="mb-3 text-3xl leading-[1.2] font-bold tracking-tight text-white sm:text-4xl">
+              When trust is uncertain, bring in Sabot
+            </h1>
+            <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+              Your third-party safety layer for verified, transparent, and
+              scam-free online transactions.
+            </p>
+
+            {/* CTA Button */}
+            <div className="flex items-center justify-center">
+              <Button
+                className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+                asChild
+              >
+                <Link href={ROUTES.TRANSACTION.NEW}>Create Transaction</Link>
               </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-[1280px] px-6 py-16 lg:px-8 lg:py-24">
-        {/* Welcome Section */}
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-5xl font-bold tracking-tight text-white lg:text-6xl">
-            Public Transaction Ledger
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg leading-7 text-white/70">
-            Real-time feed of all verified and completed transactions on Sabot
-          </p>
-        </div>
+        {/* Transaction Ledger Preview */}
+        <section className="px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1100px]">
+            <PublicLedger transactions={transactions} />
+          </div>
+        </section>
 
-        {/* Transactions Card */}
-        <Card className="mb-12 border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl text-white">
-              All Transactions
-            </CardTitle>
-            <CardDescription className="text-white/60">
-              Blockchain-inspired transparency — every verified transaction is
-              publicly recorded
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {transactions.map((transaction) => (
-                <Link
-                  key={transaction.id}
-                  href={`/transaction/${transaction.id}`}
-                  className="group block rounded-lg border border-white/10 bg-white/5 p-4 transition-all duration-250 hover:border-white/20 hover:bg-white/10 hover:shadow-lg"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    {/* Left Section - Transaction Details */}
-                    <div className="flex-1 space-y-1">
-                      {/* Transaction Type & ID */}
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-white">
-                          {getTransactionTypeLabel(transaction.type)}
-                        </p>
-                        <span className="text-xs text-white/30">•</span>
-                        <p className="font-mono text-xs text-white/50">
-                          {transaction.id}
-                        </p>
-                      </div>
+        {/* Marketplace Carousel */}
+        <MarketplaceCarousel />
 
-                      {/* Participants */}
-                      <p className="text-sm text-white/70">
-                        <span className="text-blue-400">
-                          {blurName(transaction.buyerName)}
-                        </span>{' '}
-                        →{' '}
-                        <span className="text-purple-400">
-                          {blurName(transaction.sellerName)}
-                        </span>
-                      </p>
+        {/* Footer */}
+        <footer className="border-t border-neutral-800/50 bg-gradient-to-b from-black to-neutral-950">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+              {/* Brand Column */}
+              <div className="md:col-span-1">
+                <div className="mb-4 flex items-center gap-2">
+                  <ShieldCheck className="h-6 w-6 text-white" />
+                  <span className="text-lg font-semibold text-white">
+                    Sabot
+                  </span>
+                </div>
+                <p className="mb-4 text-sm text-neutral-400">
+                  Your third-party safety layer for verified, transparent, and
+                  scam-free online transactions.
+                </p>
+                <div className="flex gap-3">
+                  <a
+                    href={ROUTES.SOCIALS.GITHUB}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border border-neutral-800 p-2 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+                  >
+                    <Github className="h-4 w-4" />
+                  </a>
+                  <a
+                    href="#"
+                    className="rounded-lg border border-neutral-800 p-2 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+                  >
+                    <Twitter className="h-4 w-4" />
+                  </a>
+                  <a
+                    href="mailto:hello@sabot.com"
+                    className="rounded-lg border border-neutral-800 p-2 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
 
-                      {/* Location & Timestamp */}
-                      <div className="flex items-center gap-2 text-xs text-white/50">
-                        <span>{transaction.location}</span>
-                        <span>•</span>
-                        <span>{formatTimestamp(transaction.timestamp)}</span>
-                        {transaction.platform && (
-                          <>
-                            <span>•</span>
-                            <span>{transaction.platform}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+              {/* Product Column */}
+              <div>
+                <h3 className="mb-4 text-sm font-semibold text-white">
+                  Product
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link
+                      href="#features"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Features
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#how-it-works"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      How It Works
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={ROUTES.REPORTS}
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Reports
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#pricing"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Pricing
+                    </Link>
+                  </li>
+                </ul>
+              </div>
 
-                    {/* Right Section - Price & Status */}
-                    <div className="flex flex-col items-end gap-2">
-                      <p className="text-xl font-bold text-white">
-                        {transaction.currency}
-                        {transaction.price.toLocaleString()}
-                      </p>
-                      <Badge
-                        variant={getStatusBadgeVariant(transaction.status)}
-                      >
-                        {transaction.status.charAt(0).toUpperCase() +
-                          transaction.status.slice(1)}
-                      </Badge>
-                    </div>
+              {/* Company Column */}
+              <div>
+                <h3 className="mb-4 text-sm font-semibold text-white">
+                  Company
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link
+                      href="#about"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      About Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#blog"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Blog
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#careers"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Careers
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#contact"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Contact
+                    </Link>
+                  </li>
+                </ul>
+              </div>
 
-                    {/* Chevron */}
-                    <ChevronRight className="h-5 w-5 text-white/40 transition-transform duration-150 group-hover:translate-x-1" />
-                  </div>
-                </Link>
-              ))}
+              {/* Legal Column */}
+              <div>
+                <h3 className="mb-4 text-sm font-semibold text-white">Legal</h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link
+                      href="#privacy"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#terms"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#security"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Security
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="#compliance"
+                      className="text-sm text-neutral-400 transition-colors hover:text-white"
+                    >
+                      Compliance
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Action Section */}
-        <div className="flex justify-center">
-          <Button
-            size="lg"
-            className="w-full max-w-md bg-white text-neutral-950 shadow-xl transition-all duration-250 hover:scale-105 hover:bg-neutral-100 hover:shadow-2xl"
-            asChild
-          >
-            <Link href="/transaction/new">
-              <Plus className="mr-2 h-5 w-5" />
-              Create New Transaction
-            </Link>
-          </Button>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-white/10 bg-black/40 py-8 backdrop-blur-xl">
-        <div className="mx-auto max-w-[1280px] px-6 text-center lg:px-8">
-          <p className="text-sm text-white/50">
-            Made with ♥ by{' '}
-            <a
-              href={ROUTES.SOCIALS.GITHUB}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white underline underline-offset-4 transition-opacity duration-150 hover:opacity-70"
-            >
-              untitled
-            </a>
-          </p>
-        </div>
-      </footer>
+            {/* Bottom Bar */}
+            <div className="mt-12 border-t border-neutral-800/50 pt-8">
+              <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                <p className="text-sm text-neutral-500">
+                  © {new Date().getFullYear()} Sabot. All rights reserved.
+                </p>
+                <p className="text-sm text-neutral-500">
+                  Built with ♥ for safer transactions
+                </p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
