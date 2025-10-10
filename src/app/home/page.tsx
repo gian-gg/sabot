@@ -30,8 +30,8 @@ export default async function Home() {
         <div className="absolute top-[40px] left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-[40px]" />
       </div>
 
-      {/* Main Content - Scrollable */}
-      <div className="flex-1 overflow-x-hidden">
+      {/* Main Content - Scrollable with top padding for fixed header */}
+      <div className="flex-1 overflow-x-hidden pt-[57px]">
         {/* Hero Section */}
         <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
           <div className="relative mx-auto max-w-[900px] text-center">
