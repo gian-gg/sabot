@@ -9,6 +9,17 @@ export const ROUTES = {
   HOME: {
     ROOT: '/home',
   },
+  PROFILE: {
+    VIEW: (id: string) => `/profile/${id}`,
+  },
+  EMERGENCY: '/emergency',
+  REPORTS: '/reports',
+  TRANSACTION: {
+    NEW: '/transaction/new',
+    INVITE: '/transaction/invite',
+    VIEW: (id: string) => `/transaction/${id}`,
+    ACTIVE: (id: string) => `/transaction/${id}/active`,
+  },
   SOCIALS: {
     GITHUB: 'https://github.com/gian-gg/sabot',
   },

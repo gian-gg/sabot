@@ -27,8 +27,15 @@ const SignOut = () => {
     });
   }
   return (
-    <Button onClick={handleSignOut} disabled={isPending}>
-      <LogOut /> Sign Out
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleSignOut}
+      disabled={isPending}
+      className="text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white"
+    >
+      <LogOut className="mr-2 h-4 w-4" />
+      Logout
     </Button>
   );
 };
