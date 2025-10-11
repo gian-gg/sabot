@@ -4,6 +4,7 @@ import '@/styles/globals.css';
 import { Header } from '@/components/home/header';
 import Footer from '@/components/home/footer';
 import { getSession } from '@/lib/auth/server';
+import { HydrateUser } from '@/components/user/hydrate-userStore';
 
 export const metadata: Metadata = {
   title: 'sabot',
@@ -20,13 +21,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="dark flex min-h-screen min-w-screen flex-col justify-between antialiased">
-        <Header
-          user={{
-            name: session?.user?.name || '',
-            email: session?.user?.email || '',
-            avatar: session?.user?.image || '',
-          }}
-        />
+        <HydrateUser user={session?.user as User} />
+
+        <Header />
 
         <main className="mt-20 flex min-h-[600px] flex-col overflow-x-hidden">
           {children}

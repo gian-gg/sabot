@@ -3,18 +3,20 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { signInWithGoogle } from '@/lib/auth/client';
-import { SessionType } from '@/types/user';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
+import { useUserStore } from '@/store/userStore';
 
-const GetStartedButton = ({ session }: SessionType) => {
+const GetStartedButton = () => {
+  const user = useUserStore();
+
   const handleClick = () => {
     signInWithGoogle().catch(() => {
       toast.error('Error signing in with Google');
     });
   };
 
-  if (session) {
+  if (user.id) {
     return (
       <Link href="/home">
         <Button

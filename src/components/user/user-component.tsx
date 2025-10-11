@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUserStore, clearUser } from '@/store/userStore';
 
 import { ROUTES } from '@/constants/routes';
 import { signOut } from '@/lib/auth/client';
@@ -21,16 +22,9 @@ import { useRouter } from 'next/navigation';
 
 import { getInitials } from '@/lib/utils/helpers';
 
-export default function UserComponent({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export default function UserComponent() {
   const router = useRouter();
+  const user = useUserStore();
   const [isPending, setIsPending] = useState(false);
 
   function handleSignOut() {
@@ -38,6 +32,7 @@ export default function UserComponent({
     toast.promise(signOut(), {
       loading: 'Signing out...',
       success: () => {
+        clearUser();
         router.push(ROUTES.ROOT);
         return 'Signed out successfully!';
       },
@@ -52,8 +47,10 @@ export default function UserComponent({
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer" asChild>
         <Avatar className="h-8 w-8 rounded-lg">
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+          {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+          <AvatarFallback className="rounded-lg">
+            {getInitials(user.name)}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -65,7 +62,9 @@ export default function UserComponent({
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src={user.avatar} alt={user.name} />
+              {user.image ? (
+                <AvatarImage src={user.image} alt={user.name} />
+              ) : null}
               <AvatarFallback className="rounded-lg">
                 {getInitials(user.name)}
               </AvatarFallback>
