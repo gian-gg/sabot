@@ -13,7 +13,7 @@ import { ROUTES } from '@/constants/routes';
 
 export default async function ErrorPage() {
   return (
-    <div className="bg-muted flex h-screen w-screen items-center justify-center">
+    <div className="flex h-full w-full items-center justify-center">
       <Card className="w-lg">
         <CardHeader>
           <CardTitle className="text-destructive">Error</CardTitle>

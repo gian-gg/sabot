@@ -22,7 +22,7 @@ export default async function Home() {
       </div>
 
       {/* Main Content - Scrollable with top padding for fixed header */}
-      <div className="flex flex-1 flex-col gap-20 overflow-x-hidden">
+      <div className="flex flex-col gap-20 overflow-x-hidden">
         {/* Hero Section */}
         <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
           <div className="relative mx-auto max-w-[500px] text-center">

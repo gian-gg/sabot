@@ -15,7 +15,7 @@ function CallToAction({
 }) {
   const pathname = usePathname();
 
-  if ((!name && !email && !avatar) || pathname === ROUTES.ROOT) {
+  if ((!name && !email && !avatar) || !pathname.startsWith(ROUTES.HOME.ROOT)) {
     return null;
   }
 

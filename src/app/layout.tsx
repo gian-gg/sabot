@@ -19,7 +19,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="dark h-screen w-screen antialiased">
+      <body className="dark flex min-h-screen min-w-screen flex-col justify-between antialiased">
         <Header
           user={{
             name: session?.user?.name || '',
@@ -27,9 +27,11 @@ export default async function RootLayout({
             avatar: session?.user?.image || '',
           }}
         />
-        <main className="mt-20 flex min-h-screen flex-col overflow-x-hidden">
+
+        <main className="mt-20 flex min-h-[600px] flex-col overflow-x-hidden">
           {children}
         </main>
+
         <Footer />
 
         <Toaster richColors />
