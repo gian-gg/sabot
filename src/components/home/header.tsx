@@ -7,26 +7,8 @@ import { ROUTES } from '@/constants/routes';
 import UserComponent from '@/components/user/user-component';
 import { usePathname } from 'next/navigation';
 
-function CallToAction({
-  // setup zustand later
-  user: { name, email, avatar },
-}: {
-  user: { name: string; email: string; avatar: string };
-}) {
+export function Header() {
   const pathname = usePathname();
-
-  if ((!name && !email && !avatar) || !pathname.startsWith(ROUTES.HOME.ROOT)) {
-    return null;
-  }
-
-  return <UserComponent user={{ name, email, avatar }} />;
-}
-
-export function Header({
-  user: { name, email, avatar },
-}: {
-  user: { name: string; email: string; avatar: string };
-}) {
   const [mouseX, setMouseX] = useState(0);
 
   useEffect(() => {
@@ -52,7 +34,7 @@ export function Header({
               </h1>
             </Link>
           </div>
-          <CallToAction user={{ name, email, avatar }} />
+          {pathname.startsWith(ROUTES.HOME.ROOT) && <UserComponent />}
         </div>
       </div>
 

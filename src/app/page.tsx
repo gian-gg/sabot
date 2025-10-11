@@ -2,11 +2,9 @@ import React from 'react';
 import { mockTransactions } from '@/lib/mock-data/transactions';
 import { PublicLedger } from '@/components/home/public-ledger';
 import { MarketplaceCarousel } from '@/components/home/marketplace-carousel';
-import { getSession } from '@/lib/auth/server';
 import GetStartedButton from '@/components/auth/get-started-button';
 
 export default async function Home() {
-  const session = await getSession();
   // Sort transactions by timestamp (newest first)
   const transactions = [...mockTransactions].sort(
     (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
@@ -39,20 +37,7 @@ export default async function Home() {
 
             {/* CTA Button */}
             <div className="flex items-center justify-center">
-              <GetStartedButton
-                session={
-                  // fix this later
-                  session
-                    ? {
-                        ...session,
-                        user: {
-                          ...session.user,
-                          image: session.user.image ?? undefined,
-                        },
-                      }
-                    : null
-                }
-              />
+              <GetStartedButton />
             </div>
           </div>
         </section>
