@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/common/page-header';
-// import { UserAvatar } from '@/components/user/user-avatar';
+import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
 import { getUserById } from '@/lib/mock-data/users';
 import { mockTransactions } from '@/lib/mock-data/transactions';
@@ -54,7 +54,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
             <CardContent className="pt-6">
               <div className="flex flex-col items-start gap-6 md:flex-row">
-                {/* <UserAvatar name={user.name} avatar={user.avatar} size="xl" /> */}
+                <UserAvatar name={user.name} avatar={user.avatar} size="xl" />
 
                 <div className="flex-1 space-y-4">
                   <div>
