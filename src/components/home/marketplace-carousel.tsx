@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import Image from 'next/image';
 
@@ -40,6 +38,8 @@ export function MarketplaceCarousel() {
                 <Image
                   src={marketplace.logo}
                   alt={marketplace.name}
+                  width={80}
+                  height={200}
                   className="h-12 w-auto object-contain"
                 />
               </div>
@@ -53,6 +53,8 @@ export function MarketplaceCarousel() {
                 <Image
                   src={marketplace.logo}
                   alt={marketplace.name}
+                  width={100}
+                  height={200}
                   className="h-12 w-auto object-contain"
                 />
               </div>
@@ -60,25 +62,6 @@ export function MarketplaceCarousel() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 }

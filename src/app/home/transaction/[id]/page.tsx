@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/common/page-header';
-import { UserAvatar } from '@/components/user/user-avatar';
+// import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
 import { mockTransactions } from '@/lib/mock-data/transactions';
 import { getUserById } from '@/lib/mock-data/users';
@@ -165,11 +165,11 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                 <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <p className="mb-3 text-xs text-neutral-500">Buyer</p>
                   <div className="flex items-center gap-3">
-                    <UserAvatar
+                    {/* <UserAvatar
                       name={buyer?.name || transaction.buyerName}
                       avatar={buyer?.avatar}
                       size="md"
-                    />
+                    /> */}
                     <div className="flex-1">
                       <Link
                         href={ROUTES.PROFILE.VIEW(buyer?.id || 'user-1')}
@@ -193,11 +193,11 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                 <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <p className="mb-3 text-xs text-neutral-500">Seller</p>
                   <div className="flex items-center gap-3">
-                    <UserAvatar
+                    {/* <UserAvatar
                       name={seller?.name || transaction.sellerName}
                       avatar={seller?.avatar}
                       size="md"
-                    />
+                    /> */}
                     <div className="flex-1">
                       <Link
                         href={ROUTES.PROFILE.VIEW(seller?.id || 'user-2')}
