@@ -60,11 +60,9 @@ export default function InvitePage() {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-black">
-      <PageHeader backButtonFallback={ROUTES.HOME.ROOT} />
-
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-8">
-        <Card className="w-full max-w-2xl border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="flex flex-1 items-center justify-center overflow-y-auto">
+        <Card className="w-full max-w-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -218,14 +216,6 @@ export default function InvitePage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 border-neutral-700 text-neutral-300 hover:bg-white/5"
-                    onClick={() => setStep('review')}
-                  >
-                    Back
-                  </Button>
                   <Button
                     type="submit"
                     className="flex-1 bg-white text-black hover:bg-neutral-200"

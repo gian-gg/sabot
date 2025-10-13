@@ -6,7 +6,6 @@ import { ROUTES } from '@/constants/routes';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/common/page-header';
 // import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
 import { mockTransactions } from '@/lib/mock-data/transactions';
@@ -45,7 +44,6 @@ export default function TransactionPage({ params }: TransactionPageProps) {
   if (!transaction) {
     return (
       <div className="flex h-screen w-screen flex-col bg-black">
-        <PageHeader />
         <div className="flex flex-1 items-center justify-center p-8">
           <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
             <CardContent className="pt-6">
@@ -74,9 +72,7 @@ export default function TransactionPage({ params }: TransactionPageProps) {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-black">
-      <PageHeader />
-
+    <div className="flex h-screen w-screen flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-[1000px] space-y-6 px-8 py-8">
           {/* Status Card */}

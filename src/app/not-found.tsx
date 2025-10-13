@@ -13,7 +13,7 @@ import { ROUTES } from '@/constants/routes';
 
 export default async function NotFoundPage() {
   return (
-    <div className="flex h-full w-full items-center justify-center">
+    <div className="flex min-h-screen w-full items-center justify-center">
       <Card className="w-lg">
         <CardHeader>
           <CardTitle className="text-destructive">404 Error</CardTitle>

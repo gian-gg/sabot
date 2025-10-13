@@ -46,7 +46,7 @@ export default function UserComponent() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer" asChild>
-        <Avatar className="h-8 w-8 rounded-lg">
+        <Avatar className="h-8 w-8 rounded-lg text-xs">
           {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
           <AvatarFallback className="rounded-lg">
             {getInitials(user.name)}

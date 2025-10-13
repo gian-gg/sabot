@@ -25,7 +25,7 @@ export default async function RootLayout({
 
         <Header />
 
-        <main className="mt-20 flex min-h-[600px] flex-col overflow-x-hidden">
+        <main className="flex min-h-[600px] flex-col overflow-x-hidden pt-7">
           {children}
         </main>
 
