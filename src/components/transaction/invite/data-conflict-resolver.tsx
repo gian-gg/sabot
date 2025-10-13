@@ -9,6 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import type { AnalysisData } from '@/types/analysis';
+import {
+  hasConflict,
+  getBestValue,
+  areValuesSimilar,
+} from '@/lib/utils/conflict-resolution';
 
 interface AnalysisWithSource extends AnalysisData {
   source: string;
@@ -119,14 +124,18 @@ export function DataConflictResolver({
     const values = analyses
       .map((a) => a[field])
       .filter((v) => v !== undefined && v !== null && v !== '');
-    const uniqueValues = [...new Set(values.map((v) => JSON.stringify(v)))];
+
+    // Use smart conflict detection
+    const hasFieldConflict = hasConflict(values);
+    const bestValue = getBestValue(values);
 
     return {
       field,
-      hasConflict: uniqueValues.length > 1,
+      hasConflict: hasFieldConflict,
       hasNoData: values.length === 0,
       hasData: values.length > 0,
       values,
+      bestValue, // The automatically selected best value
     };
   });
 
@@ -208,17 +217,23 @@ export function DataConflictResolver({
       }
     };
 
-    // Merge data: use selected values, fall back to first non-empty value
+    // Merge data: use selected values, fall back to best value, then first non-empty value
     allFields.forEach((field) => {
       if (selectedValues[field] !== undefined) {
         setField(field, selectedValues[field]);
       } else {
-        // Use first non-empty value
-        for (const analysis of analyses) {
-          const value = analysis[field];
-          if (value !== undefined && value !== null && value !== '') {
-            setField(field, value);
-            break;
+        // Try to get the best value from all analyses
+        const fieldCategory = fieldCategories.find((fc) => fc.field === field);
+        if (fieldCategory?.bestValue !== undefined) {
+          setField(field, fieldCategory.bestValue);
+        } else {
+          // Use first non-empty value as fallback
+          for (const analysis of analyses) {
+            const value = analysis[field];
+            if (value !== undefined && value !== null && value !== '') {
+              setField(field, value);
+              break;
+            }
           }
         }
       }
@@ -286,13 +301,14 @@ export function DataConflictResolver({
           {conflicts.length > 0 ? (
             <>
               Found {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''}{' '}
-              between the two screenshots. Please select the correct value for
-              each field.
+              between the screenshots. Similar values have been automatically
+              resolved. Please select the correct value for remaining conflicts.
             </>
           ) : (
             <>
-              Both screenshots analyzed successfully. Review the merged data
-              below.
+              Screenshots analyzed successfully. Similar values were
+              automatically resolved by selecting the most detailed options.
+              Review the merged data below.
             </>
           )}
         </AlertDescription>
@@ -314,7 +330,7 @@ export function DataConflictResolver({
 
       {/* All Fields - Ordered Display */}
       <div className="space-y-4">
-        {fieldCategories.map(({ field, hasConflict, hasNoData }) => {
+        {fieldCategories.map(({ field, hasConflict, hasNoData, bestValue }) => {
           const values = analyses.map((a, idx) => ({
             value: a[field],
             source: `Screenshot ${idx + 1}`,
@@ -340,9 +356,12 @@ export function DataConflictResolver({
                   </Badge>
                 )}
                 {!hasConflict && !hasNoData && (
-                  <Badge variant="outline">
+                  <Badge
+                    variant="outline"
+                    className="bg-muted/50 text-muted-foreground border-muted"
+                  >
                     <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Matched
+                    Auto-resolved
                   </Badge>
                 )}
               </div>
@@ -423,12 +442,16 @@ export function DataConflictResolver({
                   })}
                 </RadioGroup>
               ) : (
-                <div className="border-border bg-secondary/50 rounded-lg border p-3">
+                <div className="border-border bg-muted/30 border-muted rounded-lg border p-3">
                   <p className="font-medium">
-                    {formatValue(values.find((v) => v.value)?.value)}
+                    {formatValue(
+                      bestValue || values.find((v) => v.value)?.value
+                    )}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Matched across all screenshots
+                    {bestValue
+                      ? 'Automatically selected the most detailed value'
+                      : 'Matched across all screenshots'}
                   </p>
                 </div>
               )}

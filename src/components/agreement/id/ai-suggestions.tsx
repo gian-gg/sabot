@@ -1,3 +1,4 @@
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle, Info, Sparkles } from 'lucide-react';
@@ -94,7 +95,9 @@ export function AISuggestions({ suggestions = [] }: AISuggestionsProps) {
             >
               <div className="flex items-start gap-4">
                 <div className={cn('rounded-lg p-2', config.bg)}>
-                  <Icon className={cn('h-5 w-5', config.color)} />
+                  {React.createElement(Icon, {
+                    className: cn('h-5 w-5', config.color),
+                  })}
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="flex items-start justify-between gap-4">

@@ -50,6 +50,19 @@ export async function POST(request: NextRequest) {
     // For now, we'll just mark it as requested
     const arbiterRequired = Boolean(body.arbiter_required);
 
+    // Fetch AI analysis data if transaction_id is provided
+    let aiAnalysisData = null;
+    if (body.transaction_id) {
+      const { data: analyses } = await supabase
+        .from('transaction_analyses')
+        .select('*')
+        .eq('transaction_id', body.transaction_id);
+
+      if (analyses && analyses.length > 0) {
+        aiAnalysisData = analyses;
+      }
+    }
+
     // Create escrow record
     const { data: escrow, error: createError } = await supabase
       .from('escrows')
@@ -65,6 +78,7 @@ export async function POST(request: NextRequest) {
         status: arbiterRequired ? 'arbiter_review' : 'pending',
         arbiter_requested: arbiterRequired,
         arbiter_id: body.arbiter_id, // Pre-selected arbiter
+        ai_analysis_data: aiAnalysisData, // Store AI analysis data
       })
       .select()
       .single();

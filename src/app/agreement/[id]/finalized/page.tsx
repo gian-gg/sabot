@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -21,12 +22,16 @@ import {
 } from '@/lib/pdf/export-agreement';
 
 interface Party {
-  id: string;
+  id?: string;
+  user_id?: string;
   name: string;
   email: string;
+  avatar?: string;
   color: string;
   signature?: string;
   signedAt?: string;
+  has_confirmed?: boolean;
+  role?: 'creator' | 'invitee';
 }
 
 interface AgreementData {
@@ -38,40 +43,86 @@ interface AgreementData {
   content?: string;
 }
 
-export default function FinalizedPage({ params }: { params: { id: string } }) {
+export default function FinalizedPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [agreementData, setAgreementData] = useState<AgreementData>({
+    id: id,
+    title: 'Loading...',
+    parties: [],
+  });
 
   // Get document from store
   const { title: storedTitle, content: storedContent } = useDocumentStore();
 
-  // Mock data - replace with real data from API/database
-  const agreementData: AgreementData = {
-    id: params.id,
-    title: storedTitle || 'Partnership Agreement',
-    content: storedContent || '',
-    blockchainHash: '0x8f34c3c0f8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c',
-    finalizedAt: new Date().toISOString(),
-    parties: [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        color: '#1DB954',
-        signature: 'https://via.placeholder.com/200x80?text=John+Doe+Signature',
-        signedAt: new Date(Date.now() - 300000).toISOString(),
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        color: '#FF6B6B',
-        signature:
-          'https://via.placeholder.com/200x80?text=Jane+Smith+Signature',
-        signedAt: new Date().toISOString(),
-      },
-    ],
-  };
+  // Fetch real agreement data from API
+  useEffect(() => {
+    const fetchAgreement = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/agreement/${id}/finalized`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch agreement');
+        }
+
+        const data = await response.json();
+
+        // Map API response to component state
+        // Generate colors for parties if not present
+        const colors = ['#1DB954', '#FF6B6B', '#4A90E2', '#F5A623'];
+        const parties: Party[] = (data.participants || []).map(
+          (
+            participant: {
+              id: string;
+              user_id: string;
+              name: string;
+              email: string;
+              avatar?: string;
+              role: 'creator' | 'invitee';
+              has_confirmed?: boolean;
+              signed_at?: string;
+            },
+            index: number
+          ) => ({
+            id: participant.id,
+            user_id: participant.user_id,
+            name: participant.name,
+            email: participant.email,
+            avatar: participant.avatar,
+            color: colors[index % colors.length],
+            role: participant.role,
+            has_confirmed: participant.has_confirmed,
+            signed_at: participant.signed_at,
+          })
+        );
+
+        setAgreementData({
+          id: data.agreement.id,
+          title: storedTitle || data.agreement.title || 'Agreement',
+          content: storedContent || data.agreement.content || '',
+          blockchainHash:
+            data.agreement.blockchain_hash ||
+            '0x8f34c3c0f8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c',
+          finalizedAt: data.agreement.finalized_at || new Date().toISOString(),
+          parties,
+        });
+      } catch (error) {
+        console.error('Error fetching agreement:', error);
+        toast.error('Failed to load agreement details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgreement();
+  }, [id, storedTitle, storedContent]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -91,7 +142,7 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
         fileName,
         includePageNumbers: true,
         includeTimestamp: true,
-        documentId: params.id,
+        documentId: id,
       });
 
       toast.success('Agreement downloaded successfully!');
@@ -124,23 +175,11 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      {/* Main Content with top padding for fixed header from root layout */}
-      <div className="container mx-auto max-w-4xl px-6 py-8 pt-24 pb-12">
-        {/* Success State Banner */}
-        <div className="mb-12 text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="bg-primary/20 rounded-full p-4">
-              <CheckCircle2 className="text-primary h-16 w-16" />
-            </div>
-          </div>
-          <h1 className="text-foreground mb-2 text-3xl font-bold">
-            Agreement Finalized
-          </h1>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            All parties have confirmed and signed the agreement. Your
-            transaction has been securely stored on the blockchain.
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-neutral-950">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Agreement Finalized</h1>
+          <p className="text-neutral-400">Agreement {id} has been finalized</p>
         </div>
 
         {/* Main Content Card */}
@@ -218,15 +257,32 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex flex-1 items-center gap-3">
-                        <div
-                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                          style={{ backgroundColor: party.color }}
-                        >
-                          {party.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                        </div>
+                        {party.avatar ? (
+                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                            <Image
+                              src={party.avatar}
+                              alt={party.name}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              onError={(result) => {
+                                // If image fails to load, hide it and show fallback
+                                result.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : null}
+                        {!party.avatar && (
+                          <div
+                            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: party.color }}
+                          >
+                            {party.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <p className="text-foreground truncate text-sm font-semibold">
                             {party.name}

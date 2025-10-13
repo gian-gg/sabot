@@ -41,7 +41,7 @@ export async function GET(
       );
     }
 
-    // Get participants with user details
+    // Get participants with their profile data
     const { data: participants, error: participantsError } = await supabase
       .from('agreement_participants')
       .select(
@@ -50,6 +50,9 @@ export async function GET(
         agreement_id,
         user_id,
         role,
+        name,
+        email,
+        avatar,
         has_confirmed,
         joined_at
       `
@@ -67,6 +70,28 @@ export async function GET(
       );
     }
 
+    // Enrich participants with data from agreement table
+    const participantsData = (participants || []).map((participant) => {
+      if (participant.role === 'creator') {
+        // Use creator data from agreement table
+        return {
+          ...participant,
+          name:
+            participant.name || agreement.creator_name || 'Agreement Creator',
+          email: participant.email || agreement.creator_email || '',
+          avatar:
+            participant.avatar || agreement.creator_avatar_url || undefined,
+        };
+      }
+      // Use invitee data from agreement table
+      return {
+        ...participant,
+        name: participant.name || agreement.invitee_name || 'Invitee',
+        email: participant.email || agreement.invitee_email || '',
+        avatar: participant.avatar || agreement.invitee_avatar_url || undefined,
+      };
+    });
+
     // Determine current user's role
     const currentUserParticipant = participants?.find(
       (p) => p.user_id === user.id
@@ -74,18 +99,18 @@ export async function GET(
     const currentUserRole = currentUserParticipant?.role;
 
     // Check if ready for next step (both joined)
-    const isReadyForNextStep = participants?.length === 2;
+    const isReadyForNextStep = participantsData?.length === 2;
 
     console.log('Status - Response:', {
       agreementId,
       status: agreement.status,
-      participantCount: participants?.length,
+      participantCount: participantsData?.length,
       isReadyForNextStep,
     });
 
     return NextResponse.json({
       agreement,
-      participants: participants || [],
+      participants: participantsData,
       current_user_role: currentUserRole,
       is_ready_for_next_step: isReadyForNextStep,
     });

@@ -34,11 +34,6 @@ export function HeroSection() {
     router.push(ROUTES.AGREEMENT.INVITE);
   }
 
-  function goToTutorial() {
-    setCreateOpen(false);
-    router.push(ROUTES.TUTORIAL);
-  }
-
   // Removed goToEscrowNew - escrow is now part of agreement finalization
 
   return (
@@ -73,10 +68,10 @@ export function HeroSection() {
           </div>
           <div className="space-y-2">
             <h3 className="text-foreground text-xl font-semibold">
-              Getting Started Tutorial
+              Welcome to Sabot
             </h3>
             <p className="text-muted-foreground text-sm">
-              Learn how to secure your first transaction
+              Start your secure transaction journey today
             </p>
           </div>
         </div>

@@ -23,6 +23,22 @@ export function AnalysisComplete({
 }: AnalysisCompleteProps) {
   const { status } = useTransactionStatus(transactionId);
 
+  // Extract the actual analysis data (handle both nested and flat structures)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedAnalyses = analyses.map((analysis: any) => {
+    // If the data is nested under extracted_data, flatten it
+    if ('extracted_data' in analysis && analysis.extracted_data) {
+      return {
+        ...analysis.extracted_data,
+        id: analysis.id,
+        screenshot_url:
+          analysis.screenshot_url || analysis.extracted_data.screenshot_url,
+      };
+    }
+    // Otherwise return as-is (already flattened)
+    return analysis;
+  });
+
   const getParticipantRole = (userId: string) => {
     if (!status?.participants) return 'Party';
 
@@ -72,7 +88,7 @@ export function AnalysisComplete({
   };
   return (
     <div className="w-full space-y-6">
-      {analyses.map((analysis, index) => {
+      {flattenedAnalyses.map((analysis, index) => {
         const conditionBadge = getConditionBadgeVariant(
           analysis.productCondition
         );
@@ -287,7 +303,7 @@ export function AnalysisComplete({
                       Potential Concerns Detected:
                     </div>
                     <ul className="list-inside list-disc space-y-1 text-sm">
-                      {analysis.riskFlags?.map((flag, i) => (
+                      {analysis.riskFlags?.map((flag: string, i: number) => (
                         <li key={i}>{flag}</li>
                       ))}
                     </ul>

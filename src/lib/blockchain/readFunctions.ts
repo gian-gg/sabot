@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { getReadOnlyLedgerContract } from '@/lib/blockchain/contract';
 import { getPublicAddress } from '@/lib/supabase/db/user';
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +27,32 @@ export async function getAgreements() {
   }
 }
 
+// Supply-related functions
+export async function getTotalSupply(): Promise<string> {
+  try {
+    const contract = await getReadOnlyLedgerContract();
+    const totalSupply = await contract.totalSupply();
+    // Format with 18 decimals
+    return ethers.formatUnits(totalSupply, 18);
+  } catch (error) {
+    console.error('getTotalSupply: Error fetching total supply:', error);
+    return '0';
+  }
+}
+
+export async function getCirculatingSupply(): Promise<string> {
+  // In most cases, circulating supply is the same as total supply
+  // unless there are locked/vested tokens
+  return getTotalSupply();
+}
+
+export function formatSupply(supply: string): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(Number(supply));
+}
+
+// Registration-related functions
 export async function isRegistered(): Promise<boolean | null> {
   try {
     const supabase = await createClient();

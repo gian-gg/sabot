@@ -28,7 +28,7 @@ export function CreateInvitationPage() {
   const [copied, setCopied] = useState(false);
 
   const agreementId = 'abc123';
-  const agreementLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/agreement/invite?id=${agreementId}`;
+  const agreementLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/agreement/accept?id=${agreementId}`;
 
   const handleSendInvitation = async () => {
     if (!email) return;

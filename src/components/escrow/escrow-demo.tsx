@@ -142,10 +142,11 @@ export function EscrowDemo({
   const isOracleApplicable = ['digital', 'service'].includes(escrow.type);
 
   // Extract primary deliverable info
-  const primaryDeliverable = escrow.deliverables[0];
-  const totalAmount = escrow.deliverables
-    .filter((d) => d.value)
-    .reduce((sum, d) => sum + (d.value || 0), 0);
+  const primaryDeliverable = escrow.deliverables?.[0];
+  const totalAmount =
+    escrow.deliverables
+      ?.filter((d) => d.value)
+      .reduce((sum, d) => sum + (d.value || 0), 0) || 0;
   const currency = primaryDeliverable?.currency || 'PHP';
 
   // Generate demo events for timeline

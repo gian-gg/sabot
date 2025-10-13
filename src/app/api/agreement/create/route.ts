@@ -27,12 +27,32 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const payload: CreateAgreementPayload = await request.json();
 
+    // Get creator info from user metadata
+    const creatorName =
+      user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+    const creatorEmail = user.email || '';
+    // Use avatar_url from user metadata
+    const creatorAvatarUrl =
+      user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+    console.log('Create - Creator data to store:', {
+      creatorName,
+      creatorEmail,
+      creatorAvatarUrl,
+    });
+
     // Create agreement
-    console.log('Creating agreement for user:', user.id);
+    console.log('Creating agreement for user:', user.id, {
+      name: creatorName,
+      email: creatorEmail,
+    });
     const { data: agreement, error: agreementError } = await supabase
       .from('agreements')
       .insert({
         creator_id: user.id,
+        creator_name: creatorName,
+        creator_email: creatorEmail,
+        creator_avatar_url: creatorAvatarUrl,
         title: payload.title || 'New Agreement',
         agreement_type: payload.agreement_type || 'Custom',
         status: 'waiting_for_participant',
@@ -55,13 +75,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Agreement created successfully:', agreement.id);
 
-    // Add creator as participant
+    // Add creator as participant with profile data
     const { error: participantError } = await supabase
       .from('agreement_participants')
       .insert({
         agreement_id: agreement.id,
         user_id: user.id,
         role: 'creator',
+        name: creatorName,
+        email: creatorEmail,
+        avatar: creatorAvatarUrl,
       });
 
     if (participantError) {
