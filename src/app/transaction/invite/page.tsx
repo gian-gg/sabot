@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/common/page-header';
 import {
   Mail,
   Upload,

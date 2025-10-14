@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -43,9 +43,9 @@ export default function TransactionPage({ params }: TransactionPageProps) {
 
   if (!transaction) {
     return (
-      <div className="flex h-screen w-screen flex-col bg-black">
+      <div className="flex h-screen w-screen flex-col">
         <div className="flex flex-1 items-center justify-center p-8">
-          <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
+          <Card className="w-full max-w-md">
             <CardContent className="pt-6">
               <p className="text-center text-neutral-400">
                 Transaction not found
@@ -74,14 +74,14 @@ export default function TransactionPage({ params }: TransactionPageProps) {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1000px] space-y-6 px-8 py-8">
+        <div className="mx-auto max-w-3xl space-y-3 px-4 py-4">
           {/* Status Card */}
-          <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="mb-2 flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-white">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <h1 className="text-lg font-bold text-white">
                       {transaction.type.charAt(0).toUpperCase() +
                         transaction.type.slice(1).replace('-', ' ')}
                     </h1>
@@ -93,23 +93,24 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                             ? 'secondary'
                             : 'outline'
                       }
+                      className="text-xs"
                     >
                       {transaction.status.charAt(0).toUpperCase() +
                         transaction.status.slice(1)}
                     </Badge>
                   </div>
-                  <p className="font-mono text-sm text-neutral-500">
+                  <p className="truncate font-mono text-xs text-neutral-500">
                     {transaction.id}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-white">
+                <div className="flex-shrink-0 text-right">
+                  <p className="text-2xl font-bold text-white">
                     {transaction.currency}
                     {transaction.price.toLocaleString()}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-0.5 text-xs text-neutral-500">
                     {transaction.timestamp.toLocaleDateString('en-US', {
-                      month: 'long',
+                      month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
@@ -119,62 +120,58 @@ export default function TransactionPage({ params }: TransactionPageProps) {
             </CardContent>
           </Card>
 
-          {/* Transaction Details Grid */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base text-white">
-                  <MapPin className="h-4 w-4" />
-                  Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-neutral-300">
-                  {transaction.location}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base text-white">
-                  <Calendar className="h-4 w-4" />
-                  Platform
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-neutral-300">
-                  {transaction.platform || 'Not specified'}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
+            <CardContent className="pt-3 pb-3">
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex min-w-[200px] flex-1 items-center gap-2">
+                  <MapPin className="h-4 w-4 flex-shrink-0 text-neutral-400" />
+                  <div>
+                    <p className="text-xs text-neutral-500">Location</p>
+                    <p className="text-sm text-neutral-300">
+                      {transaction.location}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex min-w-[200px] flex-1 items-center gap-2">
+                  <Calendar className="h-4 w-4 flex-shrink-0 text-neutral-400" />
+                  <div>
+                    <p className="text-xs text-neutral-500">Platform</p>
+                    <p className="text-sm text-neutral-300">
+                      {transaction.platform || 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Participants Card */}
           <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardHeader>
-              <CardTitle className="text-white">Participants</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-white">
+                Participants
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CardContent className="pt-0 pb-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {/* Buyer */}
-                <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-4">
-                  <p className="mb-3 text-xs text-neutral-500">Buyer</p>
-                  <div className="flex items-center gap-3">
+                <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-3">
+                  <p className="mb-2 text-xs text-neutral-500">Buyer</p>
+                  <div className="flex items-center gap-2">
                     {/* <UserAvatar
                       name={buyer?.name || transaction.buyerName}
                       avatar={buyer?.avatar}
-                      size="md"
+                      size="sm"
                     /> */}
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={ROUTES.PROFILE.VIEW(buyer?.id || 'user-1')}
-                        className="text-sm font-medium text-white hover:underline"
+                        className="block truncate text-sm font-medium text-white hover:underline"
                       >
                         {buyer?.name || transaction.buyerName}
                       </Link>
                       {buyer && (
-                        <div className="mt-1">
+                        <div className="mt-0.5">
                           <VerificationBadge
                             isVerified={buyer.isVerified}
                             size="sm"
@@ -186,23 +183,23 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                 </div>
 
                 {/* Seller */}
-                <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-4">
-                  <p className="mb-3 text-xs text-neutral-500">Seller</p>
-                  <div className="flex items-center gap-3">
+                <div className="rounded-lg border border-neutral-800/50 bg-black/40 p-3">
+                  <p className="mb-2 text-xs text-neutral-500">Seller</p>
+                  <div className="flex items-center gap-2">
                     {/* <UserAvatar
                       name={seller?.name || transaction.sellerName}
                       avatar={seller?.avatar}
-                      size="md"
+                      size="sm"
                     /> */}
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={ROUTES.PROFILE.VIEW(seller?.id || 'user-2')}
-                        className="text-sm font-medium text-white hover:underline"
+                        className="block truncate text-sm font-medium text-white hover:underline"
                       >
                         {seller?.name || transaction.sellerName}
                       </Link>
                       {seller && (
-                        <div className="mt-1">
+                        <div className="mt-0.5">
                           <VerificationBadge
                             isVerified={seller.isVerified}
                             size="sm"
@@ -218,11 +215,12 @@ export default function TransactionPage({ params }: TransactionPageProps) {
 
           {/* Action Buttons */}
           <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 pb-4">
               {transaction.status === 'pending' && (
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button
                     className="flex-1 bg-white text-black hover:bg-neutral-200"
+                    size="sm"
                     asChild
                   >
                     <Link href={ROUTES.TRANSACTION.ACTIVE(transaction.id)}>
@@ -234,9 +232,10 @@ export default function TransactionPage({ params }: TransactionPageProps) {
               )}
 
               {transaction.status === 'active' && (
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button
                     className="flex-1 bg-green-600 text-white hover:bg-green-700"
+                    size="sm"
                     asChild
                   >
                     <Link href={ROUTES.TRANSACTION.ACTIVE(transaction.id)}>
@@ -248,13 +247,13 @@ export default function TransactionPage({ params }: TransactionPageProps) {
               )}
 
               {transaction.status === 'completed' && (
-                <div className="flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3">
-                  <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-400" />
+                <div className="flex items-start gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-2.5">
+                  <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-400" />
                   <div>
                     <p className="text-sm font-medium text-green-300">
                       Transaction Completed Successfully
                     </p>
-                    <p className="mt-1 text-xs text-green-400/70">
+                    <p className="mt-0.5 text-xs text-green-400/70">
                       Both parties have confirmed completion
                     </p>
                   </div>
@@ -266,7 +265,8 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="mt-3 w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+                    size="sm"
+                    className="mt-2 w-full border-red-500/30 bg-transparent text-red-400 hover:bg-red-500/10"
                   >
                     <Flag className="mr-2 h-4 w-4" />
                     Report Issue
