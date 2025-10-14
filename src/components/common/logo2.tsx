@@ -7,7 +7,7 @@ const Logo2 = () => {
   return (
     <Link draggable={false} href={ROUTES.ROOT}>
       <Image
-        src="./logo2-dark.svg"
+        src="/logo2-dark.svg"
         alt="Sabot"
         width={64}
         height={64}
