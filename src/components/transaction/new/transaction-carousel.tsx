@@ -76,7 +76,7 @@ export function TransactionCarousel({
         className="flex h-full"
         style={{ width: `${sections.length * 100}%` }}
       >
-        {sections.map((section, index) => (
+        {sections.map((section) => (
           <div
             key={section.id}
             className="h-full overflow-y-auto px-4 py-4"

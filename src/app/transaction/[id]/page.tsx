@@ -34,8 +34,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { TransactionProgress } from '@/components/transaction-progress';
-import { TransactionCarousel } from '@/components/transaction-carousel';
+import { TransactionProgress } from '@/components/transaction/new/transaction-progress';
+import { TransactionCarousel } from '@/components/transaction/new/transaction-carousel';
 
 interface TransactionPageProps {
   params: Promise<{ id: string }>;
@@ -221,10 +221,10 @@ export default function TransactionPage({ params }: TransactionPageProps) {
           <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-white">
-                Transaction Type
+                Transaction Details
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-neutral-400" />
                 <div>
@@ -238,6 +238,16 @@ export default function TransactionPage({ params }: TransactionPageProps) {
                       ? 'Face-to-face exchange at agreed location'
                       : 'Digital payment and shipping'}
                   </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-neutral-400" />
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    {transaction.id}
+                  </p>
+                  <p className="text-xs text-neutral-500">Transaction ID</p>
                 </div>
               </div>
             </CardContent>

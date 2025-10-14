@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import TransactionLinkSection from '@/components/transaction-link';
+import TransactionLinkSection from '@/components/transaction/new/transaction-link';
 import EmailInvitationDialog from '@/components/email-invitation';
 
 const TRANSACTION_LINK = 'http://localhost:3000/transaction/invite/abc123';
@@ -48,7 +48,7 @@ export default function NewTransactionPage() {
       <div>
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-2xl">Create New Transaction</CardTitle>
+            <CardTitle className="text-xl">Create New Transaction</CardTitle>
             <CardDescription>
               Generate a secure transaction link to share with your
               counterparty. Both parties must be verified to proceed.
