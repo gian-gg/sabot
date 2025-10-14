@@ -20,7 +20,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="dark flex min-h-screen min-w-screen flex-col justify-between antialiased">
+      <body className="flex min-h-screen min-w-screen flex-col justify-between antialiased">
         <HydrateUser user={session?.user as User} />
 
         <Header />
