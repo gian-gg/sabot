@@ -13,6 +13,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Manila, Metro Manila',
     timestamp: new Date('2024-03-15T14:30:00'),
     platform: 'Facebook Marketplace',
+    method: 'meetup', // <-- add this field
   },
   {
     id: 'TX-2024-001235',
@@ -25,6 +26,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Quezon City, Metro Manila',
     timestamp: new Date('2024-03-15T13:45:00'),
     platform: 'Carousell',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001236',
@@ -37,6 +39,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Makati, Metro Manila',
     timestamp: new Date('2024-03-15T12:20:00'),
     platform: 'Instagram',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001237',
@@ -49,6 +52,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Pasig, Metro Manila',
     timestamp: new Date('2024-03-15T11:10:00'),
     platform: 'Facebook Marketplace',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001238',
@@ -61,6 +65,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Taguig, Metro Manila',
     timestamp: new Date('2024-03-15T10:30:00'),
     platform: 'Carousell',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001239',
@@ -73,6 +78,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Cebu City, Cebu',
     timestamp: new Date('2024-03-15T09:15:00'),
     platform: 'Facebook Marketplace',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001240',
@@ -85,6 +91,7 @@ export const mockTransactions: Transaction[] = [
     location: 'Davao City, Davao del Sur',
     timestamp: new Date('2024-03-14T16:45:00'),
     platform: 'Carousell',
+    method: 'meetup',
   },
   {
     id: 'TX-2024-001241',
@@ -97,5 +104,6 @@ export const mockTransactions: Transaction[] = [
     location: 'Manila, Metro Manila',
     timestamp: new Date('2024-03-14T15:20:00'),
     platform: 'Instagram',
+    method: 'meetup',
   },
 ];
