@@ -85,28 +85,24 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
   const recentTransactions = transactions.slice(0, 10);
 
   return (
-    <Card className="border border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60 shadow-2xl backdrop-blur-sm">
-      <CardHeader className="border-b border-neutral-800/50 bg-neutral-900/30 px-5 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex gap-1.5">
-              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-500" />
-              <div className="h-2.5 w-2.5 rounded-full bg-neutral-700" />
-              <div className="h-2.5 w-2.5 rounded-full bg-neutral-700" />
-            </div>
-            <span className="text-xs font-medium text-neutral-300">
-              Public Ledger
-            </span>
+    <Card className="gap-0 border border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60 p-0 shadow-2xl backdrop-blur-sm">
+      <CardHeader className="flex w-full items-center justify-between gap-0 border-b border-neutral-800/50 bg-neutral-900/30 p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex gap-1.5">
+            <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-500" />
+            <div className="h-2.5 w-2.5 rounded-full bg-neutral-700" />
+            <div className="h-2.5 w-2.5 rounded-full bg-neutral-700" />
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="h-5 border-green-500/30 bg-green-500/10 text-xs text-green-400"
-            >
-              Live
-            </Badge>
-          </div>
+          <span className="text-xs font-medium text-neutral-300">
+            Public Ledger
+          </span>
         </div>
+        <Badge
+          variant="outline"
+          className="h-5 border-green-500/30 bg-green-500/10 text-xs text-green-400"
+        >
+          Live
+        </Badge>
       </CardHeader>
 
       <CardContent className="p-0">

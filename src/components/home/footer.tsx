@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
-import { ShieldCheck, Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail } from 'lucide-react';
+import Logo2 from '@/components/common/logo2';
 
 const Footer = () => {
   return (
@@ -11,8 +12,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="md:col-span-1">
             <div className="mb-4 flex items-center gap-2">
-              <ShieldCheck className="h-6 w-6 text-white" />
-              <span className="text-lg font-semibold text-white">Sabot</span>
+              <Logo2 />
             </div>
             <p className="mb-4 text-sm text-neutral-400">
               Your third-party safety layer for verified, transparent, and
