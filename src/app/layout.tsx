@@ -31,7 +31,7 @@ export default async function RootLayout({
 
         <Footer />
 
-        <Toaster richColors />
+        <Toaster richColors theme="dark" />
       </body>
     </html>
   );
