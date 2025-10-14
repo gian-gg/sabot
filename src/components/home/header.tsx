@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import UserComponent from '@/components/user/user-component';
 import { usePathname } from 'next/navigation';
+import Logo2 from '@/components/common/logo2';
 
 export function Header() {
   const pathname = usePathname();
@@ -27,12 +26,7 @@ export function Header() {
         {/* Brand with Icon */}
         <div className="flex w-full items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-white" />
-            <Link href={ROUTES.ROOT}>
-              <h1 className="text-base font-semibold tracking-tight text-white transition-opacity hover:opacity-100">
-                Sabot
-              </h1>
-            </Link>
+            <Logo2 />
           </div>
           {pathname.startsWith(ROUTES.HOME.ROOT) && <UserComponent />}
         </div>
