@@ -36,8 +36,7 @@ export default function ActiveTransactionPage({
 
   if (!transaction) {
     return (
-      <div className="flex h-screen w-screen flex-col bg-black">
-        <PageHeader />
+      <div className="flex h-screen w-screen flex-col">
         <div className="flex flex-1 items-center justify-center p-8">
           <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
             <CardContent className="pt-6">

@@ -1,4 +1,9 @@
-export type TransactionStatus = 'completed' | 'active' | 'pending' | 'reported';
+export type TransactionStatus =
+  | 'completed'
+  | 'active'
+  | 'pending'
+  | 'reported'
+  | 'disputed';
 
 export type TransactionType =
   | 'electronics'
@@ -9,6 +14,8 @@ export type TransactionType =
   | 'collectibles'
   | 'other';
 
+export type TransactionMethod = 'meetup' | 'online';
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -17,6 +24,7 @@ export interface Transaction {
   price: number;
   currency: string;
   status: TransactionStatus;
+  method: TransactionMethod;
   location: string;
   timestamp: Date;
   platform?: string;
