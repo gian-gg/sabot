@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { Github, Twitter, Mail } from 'lucide-react';
-import Logo2 from '@/components/common/logo2';
+import Logo2 from '@/components/core/logo2';
 
 const Footer = () => {
   return (

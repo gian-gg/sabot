@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import UserComponent from '@/components/user/user-component';
-import Logo2 from '@/components/common/logo2';
+import HeaderAction from '@/components/core/header-action';
+import Logo2 from '@/components/core/logo2';
 
 export function Header() {
   const [mouseX, setMouseX] = useState(0);
@@ -25,7 +25,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Logo2 />
           </div>
-          <UserComponent />
+          <HeaderAction />
         </div>
       </div>
 

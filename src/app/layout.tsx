@@ -1,8 +1,8 @@
 import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
-import { Header } from '@/components/home/header';
-import Footer from '@/components/home/footer';
+import { Header } from '@/components/core/header';
+import Footer from '@/components/core/footer';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/components/user/hydrate-userStore';
 

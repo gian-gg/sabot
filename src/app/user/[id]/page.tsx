@@ -5,7 +5,7 @@ import { ROUTES } from '@/constants/routes';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/common/page-header';
+import { PageHeader } from '@/components/core/page-header';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
 import { getUserById } from '@/lib/mock-data/users';

@@ -4,7 +4,7 @@ import { FileText, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/common/page-header';
+import { PageHeader } from '@/components/core/page-header';
 import { mockReports, getReportCountByStatus } from '@/lib/mock-data/reports';
 import { ReportStatus } from '@/types/report';
 

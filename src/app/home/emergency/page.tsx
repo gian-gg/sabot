@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PageHeader } from '@/components/common/page-header';
+import { PageHeader } from '@/components/core/page-header';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function EmergencyPage() {
