@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { toast } from 'sonner';
 import { signInWithGoogle } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Home } from 'lucide-react';
+import { CirclePlus } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 
 const GetStartedButton = () => {
@@ -24,8 +24,8 @@ const GetStartedButton = () => {
           variant="ghost"
           className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
         >
-          <Home />
-          Go to Home
+          <CirclePlus />
+          Create Transaction
         </Button>
       </Link>
     );

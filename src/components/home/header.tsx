@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ROUTES } from '@/constants/routes';
 import UserComponent from '@/components/user/user-component';
-import { usePathname } from 'next/navigation';
 import Logo2 from '@/components/common/logo2';
 
 export function Header() {
-  const pathname = usePathname();
   const [mouseX, setMouseX] = useState(0);
 
   useEffect(() => {
@@ -28,7 +25,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Logo2 />
           </div>
-          {pathname.startsWith(ROUTES.HOME.ROOT) && <UserComponent />}
+          <UserComponent />
         </div>
       </div>
 

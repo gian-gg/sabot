@@ -17,13 +17,16 @@ import { useUserStore } from '@/store/userStore';
 import { signOut } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 import { getInitials } from '@/lib/utils/helpers';
 import { ROUTES } from '@/constants/routes';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function UserComponent() {
   const router = useRouter();
+  const pathname = usePathname();
   const user = useUserStore();
   const [isPending, setIsPending] = useState(false);
 
@@ -40,6 +43,16 @@ export default function UserComponent() {
         return error.message || 'Sign out failed';
       },
     });
+  }
+
+  if (!user.id) return null;
+
+  if (user.id && pathname === ROUTES.ROOT) {
+    return (
+      <Button asChild>
+        <Link href={ROUTES.HOME.ROOT}>Go to Home</Link>
+      </Button>
+    );
   }
 
   return (
