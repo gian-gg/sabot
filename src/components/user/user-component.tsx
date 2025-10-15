@@ -12,15 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUserStore, clearUser } from '@/store/userStore';
+import { useUserStore } from '@/store/userStore';
 
-import { ROUTES } from '@/constants/routes';
-import { signOut } from '@/lib/auth/client';
+import { signOut } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getInitials } from '@/lib/utils/helpers';
+import { ROUTES } from '@/constants/routes';
 
 export default function UserComponent() {
   const router = useRouter();
@@ -32,7 +32,6 @@ export default function UserComponent() {
     toast.promise(signOut(), {
       loading: 'Signing out...',
       success: () => {
-        clearUser();
         router.push(ROUTES.ROOT);
         return 'Signed out successfully!';
       },

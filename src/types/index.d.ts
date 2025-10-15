@@ -2,10 +2,22 @@
 export {};
 
 declare global {
+  interface AuthUser {
+    id: string;
+    user_metadata: {
+      avatar_url: string;
+      full_name: string;
+      email: string;
+    };
+    created_at: string;
+    updated_at: string;
+    last_sign_in_at: string | null;
+  }
+
   interface User {
-    name: string;
+    id: string;
     email: string;
-    image?: string;
-    id?: string;
+    image: string;
+    name: string;
   }
 }

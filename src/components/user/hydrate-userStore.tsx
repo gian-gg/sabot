@@ -3,10 +3,15 @@
 import { useEffect } from 'react';
 import { populateUser } from '@/store/userStore';
 
-export function HydrateUser({ user }: { user: User | null }) {
+export function HydrateUser({ user }: { user: AuthUser | null }) {
   useEffect(() => {
     if (user) {
-      populateUser(user);
+      populateUser(
+        user.id,
+        user.user_metadata.email,
+        user.user_metadata.avatar_url,
+        user.user_metadata.full_name
+      );
     }
   }, [user]);
 

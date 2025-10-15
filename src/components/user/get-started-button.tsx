@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
-import { signInWithGoogle } from '@/lib/auth/client';
+import { signInWithGoogle } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';

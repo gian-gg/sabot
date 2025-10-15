@@ -1,37 +1,46 @@
 import { create } from 'zustand';
 
-interface UserState extends User {
+interface UserState {
+  id: string;
+  email: string;
+  image: string;
+  name: string;
   setId: (id: string) => void;
-  setName: (name: string) => void;
   setEmail: (email: string) => void;
   setImage: (image: string) => void;
+  setName: (name: string) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
   id: '',
-  name: '',
   email: '',
   image: '',
+  name: '',
   setId: (id) => set({ id }),
-  setName: (name) => set({ name }),
   setEmail: (email) => set({ email }),
   setImage: (image) => set({ image }),
+  setName: (name) => set({ name }),
 }));
 
-export const populateUser = (user: User) => {
+export const populateUser = (
+  id: string,
+  email: string,
+  image: string,
+  name: string
+) => {
   useUserStore.setState({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    image: user.image,
+    id: id,
+    email: email,
+    image: image,
+    name: name,
   });
 };
 
 export const clearUser = () => {
   useUserStore.setState({
     id: '',
-    name: '',
     email: '',
     image: '',
+    name: '',
   });
 };

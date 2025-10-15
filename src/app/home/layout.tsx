@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth/server';
+import { createClient } from '@/lib/supabase/server';
 import React from 'react';
 import { redirect } from 'next/navigation';
 
@@ -9,7 +9,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   if (!session) {
     redirect(ROUTES.ROOT);
   }

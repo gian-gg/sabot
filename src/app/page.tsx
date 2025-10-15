@@ -2,7 +2,7 @@ import React from 'react';
 import { mockTransactions } from '@/lib/mock-data/transactions';
 import { PublicLedger } from '@/components/home/public-ledger';
 import { MarketplaceCarousel } from '@/components/home/marketplace-carousel';
-import GetStartedButton from '@/components/auth/get-started-button';
+import GetStartedButton from '@/components/user/get-started-button';
 
 export default async function Home() {
   // Sort transactions by timestamp (newest first)

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { Header } from '@/components/home/header';
 import Footer from '@/components/home/footer';
-import { getSession } from '@/lib/auth/server';
+import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/components/user/hydrate-userStore';
 
 export const metadata: Metadata = {
@@ -16,12 +16,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <html lang="en">
       <body className="flex min-h-screen min-w-screen flex-col justify-between antialiased">
-        <HydrateUser user={session?.user as User} />
+        <HydrateUser user={user as AuthUser | null} />
 
         <Header />
 

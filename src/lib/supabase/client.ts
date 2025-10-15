@@ -1,0 +1,22 @@
+'use client';
+
+import { createBrowserClient } from '@supabase/ssr';
+import { clearUser } from '@/store/userStore';
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+}
+
+export async function signOut() {
+  clearUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    throw new Error(`Error signing out: ${error.message}`);
+  }
+}
