@@ -10,17 +10,17 @@ export function HydrateUser({
   user?: AuthUser | null;
   isVerified?: boolean;
 }) {
-  const setUser = useUserStore();
+  const { setId, setEmail, setImage, setName, setIsVerified } = useUserStore();
 
   useEffect(() => {
     if (user) {
-      setUser.setId(user.id);
-      setUser.setEmail(user.user_metadata.email);
-      setUser.setImage(user.user_metadata.avatar_url);
-      setUser.setName(user.user_metadata.full_name);
+      setId(user.id);
+      setEmail(user.user_metadata.email);
+      setImage(user.user_metadata.avatar_url);
+      setName(user.user_metadata.full_name);
     }
-    setUser.setIsVerified(isVerified ?? false);
-  }, [user, isVerified]);
+    setIsVerified(isVerified ?? false);
+  }, [user, isVerified, setId, setEmail, setImage, setName, setIsVerified]);
 
   return null; // nothing visible, just hydrates the store
 }
