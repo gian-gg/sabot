@@ -27,7 +27,9 @@ export default async function DashboardLayout({
   return (
     <>
       <HydrateUser isVerified={isVerified} />
-      <div className="h-full w-full">{children}</div>
+      <div className="container mx-auto mt-20 h-full w-full px-4 py-8">
+        {children}
+      </div>
     </>
   );
 }
