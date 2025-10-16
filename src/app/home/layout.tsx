@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import React from 'react';
 import { redirect } from 'next/navigation';
-
 import { ROUTES } from '@/constants/routes';
+import { isUserVerified } from '@/lib/supabase/db/user';
+import { HydrateUser } from '@/store/user/hydrate-userStore';
 
 export default async function DashboardLayout({
   children,
@@ -11,12 +12,22 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect(ROUTES.ROOT);
   }
 
-  return <div className="h-full w-full">{children}</div>;
+  let isVerified = false;
+  if (user?.id) {
+    isVerified = await isUserVerified(user.id);
+  }
+
+  return (
+    <>
+      <HydrateUser isVerified={isVerified} />
+      <div className="h-full w-full">{children}</div>
+    </>
+  );
 }

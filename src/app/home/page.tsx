@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Header } from '@/components/core/header';
-import { HeroSection } from '@/components/root/hero-section';
+import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
 import { TransactionsSection } from '@/components/home/transactions-section';
 import { ActiveContractsSection } from '@/components/home/active-contracts-section';

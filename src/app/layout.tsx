@@ -4,7 +4,7 @@ import '@/styles/globals.css';
 import { Header } from '@/components/core/header';
 import Footer from '@/components/core/footer';
 import { createClient } from '@/lib/supabase/server';
-import { HydrateUser } from '@/components/user/hydrate-userStore';
+import { HydrateUser } from '@/store/user/hydrate-userStore';
 
 export const metadata: Metadata = {
   title: 'sabot',
