@@ -1,7 +1,7 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
-import { clearUser } from '@/store/userStore';
+import { clearUser } from '@/store/user/userStore';
 
 export function createClient() {
   return createBrowserClient(

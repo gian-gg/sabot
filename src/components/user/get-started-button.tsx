@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { signInWithGoogle } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { CirclePlus } from 'lucide-react';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore } from '@/store/user/userStore';
 
 const GetStartedButton = () => {
   const user = useUserStore();

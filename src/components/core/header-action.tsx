@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
-import { useUserStore } from '@/store/userStore';
+import { useUserStore } from '@/store/user/userStore';
 import Link from 'next/link';
 import UserComponent from '../user/user-component';
 

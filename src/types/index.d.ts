@@ -19,5 +19,6 @@ declare global {
     email: string;
     image: string;
     name: string;
+    isVerified: boolean;
   }
 }

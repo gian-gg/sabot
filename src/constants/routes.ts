@@ -8,6 +8,7 @@ export const ROUTES = {
   },
   HOME: {
     ROOT: '/home',
+    VERIFY: '/home/verify',
   },
   PROFILE: {
     VIEW: (id: string) => `/profile/${id}`,

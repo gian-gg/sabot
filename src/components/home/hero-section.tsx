@@ -1,10 +1,7 @@
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Play } from 'lucide-react';
-import { ROUTES } from '@/constants/routes';
-import { Plus } from 'lucide-react';
-import { useUserStore } from '@/store/userStore';
-import Link from 'next/link';
+import { useUserStore } from '@/store/user/userStore';
+import HeroAction from './hero-action';
 
 export function HeroSection() {
   const user = useUserStore();
@@ -27,12 +24,7 @@ export function HeroSection() {
           </p>
         </div>
         <div>
-          <Button asChild>
-            <Link href={ROUTES.TRANSACTION.NEW}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Transaction
-            </Link>
-          </Button>
+          <HeroAction />
         </div>
       </div>
 
