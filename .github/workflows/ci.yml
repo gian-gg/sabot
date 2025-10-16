@@ -9,11 +9,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      # Required for auth and database
-      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       # Checkout repo
@@ -28,7 +23,7 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       # Prettier check
       - name: Run Prettier check
