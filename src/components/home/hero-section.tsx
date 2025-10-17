@@ -13,7 +13,7 @@ export function HeroSection() {
           <h1 className="text-foreground text-4xl leading-tight font-bold text-balance lg:text-5xl">
             Hello,{' '}
             <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-              {user.name}
+              {user.name.split(' ')[0]}
             </span>
           </h1>
           <p className="text-muted-foreground w-lg text-base leading-relaxed text-pretty">

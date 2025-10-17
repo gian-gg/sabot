@@ -2,11 +2,24 @@
 
 ## Overview
 
-Sabot is a trust and safety platform designed to protect peer-to-peer transactions across online marketplaces. It acts as a verification and escrow-like intermediary that uses AI-powered analysis, identity verification, and real-time monitoring to reduce fraud and ensure safe exchanges.
+**Sabot** is a dual-purpose platform offering:
 
-## Core Mission
+1. **Trust & Safety for P2P Transactions**: Protect peer-to-peer marketplace transactions with AI-powered fraud detection, identity verification, and real-time safety monitoring
+2. **Collaborative Agreement Creation**: Enable parties to draft, edit, and finalize legally binding agreements (MOAs, contracts, NDAs) in real-time with AI assistance
+
+## Core Missions
+
+### Transaction Safety
 
 Enable safe, transparent, and verified transactions between strangers on online marketplaces by providing blockchain-like transaction transparency, AI-powered fraud detection, and real-time safety features.
+
+### Agreement Collaboration
+
+Empower individuals and businesses to create professional, legally sound agreements through real-time collaborative editing, AI-powered clause suggestions, and blockchain-verified signatures.
+
+---
+
+## Platform Features - Part A: Transaction Safety
 
 ---
 
@@ -291,10 +304,305 @@ When building any UI component for Sabot, ensure:
 
 ---
 
+---
+
+## Platform Features - Part B: Collaborative Agreement Creation
+
+### 1. Agreement Initiation & Invitation
+
+**Agreement Link Generation**
+
+- Either party can generate a unique agreement creation link
+- Link can be shared via email, messaging apps, or copied directly
+- Both parties must be authenticated to access
+
+**Invitation Flow**
+
+1. **Review Invitation**: View inviter details and agreement type
+2. **Select Template**: Choose from pre-built templates (Partnership, Service, NDA, Sales, Custom)
+3. **Verification**: Complete identity verification (reuses transaction verification)
+
+**Template Types**
+
+- **Partnership Agreement**: For business partnerships and joint ventures
+- **Service Agreement**: Define service delivery terms and payment
+- **Non-Disclosure Agreement (NDA)**: Protect confidential information
+- **Sales Agreement**: Formalize goods/services sales with payment terms
+- **Custom Agreement**: Start from blank canvas
+
+---
+
+### 2. Agreement Overview
+
+**Four-Section Carousel**
+Before entering the collaborative editor, parties review:
+
+1. **Parties Information**
+   - Display both parties with avatars, verification badges
+   - Show trust scores and verification status
+   - Confirm contact information
+
+2. **Document Structure**
+   - Expandable tree view of agreement sections
+   - Standard sections: Preamble, Definitions, Terms, Obligations, Signatures
+   - Visual hierarchy with headings and subsections
+
+3. **AI Suggestions**
+   - Clause recommendations based on template and context
+   - Risk warnings for missing critical sections
+   - Severity indicators (Low, Medium, High)
+   - Apply/Dismiss functionality
+
+4. **Agreement Details**
+   - Agreement type, status, creation date
+   - Duration and effective date
+   - Last updated timestamp
+
+**Navigation**
+
+- Carousel with Previous/Next buttons
+- Progress indicator (1/4, 2/4, etc.)
+- "Enter Collaborative Editor" button to begin real-time editing
+
+---
+
+### 3. Collaborative Editor (Active Mode)
+
+**Real-Time Block-Based Editing**
+
+- Notion-style block editor with drag-and-drop
+- Each block represents a section, paragraph, heading, list, or quote
+- Drag handles (⋮⋮) for reordering blocks
+- Plus (+) button to add new blocks
+
+**Block Types**
+
+- Heading (H1, H2, H3)
+- Paragraph (rich text)
+- Numbered List
+- Bullet List
+- Quote (with left border accent)
+- Divider
+
+**Collaborative Features**
+
+- **Cursor Presence**: See counterpart's cursor in real-time with color-coded avatar
+- **Typing Indicators**: "User is typing..." below their avatar
+- **Live Updates**: Character-by-character synchronization
+- **Conflict Resolution**: Automatic CRDT-based merging (future: Yjs integration)
+
+**AI Assistant Sidebar**
+Collapsible panel with three tabs:
+
+1. **Grammar**: Auto-detected grammar and spelling corrections
+   - Inline suggestions with "Apply" button
+   - Corrects typos, punctuation, capitalization
+
+2. **Suggestions**: Context-aware clause recommendations
+   - "Add Force Majeure Clause"
+   - "Include Termination Terms"
+   - "Specify Dispute Resolution"
+   - Shows suggested text and reasoning
+
+3. **Risks**: High-priority warnings
+   - "Missing Termination Clause"
+   - "Vague Obligations"
+   - Highlighted in yellow/red with severity badges
+
+**Header Controls**
+
+- Back to Overview link
+- Agreement title display
+- Party avatars with online status indicators
+- "AI Assistant" toggle button
+- "Ready to Finalize" button (navigates to finalization page)
+
+---
+
+### 4. Finalization & Signatures
+
+**Document Preview**
+
+- PDF-style professional formatting
+- Displays complete agreement with all sections
+- Shows effective date and party information
+- Signature section at bottom
+
+**Dual Confirmation System**
+Similar to transaction confirmation:
+
+- Each party must click "Confirm Agreement"
+- Avatars show checkmarks when confirmed
+- Status banner: "Waiting for other parties..." or "Agreement Finalized!"
+
+**Confirmation States**
+
+1. **Pending**: Neither party confirmed
+2. **Partial**: One party confirmed, waiting for other
+3. **Finalized**: Both parties confirmed, agreement locked
+
+**Party Status Card**
+
+- List of all parties with avatars
+- Confirmation status: "Confirmed" badge or "Pending" text
+- Email and name display
+
+**Post-Finalization** (Future Phase 2)
+
+- Download PDF with signatures
+- Blockchain hash for immutable verification
+- Email notification to all parties
+- Store in user's agreement history
+
+---
+
+### 5. Agreement Management (Future)
+
+**Agreement Dashboard**
+
+- List of all agreements (Draft, Active, Finalized, Signed)
+- Filter by status, type, date
+- Search by party name or agreement title
+
+**Version History**
+
+- Track all changes with timestamps
+- User attribution for each edit
+- Revert to previous versions
+- Diff view between versions
+
+**Access Control**
+
+- Only invited parties can view/edit
+- Time-limited access links
+- Revocation capability
+
+---
+
+## Design Principles for Agreement Platform
+
+### 1. **Spotify-Inspired Dark Theme**
+
+- Primary color: Spotify Green (#1DB954)
+- Dark background (#121212) with elevated cards (#181818)
+- Smooth transitions (150-300ms)
+- Rounded buttons (rounded-full)
+
+### 2. **Real-Time Collaboration**
+
+- Visible cursors with color-coded name tags
+- Smooth cursor animations
+- Online/offline status indicators
+- Typing indicators for active users
+
+### 3. **Block-Based Flexibility**
+
+- Drag-and-drop reordering
+- Easy addition/deletion of sections
+- Nested block structures
+- Translates to clean rich text output
+
+### 4. **AI-Augmented Drafting**
+
+- Context-aware suggestions
+- Risk analysis and warnings
+- Grammar auto-corrections
+- Plain-English explanations
+
+### 5. **Professional Output**
+
+- PDF-quality document preview
+- Legal document formatting standards
+- Structured sections (Preamble, Definitions, Terms, Signatures)
+- Ready for legal submission
+
+---
+
+## Key User Flows - Agreement Platform
+
+### New Agreement Flow
+
+1. User clicks "Create Agreement"
+2. System generates unique link
+3. User shares link with counterparty
+4. Both parties sign in / verify identity
+5. Invitee selects template
+6. Both proceed to Agreement Overview
+
+### Agreement Drafting Flow
+
+1. Review agreement overview (4-section carousel)
+2. Enter collaborative editor
+3. Add/edit blocks in real-time
+4. Apply AI suggestions as needed
+5. Toggle AI Assistant for grammar/risk checks
+6. Click "Ready to Finalize" when complete
+
+### Finalization Flow
+
+1. Review document preview
+2. First party confirms agreement
+3. System shows "Waiting for other party..." banner
+4. Second party confirms agreement
+5. "Agreement Finalized!" banner appears
+6. Download PDF (future) or view locked document
+
+---
+
+## Technology Stack - Agreement Platform
+
+**Existing Infrastructure**:
+
+- Next.js 15 with App Router
+- PostgreSQL with Drizzle ORM
+- Authentication via better-auth
+- Tailwind CSS v4 with shadcn/ui
+
+**Future Dependencies** (Phase 2):
+
+- **BlockNote**: Block-based editor (built on Tiptap/ProseMirror)
+- **Yjs**: CRDT for real-time collaboration
+- **y-websocket**: WebSocket server for sync
+- **Liveblocks** (optional): Managed real-time infrastructure
+- **jsPDF**: PDF generation with signatures
+
+**Current Implementation** (Phase 1 - Frontend Only):
+
+- Mock data for agreements, parties, sections, AI suggestions
+- Placeholder components ready for v0-generated UI
+- Static blocks (no real-time sync yet)
+- Mock cursor positions and typing indicators
+
+---
+
+## Routes - Agreement Platform
+
+```
+/agreement/new              - Create new agreement
+/agreement/invite           - Join via invitation link
+/agreement/[id]             - Agreement overview (carousel)
+/agreement/[id]/active      - Collaborative editor
+/agreement/[id]/finalize    - Confirmation & signatures
+```
+
+---
+
 ## Future Considerations
+
+**Transaction Safety**:
 
 - Multi-platform integration (API connections to marketplaces)
 - Escrow payment system
 - Reputation portability across platforms
 - Community reporting and pattern detection
 - Machine learning fraud detection improvements
+
+**Agreement Platform**:
+
+- Real-time WebSocket synchronization (Yjs + y-websocket)
+- E-signature integration (DocuSign/HelloSign)
+- PDF generation with blockchain verification
+- Legal clause library with jurisdiction-specific templates
+- AI-powered contract review and risk scoring
+- Multi-party agreements (3+ collaborators)
+- Agreement templates marketplace
