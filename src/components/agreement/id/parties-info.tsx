@@ -1,26 +1,64 @@
-// Parties Info Component
-// Displays information about both parties in the agreement
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, Shield, Mail } from 'lucide-react';
+import { mockUser, mockInviter } from '@/lib/mock-data/agreements';
 
-import type { Party } from '@/lib/mock-data/agreements';
+export function PartiesInfo() {
+  const parties = [
+    { ...mockUser, role: 'Creator' },
+    { ...mockInviter, role: 'Invitee' },
+  ];
 
-interface PartiesInfoProps {
-  parties: Party[];
-}
-
-export default function PartiesInfo({ parties }: PartiesInfoProps) {
-  // TODO: Replace with v0-generated component
   return (
-    <div>
-      <h3>Agreement Parties</h3>
-      {parties.map((party) => (
-        <div key={party.id}>
-          <p>
-            {party.name} - {party.email}
-          </p>
-          <p>Verified: {party.verified ? 'Yes' : 'No'}</p>
-          {party.trustScore && <p>Trust Score: {party.trustScore}</p>}
-        </div>
-      ))}
+    <div className="space-y-6">
+      <div>
+        <h2 className="mb-2 text-2xl font-bold">Agreement Parties</h2>
+        <p className="text-muted-foreground">
+          Review the parties involved in this agreement
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {parties.map((party) => (
+          <div
+            key={party.id}
+            className="border-border bg-card/50 rounded-lg border-2 p-6"
+          >
+            <div className="flex items-start gap-4">
+              <Avatar className="ring-primary/20 h-16 w-16 ring-2">
+                <AvatarImage
+                  src={party.avatar || '/placeholder.svg'}
+                  alt={party.name}
+                />
+                <AvatarFallback>{party.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">{party.name}</h3>
+                  {party.isVerified && (
+                    <CheckCircle2 className="text-primary h-5 w-5" />
+                  )}
+                </div>
+                <Badge variant="secondary" className="mb-3">
+                  {party.role}
+                </Badge>
+                <div className="space-y-2">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4" />
+                    <span>{party.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="text-primary h-4 w-4" />
+                    <span className="font-medium">
+                      Trust Score: {party.trustScore}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
