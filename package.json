@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
+    "ethers": "^6.15.0",
     "lucide-react": "^0.545.0",
     "mathjs": "^15.0.0",
     "next": "15.5.4",

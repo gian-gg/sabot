@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-// The client you created from the Server-Side Auth instructions
 import { createClient } from '@/lib/supabase/server';
+import { ethers } from 'ethers';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -8,27 +8,60 @@ export async function GET(request: Request) {
   // if "next" is in param, use it as the redirect URL
   let next = searchParams.get('next') ?? '/';
   if (!next.startsWith('/')) {
-    // if "next" is not a relative URL, use the default
-    next = '/';
+    next = '/'; // Default to root if "next" is not a relative URL
   }
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
-      const isLocalEnv = process.env.NODE_ENV === 'development';
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
+    const { error: sessionError } =
+      await supabase.auth.exchangeCodeForSession(code);
+
+    if (!sessionError) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: userProfile, error: profileError } = await supabase
+          .from('user_wallet')
+          .select('address')
+          .eq('id', user.id)
+          .single();
+
+        // If the user profile exists and already has a wallet, redirect to the main app.
+        if (userProfile && userProfile.address) {
+          return NextResponse.redirect(`${origin}${next}`);
+        }
+
+        // --- NEW LOGIC ---
+        // If the user is new or doesn't have a wallet, create one.
+        const newWallet = ethers.Wallet.createRandom();
+        const publicAddress = newWallet.address;
+        const privateKey = newWallet.privateKey;
+        const mnemonic = newWallet.mnemonic.phrase;
+        const { error: updateError } = await supabase
+          .from('user_wallet')
+          .insert([{ address: publicAddress }])
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('Failed to save new wallet address:', updateError);
+          // Redirect to an error page if saving fails
+          return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+        }
+
+        // Redirect to a new page to display the mnemonic phrase securely.
+        // We pass the mnemonic as a query parameter for the one-time display.
+        const redirectUrl = new URL(`${origin}/wallet-setup`);
+        redirectUrl.searchParams.append('mnemonic', mnemonic);
+        redirectUrl.searchParams.append('address', publicAddress);
+        redirectUrl.searchParams.append('privateKey', privateKey);
+
+        return NextResponse.redirect(redirectUrl.toString());
       }
     }
   }
 
-  // return the user to an error page with instructions
+  // Fallback: return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }
