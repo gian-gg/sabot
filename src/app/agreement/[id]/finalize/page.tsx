@@ -1,37 +1,45 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Check, X, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
-import { getAgreementById } from '@/lib/mock-data/agreements';
-// TODO: Import Button, Card, Avatar components from shadcn/ui
-// TODO: Apply Spotify green theme (#1DB954) instead of blue
+import { cn } from '@/lib/utils';
 
-export default function FinalizeAgreementPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+interface Party {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+  hasConfirmed: boolean;
+}
+
+// Mock parties data
+const mockParties: Party[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    color: '#1DB954',
+    hasConfirmed: false,
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    color: '#FF6B6B',
+    hasConfirmed: false,
+  },
+];
+
+export default function FinalizePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-
-  const agreement = getAgreementById(id);
+  const [parties, setParties] = useState<Party[]>(mockParties);
   const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
-  const [parties, setParties] = useState(agreement?.parties || []);
-
   const currentUserId = '1'; // Mock current user
-
-  if (!agreement) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <div>
-          <p>Agreement not found</p>
-          <Link href={ROUTES.HOME.ROOT}>Go Home</Link>
-        </div>
-      </div>
-    );
-  }
 
   const handleConfirm = () => {
     setCurrentUserConfirmed(true);
@@ -40,17 +48,10 @@ export default function FinalizeAgreementPage({
         party.id === currentUserId ? { ...party, hasConfirmed: true } : party
       )
     );
-
-    // Mock other party confirming after 3 seconds
-    setTimeout(() => {
-      setParties((prev) =>
-        prev.map((party) => ({ ...party, hasConfirmed: true }))
-      );
-    }, 3000);
   };
 
   const handleCancel = () => {
-    router.push(ROUTES.AGREEMENT.ACTIVE(id));
+    router.push(`/agreement/${params.id}/active`);
   };
 
   const allConfirmed = parties.every((party) => party.hasConfirmed);
@@ -58,15 +59,19 @@ export default function FinalizeAgreementPage({
 
   return (
     <div className="bg-background min-h-screen">
-      {/* TODO: Replace with v0-generated header with Spotify green theme */}
+      {/* Header */}
       <header className="border-border/50 bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur">
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href={ROUTES.AGREEMENT.ACTIVE(id)}>
-              <span>← Back to Editor</span>
+            <Link
+              href={`/agreement/${params.id}/active`}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm">Back to Editor</span>
             </Link>
             <div className="bg-border h-6 w-px" />
-            <h1>
+            <h1 className="text-foreground text-xl font-bold">
               Finalize <span className="text-primary">Agreement</span>
             </h1>
           </div>
@@ -74,28 +79,22 @@ export default function FinalizeAgreementPage({
           <div className="flex items-center gap-3">
             {parties.map((party) => (
               <div key={party.id} className="flex items-center gap-2">
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: party.color,
-                    border: party.hasConfirmed
-                      ? '2px solid #1DB954'
-                      : '2px solid gray',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '12px',
-                  }}
+                <Avatar
+                  className={cn(
+                    'h-8 w-8 border-2',
+                    party.hasConfirmed ? 'border-primary' : 'border-border'
+                  )}
                 >
-                  {party.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </div>
-                {party.hasConfirmed && <span>✓</span>}
+                  <AvatarFallback style={{ backgroundColor: party.color }}>
+                    {party.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  </AvatarFallback>
+                </Avatar>
+                {party.hasConfirmed && (
+                  <Check className="text-primary h-4 w-4" />
+                )}
               </div>
             ))}
           </div>
@@ -104,13 +103,13 @@ export default function FinalizeAgreementPage({
 
       {/* Main Content */}
       <div className="container mx-auto max-w-5xl px-6 py-8">
-        {/* Status Banners */}
+        {/* Status Banner */}
         {waitingForOthers && (
-          <div className="border-primary/20 bg-primary/5 mb-6 rounded-lg border p-6">
+          <Card className="bg-primary/5 border-primary/20 mb-6 p-6">
             <div className="flex items-center gap-3">
-              <span className="animate-spin">⟳</span>
+              <Loader2 className="text-primary h-5 w-5 animate-spin" />
               <div>
-                <h3 className="font-semibold">
+                <h3 className="text-foreground font-semibold">
                   Waiting for other parties to confirm
                 </h3>
                 <p className="text-muted-foreground mt-1 text-sm">
@@ -123,56 +122,97 @@ export default function FinalizeAgreementPage({
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {allConfirmed && (
-          <div className="border-primary/30 bg-primary/10 mb-6 rounded-lg border p-6">
+          <Card className="bg-primary/10 border-primary/30 mb-6 p-6">
             <div className="flex items-center gap-3">
-              <span>✓</span>
+              <Check className="text-primary h-5 w-5" />
               <div>
-                <h3 className="font-semibold">Agreement Finalized!</h3>
+                <h3 className="text-foreground font-semibold">
+                  Agreement Finalized!
+                </h3>
                 <p className="text-muted-foreground mt-1 text-sm">
                   All parties have confirmed. The agreement is now locked and
                   ready for download.
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Document Preview */}
-        <div className="mb-6 overflow-hidden rounded-lg border">
+        <Card className="mb-6 overflow-hidden">
           <div className="bg-muted/30 p-8">
             <div className="bg-background mx-auto max-w-3xl rounded-lg p-12 shadow-lg">
               <div className="text-foreground/90 space-y-6">
-                {/* TODO: Replace with actual agreement content from sections */}
                 <div className="border-border border-b pb-6 text-center">
-                  <h1 className="mb-2 text-3xl font-bold">{agreement.title}</h1>
+                  <h1 className="mb-2 text-3xl font-bold">
+                    Partnership Agreement
+                  </h1>
                   <p className="text-muted-foreground text-sm">
-                    Effective Date: {agreement.effectiveDate}
+                    Effective Date: January 15, 2025
                   </p>
                 </div>
 
                 <section>
                   <h2 className="mb-3 text-xl font-semibold">Preamble</h2>
                   <p className="text-sm leading-relaxed">
-                    This agreement is entered into as of the date set forth
-                    above by and between the parties identified below.
+                    This Partnership Agreement (&quot;Agreement&quot;) is
+                    entered into as of the date set forth above by and between
+                    the parties identified below, who agree to the terms and
+                    conditions set forth herein.
                   </p>
                 </section>
 
                 <section>
-                  <h2 className="mb-3 text-xl font-semibold">Parties</h2>
+                  <h2 className="mb-3 text-xl font-semibold">Definitions</h2>
                   <div className="space-y-2 text-sm">
-                    {parties.map((party, index) => (
-                      <p key={party.id}>
-                        <strong>
-                          Party {String.fromCharCode(65 + index)}:
-                        </strong>{' '}
-                        {party.name}, {party.email}
+                    <p>
+                      <strong>Party A:</strong> John Doe, representing ABC
+                      Corporation
+                    </p>
+                    <p>
+                      <strong>Party B:</strong> Jane Smith, representing XYZ
+                      Enterprises
+                    </p>
+                    <p>
+                      <strong>Effective Date:</strong> The date on which this
+                      Agreement becomes binding
+                    </p>
+                  </div>
+                </section>
+
+                <section>
+                  <h2 className="mb-3 text-xl font-semibold">
+                    Terms and Conditions
+                  </h2>
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <h3 className="mb-2 font-semibold">
+                        1. Scope of Agreement
+                      </h3>
+                      <p className="leading-relaxed">
+                        The parties agree to collaborate on the development and
+                        marketing of innovative software solutions for
+                        enterprise clients.
                       </p>
-                    ))}
+                    </div>
+                    <div>
+                      <h3 className="mb-2 font-semibold">2. Obligations</h3>
+                      <p className="leading-relaxed">
+                        Each party shall contribute resources, expertise, and
+                        personnel as outlined in Schedule A attached hereto.
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="mb-2 font-semibold">3. Payment Terms</h3>
+                      <p className="leading-relaxed">
+                        Revenue shall be distributed according to the percentage
+                        ownership outlined in Section 4.2 of this Agreement.
+                      </p>
+                    </div>
                   </div>
                 </section>
 
@@ -190,7 +230,7 @@ export default function FinalizeAgreementPage({
                         </p>
                         {party.hasConfirmed && (
                           <div className="text-primary mt-2 flex items-center gap-2">
-                            <span>✓</span>
+                            <Check className="h-4 w-4" />
                             <span className="text-xs font-medium">
                               Confirmed
                             </span>
@@ -203,45 +243,42 @@ export default function FinalizeAgreementPage({
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Action Buttons */}
         {!currentUserConfirmed && (
           <div className="flex items-center justify-center gap-4">
-            <button onClick={handleCancel} className="min-w-32">
-              ✕ Cancel
-            </button>
-            <button onClick={handleConfirm} className="min-w-32">
-              ✓ Confirm Agreement
-            </button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleCancel}
+              className="min-w-32 bg-transparent"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button size="lg" onClick={handleConfirm} className="min-w-32">
+              <Check className="mr-2 h-4 w-4" />
+              Confirm Agreement
+            </Button>
           </div>
         )}
 
         {/* Party Status */}
-        <div className="mt-6 rounded-lg border p-6">
+        <Card className="mt-6 p-6">
           <h3 className="mb-4 font-semibold">Confirmation Status</h3>
           <div className="space-y-3">
             {parties.map((party) => (
               <div key={party.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      backgroundColor: party.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {party.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
-                  </div>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback style={{ backgroundColor: party.color }}>
+                      {party.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <p className="text-sm font-medium">{party.name}</p>
                     <p className="text-muted-foreground text-xs">
@@ -251,7 +288,7 @@ export default function FinalizeAgreementPage({
                 </div>
                 {party.hasConfirmed ? (
                   <div className="text-primary flex items-center gap-2">
-                    <span>✓</span>
+                    <Check className="h-4 w-4" />
                     <span className="text-sm font-medium">Confirmed</span>
                   </div>
                 ) : (
@@ -260,7 +297,7 @@ export default function FinalizeAgreementPage({
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
