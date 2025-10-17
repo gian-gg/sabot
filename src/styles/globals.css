@@ -210,3 +210,13 @@
 .animate-scroll:hover {
   animation-play-state: paused;
 }
+
+/* -----------------------------------
+   DIALOG OVERRIDES
+------------------------------------ */
+[data-slot='dialog-close']:focus,
+[data-slot='dialog-close']:focus-visible,
+[data-slot='dialog-close'][data-radix-focus-visible] {
+  outline: none !important;
+  box-shadow: none !important;
+}

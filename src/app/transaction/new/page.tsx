@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -10,80 +10,78 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import TransactionLinkSection from '@/components/transaction/new/transaction-link';
-import EmailInvitationDialog from '@/components/email-invitation';
+import { Play, Plus } from 'lucide-react';
 
-const TRANSACTION_LINK = 'http://localhost:3000/transaction/invite/abc123';
+export default function AgreementHomePage() {
+  const router = useRouter(); // Initialize the router
 
-export default function NewTransactionPage() {
-  const [email, setEmail] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleSendInvitation = async () => {
-    if (!email) return;
-    setSending(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    console.log('Sending invitation to:', email);
-    setSending(false);
-    setDialogOpen(false);
-    setEmail('');
+  const handleStartTransaction = () => {
+    // Redirect to the invite page (create flow)
+    router.replace('/transaction/invite');
   };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(TRANSACTION_LINK);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // Optionally handle error
-    }
-  };
-
-  const openDialog = () => setDialogOpen(true);
 
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center p-4 pt-14">
-      <div>
-        <Card className="w-full max-w-2xl">
-          <CardHeader>
-            <CardTitle className="text-xl">Create New Transaction</CardTitle>
-            <CardDescription>
-              Generate a secure transaction link to share with your
-              counterparty. Both parties must be verified to proceed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <TransactionLinkSection
-              link={TRANSACTION_LINK}
-              onCopy={handleCopy}
-              copied={copied}
-              onOpenDialog={openDialog}
-            />
-            <EmailInvitationDialog
-              open={dialogOpen}
-              setOpen={setDialogOpen}
-              email={email}
-              setEmail={setEmail}
-              sending={sending}
-              handleSendInvitation={handleSendInvitation}
-            />
-            <div className="justify-cente flex items-center">
-              <Button disabled size="lg" className="w-full">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Waiting for other party...
+    <div className="bg-background min-h-screen pt-16 pb-4">
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-12 text-center">
+          <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight">
+            Collaborative Agreement Drafting
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg">
+            Create, collaborate, and finalize legal agreements with AI
+            assistance in real-time.
+          </p>
+          <Link href="/agreement/new">
+            <Button size="lg" className="gap-2">
+              <Plus className="h-5 w-5" />
+              Create New Agreement
+            </Button>
+          </Link>
+        </div>
+
+        <div className="mb-12">
+          <h2 className="mb-4 text-2xl font-semibold">See Pactly in Action</h2>
+          <p className="text-muted-foreground mb-6">
+            Watch how teams collaborate on legal documents in real-time with AI
+            assistance.
+          </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Interactive Demo</CardTitle>
+              <CardDescription>
+                Try out the editor with sample content and AI suggestions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-1 items-center">
+              {/* Removed Link component and added onClick to the Button */}
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleStartTransaction} // Call the redirect function on click
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Start Transaction
               </Button>
-            </div>
-            <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
-              <p className="text-sm text-amber-600 dark:text-amber-400">
-                <strong>Important:</strong> Both you and your counterparty must
-                be verified users to proceed with the transaction. Unverified
-                users will be prompted to complete identity verification.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Video Walkthrough</CardTitle>
+              <CardDescription>
+                Watch a 3-minute overview of Sabot&apos;s key features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted hover:bg-muted/80 flex aspect-video cursor-pointer items-center justify-center rounded-lg transition-colors">
+                <Play className="text-muted-foreground h-12 w-12" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

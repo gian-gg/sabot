@@ -1,91 +1,189 @@
-import { Button } from '@/components/ui/button';
-import { Mail } from 'lucide-react';
+'use client';
 
-export default function ReviewInvitationStep({
-  inviterEmail,
-  onDecline,
-  onAccept,
-}: {
-  inviterEmail: string;
-  onDecline: () => void;
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CheckCircle2, Shield, Info } from 'lucide-react';
+
+interface Inviter {
+  name: string;
+  email: string;
+  avatar?: string;
+  trustScore: number;
+  isVerified: boolean;
+  completedTransactions: number;
+}
+
+interface ReviewTransactionInvitationProps {
+  inviter: Inviter;
   onAccept: () => void;
-}) {
+  onDecline: () => void;
+}
+
+export function ReviewTransactionInvitation({
+  inviter,
+  onAccept,
+  onDecline,
+}: ReviewTransactionInvitationProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-3 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
-        <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-400" />
-        <div>
-          <p className="mb-1 text-sm font-medium text-blue-300">
-            Invitation from {inviterEmail}
-          </p>
-          <p className="text-xs text-blue-400/70">
-            They have uploaded their conversation screenshot and are waiting for
-            you to verify the transaction
-          </p>
-        </div>
-      </div>
-      <div className="space-y-4">
-        <h3 className="text-base font-semibold text-white">
-          What happens next?
-        </h3>
-        <div className="border-border bg-muted/50 space-y-3 rounded-lg border p-4">
-          {/* ...existing code for steps 1, 2, 3... */}
-          <div className="flex items-start gap-3">
-            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-blue-400/30 bg-blue-500/20 text-xs font-semibold text-blue-400">
-              1
+    <>
+      <Card>
+        <CardContent className="space-y-6">
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="bg-muted/50 hover:bg-muted/70 group flex w-full items-center gap-4 rounded-lg p-8 py-6 text-left transition-colors"
+          >
+            <Avatar className="ring-primary/20 h-16 w-16 ring-2">
+              <AvatarImage
+                src={inviter.avatar || '/placeholder.svg'}
+                alt={inviter.name}
+              />
+              <AvatarFallback>{inviter.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">{inviter.name}</h3>
+                {inviter.isVerified && (
+                  <CheckCircle2 className="text-primary h-5 w-5" />
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm">{inviter.email}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white">
-                Upload your conversation screenshot
-              </p>
-              <p className="mt-1 text-xs text-neutral-400">
-                This will be cross-referenced with the other party&apos;s upload
-              </p>
+            <Info className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
+          </button>
+
+          <div className="space-y-3">
+            <h4 className="font-semibold">What happens next?</h4>
+            <ul className="text-muted-foreground space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>
+                  You&apos;ll upload a screenshot of your conversation with the
+                  seller
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>
+                  AI will analyze the conversation for safety concerns
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>Both parties must verify identity before proceeding</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>
+                  Transaction details will be recorded on the public ledger
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={onDecline}
+              className="flex-1 bg-transparent"
+            >
+              Decline
+            </Button>
+            <Button onClick={onAccept} className="flex-1">
+              Accept Invitation
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Trust Profile</DialogTitle>
+            <DialogDescription>
+              Detailed information about {inviter.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="ring-primary/20 h-20 w-20 ring-2">
+                <AvatarImage
+                  src={inviter.avatar || '/placeholder.svg'}
+                  alt={inviter.name}
+                />
+                <AvatarFallback className="text-2xl">
+                  {inviter.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-semibold">{inviter.name}</h3>
+                  {inviter.isVerified && (
+                    <CheckCircle2 className="text-primary h-6 w-6" />
+                  )}
+                </div>
+                <p className="text-muted-foreground text-sm">{inviter.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-primary/10 border-primary/30 flex items-center gap-3 rounded-lg border p-4">
+                <Shield className="text-primary h-8 w-8 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Trust Score</p>
+                  <p className="text-2xl font-bold">{inviter.trustScore}%</p>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 grid gap-4 rounded-lg p-4">
+                <div>
+                  <p className="text-muted-foreground text-xs">
+                    Completed Transactions
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {inviter.completedTransactions}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">
+                    Verification Status
+                  </p>
+                  <p className="flex items-center gap-2 text-lg font-semibold">
+                    {inviter.isVerified ? (
+                      <>
+                        <CheckCircle2 className="text-primary h-5 w-5" />
+                        Verified
+                      </>
+                    ) : (
+                      'Unverified'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-primary/30 bg-primary/5 rounded-lg border p-4">
+                <p className="text-primary text-sm">
+                  <strong>Safety Note:</strong> This user has completed{' '}
+                  {inviter.completedTransactions} verified transactions with a{' '}
+                  {inviter.trustScore}% trust score. All transactions are
+                  monitored for safety.
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-1 border-purple-400/30 bg-purple-500/20 text-xs font-semibold text-purple-400">
-              2
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">
-                AI verifies authenticity
-              </p>
-              <p className="mt-1 text-xs text-neutral-400">
-                Our system detects inconsistencies and fraud attempts
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-green-400/30 bg-green-500/20 text-xs font-semibold text-green-400">
-              3
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">
-                Review transaction summary
-              </p>
-              <p className="mt-1 text-xs text-neutral-400">
-                Proceed with a safe, verified transaction
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-3 pt-2">
-        <Button
-          variant="outline"
-          className="flex-1 border-neutral-700 text-neutral-300 hover:bg-white/5"
-          onClick={onDecline}
-        >
-          Decline
-        </Button>
-        <Button
-          className="flex-1 bg-white text-black hover:bg-neutral-200"
-          onClick={onAccept}
-        >
-          Accept & Continue
-        </Button>
-      </div>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

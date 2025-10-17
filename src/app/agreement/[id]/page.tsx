@@ -11,7 +11,7 @@ export default function AgreementProgressPage() {
   const agreementId = params.id as string;
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen py-16">
       <div className="mx-auto max-w-5xl px-6 py-12">
         <div className="mb-8">
           <div className="mb-4 flex items-center justify-between">
