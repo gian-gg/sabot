@@ -90,7 +90,6 @@ export default function TransactionPage({
     );
   }
 
-  const buyer = getUserById('user-1');
   const seller = getUserById('user-2') ?? null;
 
   const handleReport = () => {

@@ -21,6 +21,13 @@ export const ROUTES = {
     VIEW: (id: string) => `/transaction/${id}`,
     ACTIVE: (id: string) => `/transaction/${id}/active`,
   },
+  AGREEMENT: {
+    NEW: '/agreement/new',
+    INVITE: '/agreement/invite',
+    VIEW: (id: string) => `/agreement/${id}`,
+    ACTIVE: (id: string) => `/agreement/${id}/active`,
+    FINALIZE: (id: string) => `/agreement/${id}/finalize`,
+  },
   SOCIALS: {
     GITHUB: 'https://github.com/gian-gg/sabot',
   },

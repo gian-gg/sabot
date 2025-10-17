@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,11 +12,11 @@ import {
 import { Play } from 'lucide-react';
 
 export default function AgreementHomePage() {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
-  const handleStartTransaction = () => {
+  const handleStartAgreement = () => {
     // Redirect to the invite page (create flow)
-    router.replace('/transaction/invite');
+    router.push('/agreement/invite');
   };
 
   return (
@@ -35,20 +35,19 @@ export default function AgreementHomePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border-border/50 bg-card/50 backdrop-blur">
             <CardHeader>
-              <CardTitle>Start New Transaction</CardTitle>
+              <CardTitle>Start New Agreement</CardTitle>
               <CardDescription>
-                Transact and verify using blockchain ledger and AI suggestions
+                Create a collaborative agreement with AI-powered assistance
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 items-center">
-              {/* Removed Link component and added onClick to the Button */}
               <Button
                 className="w-full"
                 size="lg"
-                onClick={handleStartTransaction} // Call the redirect function on click
+                onClick={handleStartAgreement}
               >
                 <Play className="mr-2 h-4 w-4" />
-                Create Transaction
+                Create Agreement
               </Button>
             </CardContent>
           </Card>

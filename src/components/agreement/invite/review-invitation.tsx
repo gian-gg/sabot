@@ -22,23 +22,24 @@ interface Inviter {
   completedTransactions: number;
 }
 
-interface ReviewTransactionInvitationProps {
+interface ReviewAgreementInvitationProps {
   inviter: Inviter;
   onAccept: () => void;
   onDecline: () => void;
 }
 
-export function ReviewTransactionInvitation({
+export function ReviewAgreementInvitation({
   inviter,
   onAccept,
   onDecline,
-}: ReviewTransactionInvitationProps) {
+}: ReviewAgreementInvitationProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <>
       <Card>
         <CardContent className="space-y-6">
+          {/* Header section (clickable to open dialog) */}
           <button
             onClick={() => setDialogOpen(true)}
             className="bg-muted/50 hover:bg-muted/70 group flex w-full items-center gap-4 rounded-lg p-8 py-6 text-left transition-colors"
@@ -50,6 +51,7 @@ export function ReviewTransactionInvitation({
               />
               <AvatarFallback>{inviter.name.charAt(0)}</AvatarFallback>
             </Avatar>
+
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold">{inviter.name}</h3>
@@ -59,34 +61,32 @@ export function ReviewTransactionInvitation({
               </div>
               <p className="text-muted-foreground text-sm">{inviter.email}</p>
             </div>
+
             <Info className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
           </button>
 
+          {/* “What happens next” section */}
           <div className="space-y-3">
             <h4 className="font-semibold">What happens next?</h4>
             <ul className="text-muted-foreground space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>
                 <span>
-                  You&apos;ll upload a screenshot of your conversation with the
-                  seller
+                  You&apos;ll select an agreement template that fits your needs
                 </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>
-                <span>
-                  AI will analyze the conversation for safety concerns
-                </span>
+                <span>Collaborate in real-time with AI-assisted drafting</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>
-                <span>
-                  Transaction details will be recorded on the public ledger
-                </span>
+                <span>Both parties must confirm before finalizing</span>
               </li>
             </ul>
           </div>
 
+          {/* Action buttons */}
           <div className="flex gap-3 pt-4">
             <Button
               variant="outline"
@@ -102,6 +102,7 @@ export function ReviewTransactionInvitation({
         </CardContent>
       </Card>
 
+      {/* Dialog content */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -148,7 +149,7 @@ export function ReviewTransactionInvitation({
                     Completed Transactions
                   </p>
                   <p className="text-lg font-semibold">
-                    {inviter.completedTransactions}
+                    {inviter.completedTransactions ?? 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -170,10 +171,9 @@ export function ReviewTransactionInvitation({
 
               <div className="border-primary/30 bg-primary/5 rounded-lg border p-4">
                 <p className="text-primary text-sm">
-                  <strong>Safety Note:</strong> This user has completed{' '}
-                  {inviter.completedTransactions} verified transactions with a{' '}
-                  {inviter.trustScore}% trust score. All transactions are
-                  monitored for safety.
+                  <strong>Safety Note:</strong> This user has a{' '}
+                  {inviter.trustScore}% trust score. All collaborations are
+                  monitored for safety and compliance.
                 </p>
               </div>
             </div>
