@@ -2,8 +2,8 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CreateTransactionPage } from '@/components/transaction/invite/create-transaction-page';
-import { AcceptTransactionPage } from '@/components/transaction/invite/accept-transaction-page';
+import { CreateTransactionPage } from '@/components/transaction/invite/create-invitation-page';
+import { AcceptTransactionPage } from '@/components/transaction/invite/accept-invitation-page';
 import { Loader2 } from 'lucide-react';
 
 function InvitePageContent() {

@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CheckCircle2, Shield, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckCircle2, Shield, Info } from 'lucide-react';
 
 interface Inviter {
   name: string;
@@ -77,10 +77,6 @@ export function ReviewTransactionInvitation({
                 <span>
                   AI will analyze the conversation for safety concerns
                 </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
-                <span>Both parties must verify identity before proceeding</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>

@@ -2,15 +2,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { ShieldCheck } from 'lucide-react';
 
 interface ProjectQuestionnaireProps {
   onComplete: (
@@ -67,42 +62,31 @@ export function ProjectQuestionnaire({
   };
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center p-6">
-      <Card className="border-border/50 w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="text-2xl">What are you building?</CardTitle>
-          <CardDescription>
+    <Card>
+      <CardContent className="space-y-6">
+        <Label>What are you building?</Label>
+        <Textarea
+          placeholder="e.g., A partnership agreement for a software development project between two companies..."
+          value={response}
+          onChange={(e) => setResponse(e.target.value)}
+          className="min-h-32 resize-none"
+        />
+        <div className="border-primary/30 bg-primary/10 flex items-center gap-2 rounded-lg border p-3">
+          <ShieldCheck className="text-primary h-4 w-4 flex-shrink-0" />
+          <p className="text-primary text-xs">
             Tell us about your agreement. We&apos;ll generate personalized idea
             blocks to help you get started.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            placeholder="e.g., A partnership agreement for a software development project between two companies..."
-            value={response}
-            onChange={(e) => setResponse(e.target.value)}
-            className="min-h-32 resize-none"
-          />
-          <Button
-            onClick={handleSubmit}
-            disabled={!response.trim() || isGenerating}
-            className="w-full"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-                Generating Ideas...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate Idea Blocks
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+          </p>
+        </div>
+        <Button
+          onClick={handleSubmit}
+          disabled={!response.trim() || isGenerating}
+          className="w-full"
+          size="lg"
+        >
+          {isGenerating ? <>Generating Ideas...</> : <>Generate Idea Blocks</>}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

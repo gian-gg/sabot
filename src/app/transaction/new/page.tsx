@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Play, Plus } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 export default function AgreementHomePage() {
   const router = useRouter(); // Initialize the router
@@ -31,28 +30,14 @@ export default function AgreementHomePage() {
             Create, collaborate, and finalize legal agreements with AI
             assistance in real-time.
           </p>
-          <Link href="/agreement/new">
-            <Button size="lg" className="gap-2">
-              <Plus className="h-5 w-5" />
-              Create New Agreement
-            </Button>
-          </Link>
-        </div>
-
-        <div className="mb-12">
-          <h2 className="mb-4 text-2xl font-semibold">See Pactly in Action</h2>
-          <p className="text-muted-foreground mb-6">
-            Watch how teams collaborate on legal documents in real-time with AI
-            assistance.
-          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border-border/50 bg-card/50 backdrop-blur">
             <CardHeader>
-              <CardTitle>Interactive Demo</CardTitle>
+              <CardTitle>Start New Transaction</CardTitle>
               <CardDescription>
-                Try out the editor with sample content and AI suggestions
+                Transact and verify using blockchain ledger and AI suggestions
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-1 items-center">
@@ -63,7 +48,7 @@ export default function AgreementHomePage() {
                 onClick={handleStartTransaction} // Call the redirect function on click
               >
                 <Play className="mr-2 h-4 w-4" />
-                Start Transaction
+                Create Transaction
               </Button>
             </CardContent>
           </Card>

@@ -51,7 +51,7 @@ export function CreateInvitationPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center p-4 pt-16">
+    <div className="flex min-h-screen w-screen items-center justify-center p-4 pt-18">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-xl">Create New Agreement</CardTitle>

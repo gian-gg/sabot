@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Shield, Mail } from 'lucide-react';
 import { mockUser, mockInviter } from '@/lib/mock-data/agreements';
@@ -25,17 +25,16 @@ export function PartiesInfo() {
             className="border-border bg-card/50 rounded-lg border-2 p-6"
           >
             <div className="flex items-start gap-4">
-              <Avatar className="ring-primary/20 h-16 w-16 ring-2">
-                <AvatarImage
-                  src={party.avatar || '/placeholder.svg'}
-                  alt={party.name}
-                />
+              <Avatar
+                className="ring-primary/20 h-16 w-16 ring-2"
+                style={{ backgroundColor: party.color }}
+              >
                 <AvatarFallback>{party.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <h3 className="text-lg font-semibold">{party.name}</h3>
-                  {party.isVerified && (
+                  {party.verified && (
                     <CheckCircle2 className="text-primary h-5 w-5" />
                   )}
                 </div>
@@ -50,7 +49,7 @@ export function PartiesInfo() {
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="text-primary h-4 w-4" />
                     <span className="font-medium">
-                      Trust Score: {party.trustScore}%
+                      Trust Score: {party.trustScore ?? 0}%
                     </span>
                   </div>
                 </div>

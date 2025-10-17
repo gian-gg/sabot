@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 import {
   Card,
   CardHeader,
@@ -9,97 +11,88 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ReviewInvitation } from '@/components/agreement/invite/review-invitation';
-import { Play } from 'lucide-react';
-import Link from 'next/link';
-import { mockInviter } from '@/lib/mock-data/agreements';
+import { ReviewAgreementInvitation } from '@/components/agreement/invite/review-invitation';
+import { ProjectQuestionnaire } from '@/components/agreement/editor/project-questionnaire';
 
-type Step = 'review' | 'demo';
+type Step = 'review' | 'questionnaire';
 
 interface AcceptInvitationPageProps {
   invitationId: string;
 }
 
+// Mock inviter data - replace with actual data fetching
+const mockInviter = {
+  name: 'John Doe',
+  email: 'john.doe@example.com',
+  avatar: undefined,
+  trustScore: 92,
+  isVerified: true,
+  completedTransactions: 15,
+};
+
 export function AcceptInvitationPage({
   invitationId,
 }: AcceptInvitationPageProps) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>('review');
 
   const handleAcceptInvite = () => {
-    setStep('demo');
+    setStep('questionnaire');
+  };
+
+  const handleDecline = () => {
+    router.push(ROUTES.HOME.ROOT);
+  };
+
+  const handleQuestionnaireComplete = () => {
+    // Navigate directly to the editor
+    router.push(`/agreement/${invitationId}/active`);
+  };
+
+  const getStepNumber = () => {
+    switch (step) {
+      case 'review':
+        return 1;
+      case 'questionnaire':
+        return 2;
+      default:
+        return 1;
+    }
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-16">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <CardTitle className="text-xl">Agreement Invitation</CardTitle>
               <CardDescription>
-                You&apos;ve been invited to collaborate on an agreement
+                {step === 'review' &&
+                  "You've been invited to collaborate on an agreement"}
+                {step === 'questionnaire' &&
+                  'Tell us about your agreement to get started'}
               </CardDescription>
             </div>
             <Badge
               variant="outline"
               className="border-primary/30 bg-primary/10 text-primary"
             >
-              Step {step === 'review' ? '1' : '2'}/2
+              Step {getStepNumber()}/2
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           {step === 'review' && (
-            <ReviewInvitation
+            <ReviewAgreementInvitation
               inviter={mockInviter}
               onAccept={handleAcceptInvite}
+              onDecline={handleDecline}
             />
           )}
 
-          {step === 'demo' && (
-            <div className="space-y-6">
-              <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-semibold">See Pactly in Action</h3>
-                <p className="text-muted-foreground">
-                  Watch how teams collaborate on legal documents in real-time
-                  with AI assistance.
-                </p>
-              </div>
-
-              <div className="grid gap-4">
-                <Card className="border-border/50 bg-card/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Interactive Demo</CardTitle>
-                    <CardDescription>
-                      Try out the editor with sample content and AI suggestions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Link href={`/agreement/${invitationId}/active`}>
-                      <Button className="w-full" size="lg">
-                        <Play className="mr-2 h-4 w-4" />
-                        Launch Demo Editor
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border/50 bg-card/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Video Walkthrough</CardTitle>
-                    <CardDescription>
-                      Watch a 3-minute overview of Pactly&apos;s key features
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted hover:bg-muted/80 flex aspect-video cursor-pointer items-center justify-center rounded-lg transition-colors">
-                      <Play className="text-muted-foreground h-12 w-12" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          {step === 'questionnaire' && (
+            <ProjectQuestionnaire onComplete={handleQuestionnaireComplete} />
           )}
         </CardContent>
       </Card>
