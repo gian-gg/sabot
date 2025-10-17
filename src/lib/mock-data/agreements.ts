@@ -78,6 +78,10 @@ export const mockParties: Party[] = [
   },
 ];
 
+// Individual mock users (for v0 compatibility)
+export const mockUser: Party = mockParties[0];
+export const mockInviter: Party = mockParties[1];
+
 // Mock sections for a partnership agreement
 export const mockSections: Section[] = [
   {
