@@ -4,10 +4,15 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Check, X, Loader2, ArrowLeft } from 'lucide-react';
+import { Check, X, Loader2, ArrowLeft, FileCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { PartiesInfo } from '@/components/agreement/id/parties-info';
+import { AgreementDetails } from '@/components/agreement/id/agreement-details';
+import { DocumentStructure } from '@/components/agreement/id/document-structure';
+import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
+import { mockUser, mockInviter } from '@/lib/mock-data/agreements';
 
 interface Party {
   id: string;
@@ -17,20 +22,20 @@ interface Party {
   hasConfirmed: boolean;
 }
 
-// Mock parties data
+// Mock parties data - extended from mock-data
 const mockParties: Party[] = [
   {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    color: '#1DB954',
+    id: mockUser.id,
+    name: mockUser.name,
+    email: mockUser.email,
+    color: mockUser.color,
     hasConfirmed: false,
   },
   {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    color: '#FF6B6B',
+    id: mockInviter.id,
+    name: mockInviter.name,
+    email: mockInviter.email,
+    color: mockInviter.color,
     hasConfirmed: false,
   },
 ];
@@ -102,10 +107,10 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto max-w-5xl px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8">
         {/* Status Banner */}
         {waitingForOthers && (
-          <Card className="bg-primary/5 border-primary/20 mb-6 p-6">
+          <Card className="bg-primary/5 border-primary/20 mb-8 p-6">
             <div className="flex items-center gap-3">
               <Loader2 className="text-primary h-5 w-5 animate-spin" />
               <div>
@@ -126,7 +131,7 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
         )}
 
         {allConfirmed && (
-          <Card className="bg-primary/10 border-primary/30 mb-6 p-6">
+          <Card className="bg-primary/10 border-primary/30 mb-8 p-6">
             <div className="flex items-center gap-3">
               <Check className="text-primary h-5 w-5" />
               <div>
@@ -142,162 +147,101 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
           </Card>
         )}
 
-        {/* Document Preview */}
-        <Card className="mb-6 overflow-hidden">
-          <div className="bg-muted/30 p-8">
-            <div className="bg-background mx-auto max-w-3xl rounded-lg p-12 shadow-lg">
-              <div className="text-foreground/90 space-y-6">
-                <div className="border-border border-b pb-6 text-center">
-                  <h1 className="mb-2 text-3xl font-bold">
-                    Partnership Agreement
-                  </h1>
+        {/* Two Column Layout */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Left Column - Agreement Overview */}
+          <div className="space-y-8">
+            {/* Confirmation Status Card */}
+            <Card className="p-6">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="bg-primary/10 rounded-lg p-2">
+                  <FileCheck className="text-primary h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Confirmation Status</h3>
                   <p className="text-muted-foreground text-sm">
-                    Effective Date: January 15, 2025
+                    Review party confirmations
                   </p>
                 </div>
-
-                <section>
-                  <h2 className="mb-3 text-xl font-semibold">Preamble</h2>
-                  <p className="text-sm leading-relaxed">
-                    This Partnership Agreement (&quot;Agreement&quot;) is
-                    entered into as of the date set forth above by and between
-                    the parties identified below, who agree to the terms and
-                    conditions set forth herein.
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="mb-3 text-xl font-semibold">Definitions</h2>
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <strong>Party A:</strong> John Doe, representing ABC
-                      Corporation
-                    </p>
-                    <p>
-                      <strong>Party B:</strong> Jane Smith, representing XYZ
-                      Enterprises
-                    </p>
-                    <p>
-                      <strong>Effective Date:</strong> The date on which this
-                      Agreement becomes binding
-                    </p>
-                  </div>
-                </section>
-
-                <section>
-                  <h2 className="mb-3 text-xl font-semibold">
-                    Terms and Conditions
-                  </h2>
-                  <div className="space-y-4 text-sm">
-                    <div>
-                      <h3 className="mb-2 font-semibold">
-                        1. Scope of Agreement
-                      </h3>
-                      <p className="leading-relaxed">
-                        The parties agree to collaborate on the development and
-                        marketing of innovative software solutions for
-                        enterprise clients.
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="mb-2 font-semibold">2. Obligations</h3>
-                      <p className="leading-relaxed">
-                        Each party shall contribute resources, expertise, and
-                        personnel as outlined in Schedule A attached hereto.
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="mb-2 font-semibold">3. Payment Terms</h3>
-                      <p className="leading-relaxed">
-                        Revenue shall be distributed according to the percentage
-                        ownership outlined in Section 4.2 of this Agreement.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <h2 className="mb-3 text-xl font-semibold">Signatures</h2>
-                  <div className="mt-6 grid grid-cols-2 gap-8">
-                    {parties.map((party) => (
-                      <div
-                        key={party.id}
-                        className="border-border border-t pt-4"
-                      >
-                        <p className="text-sm font-semibold">{party.name}</p>
+              </div>
+              <div className="space-y-3">
+                {parties.map((party) => (
+                  <div
+                    key={party.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback
+                          style={{ backgroundColor: party.color }}
+                        >
+                          {party.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{party.name}</p>
                         <p className="text-muted-foreground text-xs">
                           {party.email}
                         </p>
-                        {party.hasConfirmed && (
-                          <div className="text-primary mt-2 flex items-center gap-2">
-                            <Check className="h-4 w-4" />
-                            <span className="text-xs font-medium">
-                              Confirmed
-                            </span>
-                          </div>
-                        )}
                       </div>
-                    ))}
+                    </div>
+                    {party.hasConfirmed ? (
+                      <div className="text-primary flex items-center gap-2">
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm font-medium">Confirmed</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        Pending
+                      </span>
+                    )}
                   </div>
-                </section>
+                ))}
               </div>
-            </div>
-          </div>
-        </Card>
 
-        {/* Action Buttons */}
-        {!currentUserConfirmed && (
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleCancel}
-              className="min-w-32 bg-transparent"
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button size="lg" onClick={handleConfirm} className="min-w-32">
-              <Check className="mr-2 h-4 w-4" />
-              Confirm Agreement
-            </Button>
-          </div>
-        )}
-
-        {/* Party Status */}
-        <Card className="mt-6 p-6">
-          <h3 className="mb-4 font-semibold">Confirmation Status</h3>
-          <div className="space-y-3">
-            {parties.map((party) => (
-              <div key={party.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback style={{ backgroundColor: party.color }}>
-                      {party.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{party.name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {party.email}
-                    </p>
-                  </div>
+              {/* Action Buttons */}
+              {!currentUserConfirmed && (
+                <div className="mt-6 flex items-center justify-center gap-4 border-t pt-6">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleCancel}
+                    className="min-w-32 bg-transparent"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={handleConfirm}
+                    className="min-w-32"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Confirm Agreement
+                  </Button>
                 </div>
-                {party.hasConfirmed ? (
-                  <div className="text-primary flex items-center gap-2">
-                    <Check className="h-4 w-4" />
-                    <span className="text-sm font-medium">Confirmed</span>
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground text-sm">Pending</span>
-                )}
-              </div>
-            ))}
+              )}
+            </Card>
+
+            {/* Parties Info */}
+            <PartiesInfo />
+
+            {/* Agreement Details */}
+            <AgreementDetails />
           </div>
-        </Card>
+
+          {/* Right Column - Document Structure & AI */}
+          <div className="space-y-8">
+            {/* Document Structure */}
+            <DocumentStructure />
+
+            {/* AI Suggestions */}
+            <AISuggestions />
+          </div>
+        </div>
       </div>
     </div>
   );
