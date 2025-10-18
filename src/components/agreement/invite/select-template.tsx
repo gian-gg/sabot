@@ -14,7 +14,7 @@ import {
   ShoppingCart,
   FileText,
 } from 'lucide-react';
-import { mockTemplates } from '@/lib/mock-data/agreements';
+import { agreementTemplates } from '@/lib/mock-data/agreements';
 
 interface SelectTemplateProps {
   onSelect: (templateId: string) => void;
@@ -39,7 +39,7 @@ export function SelectTemplate({ onSelect }: SelectTemplateProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {mockTemplates.map((template) => {
+          {agreementTemplates.map((template) => {
             const Icon = iconMap[template.icon as keyof typeof iconMap];
             return (
               <button
@@ -55,24 +55,9 @@ export function SelectTemplate({ onSelect }: SelectTemplateProps) {
                     <h3 className="mb-1 text-lg font-semibold">
                       {template.name}
                     </h3>
-                    <p className="text-muted-foreground mb-3 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       {template.description}
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      {template.sections.slice(0, 3).map((section) => (
-                        <span
-                          key={section}
-                          className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs"
-                        >
-                          {section}
-                        </span>
-                      ))}
-                      {template.sections.length > 3 && (
-                        <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs">
-                          +{template.sections.length - 3} more
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </button>
