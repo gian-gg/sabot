@@ -12,12 +12,12 @@ import {
 import type {
   VerificationStep,
   GovernmentIdInfo,
-  IdType,
+  UserIDType,
 } from '@/types/verify';
 
 export default function VerifyPage() {
   const [step, setStep] = useState<VerificationStep>('ID_SELECTION');
-  const [selectedIDType, setSelectedIDType] = useState<IdType | null>(null);
+  const [userID, setUserID] = useState<UserIDType | null>(null);
   const [userData, setUserData] = useState<GovernmentIdInfo | null>(null);
 
   const goToNextStep = () => {
@@ -52,15 +52,16 @@ export default function VerifyPage() {
       case 'ID_SELECTION':
         return (
           <IdSelection
-            selectedIDType={selectedIDType}
-            setSelectedIDType={setSelectedIDType}
+            selectedIDType={userID}
+            setSelectedIDType={setUserID}
             onNext={goToNextStep}
           />
         );
       case 'ID_CAPTURE':
         return (
           <IdCapture
-            selectedIdType={selectedIDType}
+            selectedIDType={userID}
+            setSelectedIDType={setUserID}
             userData={userData}
             setUserData={setUserData}
             onNext={goToNextStep}
@@ -76,8 +77,8 @@ export default function VerifyPage() {
       default:
         return (
           <IdSelection
-            selectedIDType={selectedIDType}
-            setSelectedIDType={setSelectedIDType}
+            selectedIDType={userID}
+            setSelectedIDType={setUserID}
             onNext={goToNextStep}
           />
         );

@@ -11,17 +11,17 @@ import NavigationButtons from '../components/navigation-buttons';
 
 import type { StepNavProps } from '@/types/verify';
 import { idOptions } from '@/constants/verify';
-import type { IdType } from '@/types/verify';
+import type { IdType, UserIDType } from '@/types/verify';
 
 export function IdSelection({
   onNext,
   selectedIDType,
   setSelectedIDType,
 }: StepNavProps & {
-  selectedIDType: IdType | null;
-  setSelectedIDType: (id: IdType | null) => void;
+  selectedIDType: UserIDType | null;
+  setSelectedIDType: (arg: UserIDType | null) => void;
 }) {
-  const currentValue = selectedIDType ?? idOptions[0].id;
+  const currentValue = selectedIDType?.type ?? idOptions[0].id;
 
   return (
     <Card>
@@ -35,7 +35,9 @@ export function IdSelection({
       <CardContent>
         <RadioGroup
           value={currentValue}
-          onValueChange={(val) => setSelectedIDType(val as IdType)}
+          onValueChange={(val) =>
+            setSelectedIDType({ type: val as IdType, file: null })
+          }
           className="gap-4"
         >
           {idOptions.map((option) => (
@@ -52,7 +54,7 @@ export function IdSelection({
         <NavigationButtons
           onNext={() => {
             if (!selectedIDType) {
-              setSelectedIDType(idOptions[0].id);
+              setSelectedIDType({ type: idOptions[0].id, file: null });
             }
             onNext();
           }}

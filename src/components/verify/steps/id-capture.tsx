@@ -12,18 +12,24 @@ import PreviewForm from '../components/upload-id/preview-form';
 
 import { extractID } from '@/lib/gemini/verify';
 
-import type { GovernmentIdInfo, StepNavProps, IdType } from '@/types/verify';
+import type {
+  GovernmentIdInfo,
+  StepNavProps,
+  UserIDType,
+} from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
 
 export function IdCapture({
   onNext,
   onPrev,
-  selectedIdType,
+  selectedIDType,
+  setSelectedIDType,
   userData,
   setUserData,
 }: StepNavProps & {
-  selectedIdType: IdType | null;
+  selectedIDType: UserIDType | null;
+  setSelectedIDType: (arg: UserIDType | null) => void;
   userData: GovernmentIdInfo | null;
   setUserData: (u: GovernmentIdInfo | null) => void;
 }) {
@@ -31,7 +37,6 @@ export function IdCapture({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [form, setForm] = useState<GovernmentIdInfo | null>(null);
 
@@ -49,7 +54,7 @@ export function IdCapture({
 
   // validate file, show preview, and process data
   const handleFiles = async (files: FileList | null) => {
-    if (!selectedIdType) {
+    if (!selectedIDType?.type) {
       setError('Please select an ID type first.');
       return;
     }
@@ -74,13 +79,13 @@ export function IdCapture({
 
     setError(null);
     setIsUploading(true);
-    setFile(null);
+    setSelectedIDType({ type: selectedIDType.type, file: null });
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
-    setFile(f);
+    setSelectedIDType({ type: selectedIDType.type, file: f });
 
-    const data = await extractID(selectedIdType, f);
+    const data = await extractID(selectedIDType.type, f);
 
     if (data.notes) {
       console.warn('⚠️ Quality Warning:', data.notes);
@@ -125,6 +130,54 @@ export function IdCapture({
     }
   };
 
+  const handleBackButton = () => {
+    // Clear selected file and preview when going back
+    setSelectedIDType({ type: selectedIDType?.type ?? 'passport', file: null });
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setError(null);
+    setForm(null);
+    setUserData(null);
+    onPrev && onPrev();
+  };
+
+  const handleDisableNext = (): boolean => {
+    if (isUploading) return true;
+    if (!selectedIDType?.file) return true;
+    if (userData?.notes) return true;
+    if (!userData) return true;
+
+    // required fields to consider present for progressing.
+    // expiryDate is ignored for UMID IDs.
+    const requiredFields: Array<keyof GovernmentIdInfo> = [
+      'idType',
+      'firstName',
+      'lastName',
+      'idNumber',
+      'dateOfBirth',
+      'expiryDate',
+    ];
+
+    const missing = requiredFields.some((field) => {
+      if (field === 'expiryDate' && selectedIDType?.type === 'umid') {
+        return false; // ignore expiry for UMID
+      }
+
+      const val = (userData as GovernmentIdInfo)[field];
+
+      // idType is not a string so check null/undefined only
+      if (field === 'idType') {
+        return val === null || val === undefined;
+      }
+
+      return val === null || val === undefined || String(val).trim() === '';
+    });
+
+    return missing;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -136,7 +189,7 @@ export function IdCapture({
       </CardHeader>
       <CardContent>
         {/* Upload area (shows uploader or preview) */}
-        {!file ? (
+        {!selectedIDType?.file ? (
           <Upload
             openFileDialog={openFileDialog}
             onKeyDown={onKeyDown}
@@ -148,7 +201,7 @@ export function IdCapture({
           />
         ) : (
           <PreviewUpload
-            file={file}
+            file={selectedIDType?.file}
             previewUrl={previewUrl}
             isUploading={isUploading}
             openFileDialog={openFileDialog}
@@ -183,7 +236,7 @@ export function IdCapture({
           />
         )}
 
-        <ul className="text-muted-foreground mb-6 list-inside list-disc space-y-1 text-sm">
+        <ul className="text-muted-foreground mt-4 mb-6 list-inside list-disc space-y-1 text-sm">
           <li>Avoid glare and shadows.</li>
           <li>Use a well-lit area.</li>
           <li>Ensure all text is readable.</li>
@@ -192,7 +245,8 @@ export function IdCapture({
         {/* Navigation buttons */}
         <NavigationButtons
           onNext={onNext}
-          onPrev={onPrev}
+          disableNext={handleDisableNext()}
+          onPrev={handleBackButton}
           isUploading={isUploading}
         />
       </CardContent>

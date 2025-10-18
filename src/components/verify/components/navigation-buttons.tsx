@@ -6,12 +6,14 @@ import type { StepNavProps } from '@/types/verify';
 type NavigationButtonsProps = Omit<StepNavProps, 'onPrev'> & {
   onPrev?: StepNavProps['onPrev'];
   isUploading: boolean;
+  disableNext?: boolean;
 };
 
 const NavigationButtons = ({
   onNext,
   onPrev,
   isUploading,
+  disableNext = false,
 }: NavigationButtonsProps) => {
   return (
     <div className={`flex ${onPrev ? 'justify-between' : 'justify-end'}`}>
@@ -28,7 +30,7 @@ const NavigationButtons = ({
       <Button
         onClick={onNext}
         className="transition-all duration-150 active:scale-[0.98]"
-        disabled={isUploading}
+        disabled={isUploading || disableNext}
       >
         Continue
       </Button>

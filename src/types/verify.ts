@@ -12,8 +12,12 @@ export interface StepNavProps {
 
 export type IdType = 'passport' | 'umid' | 'philsys' | 'drivers_license';
 
+export type UserIDType = {
+  type: IdType;
+  file: File | null;
+};
+
 export type GovernmentIdInfo = {
-  id: string; // Added to match the return pattern
   idType: IdType | null;
   firstName: string | null;
   lastName: string | null;
