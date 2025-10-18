@@ -2,7 +2,6 @@ import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import type { GovernmentIdInfo } from '@/types/verify';
 import { getFormValueOrNull } from '@/lib/utils/helpers';
 
@@ -15,31 +14,70 @@ const PreviewForm = ({
   setForm: React.Dispatch<React.SetStateAction<GovernmentIdInfo | null>>;
   setUserData: (u: GovernmentIdInfo | null) => void;
 }) => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  // Refs to avoid re-creating handlers and to minimize re-renders
+  const formRef = React.useRef<HTMLFormElement | null>(null);
+  const latestExtractedRef = React.useRef<GovernmentIdInfo | null>(
+    extractedData
+  );
+  const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const lastSentSnapshotRef = React.useRef<string | null>(null);
 
-    const updated: GovernmentIdInfo | null = extractedData
-      ? {
-          ...extractedData,
-          idNumber: getFormValueOrNull(formData.get('idNumber')),
-          firstName: getFormValueOrNull(formData.get('firstName')),
-          middleName: getFormValueOrNull(formData.get('middleName')),
-          lastName: getFormValueOrNull(formData.get('lastName')),
-          dateOfBirth: getFormValueOrNull(formData.get('dateOfBirth')),
-          issueDate: getFormValueOrNull(formData.get('issueDate')),
-          expiryDate: getFormValueOrNull(formData.get('expiryDate')),
-          address: getFormValueOrNull(formData.get('address')),
-          sex: getFormValueOrNull(formData.get('sex')),
-        }
-      : null;
+  React.useEffect(() => {
+    latestExtractedRef.current = extractedData;
+  }, [extractedData]);
 
-    setForm(() => updated);
-    setUserData(updated);
-  };
+  // Debounced autosave to avoid excessive updates on every keystroke
+  const scheduleAutoSave = React.useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      const formEl = formRef.current;
+      if (!formEl) return;
+      const formData = new FormData(formEl);
+      const base = latestExtractedRef.current;
+
+      const updated: GovernmentIdInfo | null = base
+        ? {
+            ...base,
+            idNumber: getFormValueOrNull(formData.get('idNumber')),
+            firstName: getFormValueOrNull(formData.get('firstName')),
+            middleName: getFormValueOrNull(formData.get('middleName')),
+            lastName: getFormValueOrNull(formData.get('lastName')),
+            dateOfBirth: getFormValueOrNull(formData.get('dateOfBirth')),
+            issueDate: getFormValueOrNull(formData.get('issueDate')),
+            expiryDate: getFormValueOrNull(formData.get('expiryDate')),
+            address: getFormValueOrNull(formData.get('address')),
+            sex: getFormValueOrNull(formData.get('sex')),
+          }
+        : null;
+
+      // Only propagate if there's a real change to minimize upstream re-renders
+      const snapshot = JSON.stringify(updated);
+      if (snapshot !== lastSentSnapshotRef.current) {
+        setForm(() => updated);
+        setUserData(updated);
+        lastSentSnapshotRef.current = snapshot;
+      }
+    }, 300);
+  }, [setForm, setUserData]);
+
+  React.useEffect(
+    () => () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    },
+    []
+  );
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+    <form
+      ref={formRef}
+      onInput={scheduleAutoSave}
+      onChange={scheduleAutoSave}
+      className="mb-8 space-y-4"
+    >
       {extractedData?.notes && (
         <div
           role="alert"
@@ -99,6 +137,15 @@ const PreviewForm = ({
           />
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="sex">Sex</Label>
+          <Input
+            id="sex"
+            name="sex"
+            defaultValue={extractedData?.sex ?? ''}
+            placeholder="Sex"
+          />
+        </div>
+        <div className="space-y-1.5">
           <Label htmlFor="issueDate">Issue Date</Label>
           <Input
             id="issueDate"
@@ -128,19 +175,6 @@ const PreviewForm = ({
             placeholder="Address"
           />
         </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="sex">Sex</Label>
-          <Input
-            id="sex"
-            name="sex"
-            defaultValue={extractedData?.sex ?? ''}
-            placeholder="Sex"
-          />
-        </div>
-      </div>
-      <div className="flex justify-end pt-2">
-        <Button type="submit">Save</Button>
       </div>
     </form>
   );
