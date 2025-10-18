@@ -140,7 +140,7 @@ export function IdCapture({
     setError(null);
     setForm(null);
     setUserData(null);
-    onPrev && onPrev();
+    if (onPrev) onPrev();
   };
 
   const handleDisableNext = (): boolean => {

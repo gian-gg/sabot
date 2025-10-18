@@ -1,15 +1,14 @@
 'use client';
 
 interface TabNavigationProps {
-  activeTab: 'transactions' | 'contracts' | 'verification';
-  onTabChange: (tab: 'transactions' | 'contracts' | 'verification') => void;
+  activeTab: 'transactions' | 'contracts';
+  onTabChange: (tab: 'transactions' | 'contracts') => void;
 }
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   const tabs = [
     { id: 'transactions' as const, label: 'Transactions' },
     { id: 'contracts' as const, label: 'Active Contracts' },
-    { id: 'verification' as const, label: 'Verification' },
   ];
 
   return (
