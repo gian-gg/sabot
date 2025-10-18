@@ -38,7 +38,14 @@ export async function GET(request: Request) {
         const newWallet = ethers.Wallet.createRandom();
         const publicAddress = newWallet.address;
         const privateKey = newWallet.privateKey;
+
+        if (!newWallet.mnemonic) {
+          console.error('Wallet creation failed to generate a mnemonic.');
+          return new Response('Wallet creation failed.', { status: 500 });
+        }
+
         const mnemonic = newWallet.mnemonic.phrase;
+
         const { error: updateError } = await supabase
           .from('user_wallet')
           .insert([{ address: publicAddress }])
