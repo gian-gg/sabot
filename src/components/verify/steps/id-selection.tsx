@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,19 +7,22 @@ import {
 } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import NavigationButtons from '../components/navigation-buttons';
 
-import type { StepNavProps } from '../../../types/verify';
+import type { StepNavProps } from '@/types/verify';
+import { idOptions } from '@/constants/verify';
+import type { IdType } from '@/types/verify';
 
-type IdSelectionProps = StepNavProps;
+export function IdSelection({
+  onNext,
+  selectedIDType,
+  setSelectedIDType,
+}: StepNavProps & {
+  selectedIDType: IdType | null;
+  setSelectedIDType: (id: IdType | null) => void;
+}) {
+  const currentValue = selectedIDType ?? idOptions[0].id;
 
-const idOptions = [
-  { id: 'passport', label: 'Passport' },
-  { id: 'umid', label: 'UMID' },
-  { id: 'philsys', label: 'PhilSys ID' },
-  { id: 'drivers_license', label: "Driver's License" },
-];
-
-export function IdSelection({ onNext }: IdSelectionProps) {
   return (
     <Card>
       <CardHeader>
@@ -31,7 +33,11 @@ export function IdSelection({ onNext }: IdSelectionProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <RadioGroup defaultValue={idOptions[0].id} className="gap-4">
+        <RadioGroup
+          value={currentValue}
+          onValueChange={(val) => setSelectedIDType(val as IdType)}
+          className="gap-4"
+        >
           {idOptions.map((option) => (
             <Label
               key={option.id}
@@ -43,12 +49,15 @@ export function IdSelection({ onNext }: IdSelectionProps) {
             </Label>
           ))}
         </RadioGroup>
-        <Button
-          onClick={onNext}
-          className="mt-6 w-full transition-all duration-150 active:scale-[0.98]"
-        >
-          Continue
-        </Button>
+        <NavigationButtons
+          onNext={() => {
+            if (!selectedIDType) {
+              setSelectedIDType(idOptions[0].id);
+            }
+            onNext();
+          }}
+          isUploading={false}
+        />
       </CardContent>
     </Card>
   );

@@ -10,9 +10,11 @@ export interface StepNavProps {
   onPrev?: () => void;
 }
 
+export type IdType = 'passport' | 'umid' | 'philsys' | 'drivers_license';
+
 export type GovernmentIdInfo = {
   id: string; // Added to match the return pattern
-  idType: string | null;
+  idType: IdType | null;
   firstName: string | null;
   lastName: string | null;
   middleName: string | null;

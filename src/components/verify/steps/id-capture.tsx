@@ -6,24 +6,33 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { maxSizeUploadIDDocument } from '@/constants/upload';
+import { maxSizeUploadIDDocument } from '@/constants/verify';
 import NavigationButtons from '../components/navigation-buttons';
 import PreviewForm from '../components/upload-id/preview-form';
 
 import { extractID } from '@/lib/gemini/verify';
 
-import type { GovernmentIdInfo, StepNavProps } from '@/types/verify';
+import type { GovernmentIdInfo, StepNavProps, IdType } from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
 
-export function IdCapture({ onNext, onPrev }: StepNavProps) {
+export function IdCapture({
+  onNext,
+  onPrev,
+  selectedIdType,
+  userData,
+  setUserData,
+}: StepNavProps & {
+  selectedIdType: IdType | null;
+  userData: GovernmentIdInfo | null;
+  setUserData: (u: GovernmentIdInfo | null) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [extracted, setExtracted] = useState<GovernmentIdInfo | null>(null);
   const [form, setForm] = useState<GovernmentIdInfo | null>(null);
 
   // cleanup preview URL when unmounted or changed
@@ -40,6 +49,10 @@ export function IdCapture({ onNext, onPrev }: StepNavProps) {
 
   // validate file, show preview, and process data
   const handleFiles = async (files: FileList | null) => {
+    if (!selectedIdType) {
+      setError('Please select an ID type first.');
+      return;
+    }
     if (!files || files.length === 0) return;
     if (files.length > 1) {
       setError('Please upload only one file.');
@@ -67,13 +80,13 @@ export function IdCapture({ onNext, onPrev }: StepNavProps) {
     setPreviewUrl(url);
     setFile(f);
 
-    const data = await extractID(f);
+    const data = await extractID(selectedIdType, f);
 
     if (data.notes) {
       console.warn('⚠️ Quality Warning:', data.notes);
     }
 
-    setExtracted(data as GovernmentIdInfo);
+    setUserData(data as GovernmentIdInfo);
     setForm(data as GovernmentIdInfo);
 
     // slight delay to keep spinner visible for better UX
@@ -162,7 +175,13 @@ export function IdCapture({ onNext, onPrev }: StepNavProps) {
         )}
 
         {/* Extracted details form (editable) */}
-        {form && <PreviewForm extractedData={extracted} setForm={setForm} />}
+        {form && (
+          <PreviewForm
+            extractedData={userData}
+            setUserData={setUserData}
+            setForm={setForm}
+          />
+        )}
 
         <ul className="text-muted-foreground mb-6 list-inside list-disc space-y-1 text-sm">
           <li>Avoid glare and shadows.</li>

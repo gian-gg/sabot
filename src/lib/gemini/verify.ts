@@ -1,9 +1,9 @@
 'use server';
 
 import { GoogleGenAI, Part } from '@google/genai';
-import type { GovernmentIdInfo } from '@/types/verify';
+import type { GovernmentIdInfo, IdType } from '@/types/verify';
 
-import { idExtractionPrompt as prompt, geminiModel } from '@/constants/gemini';
+import { idExtractionPromptTemplate, geminiModel } from '@/constants/gemini';
 
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
@@ -13,12 +13,15 @@ if (!API_KEY) {
 }
 const ai = new GoogleGenAI({}); // Gemini client instance
 
-export async function extractID(file: File): Promise<GovernmentIdInfo> {
-  // Read the uploaded file into a base64 string for inline sending
+export async function extractID(
+  idType: IdType,
+  file: File
+): Promise<GovernmentIdInfo> {
+  // Read the uploaded file into a base64 string
   const buffer = await file.arrayBuffer();
   const base64Data = Buffer.from(buffer).toString('base64');
 
-  // Build the image part to include in the AI request
+  // Build the image part for the AI request
   const imagePart: Part = {
     inlineData: {
       data: base64Data,
@@ -26,7 +29,13 @@ export async function extractID(file: File): Promise<GovernmentIdInfo> {
     },
   };
 
-  // Call the Gemini model with the image and prompt
+  // Create the final prompt by injecting the expected ID type**
+  const finalPrompt = idExtractionPromptTemplate.replace(
+    /__{EXPECTED_ID_TYPE}__/g,
+    idType
+  );
+
+  // Call the Gemini model with the image and the now-dynamic prompt
   const result = await ai.models.generateContent({
     model: geminiModel,
     contents: [
@@ -35,7 +44,7 @@ export async function extractID(file: File): Promise<GovernmentIdInfo> {
         parts: [
           imagePart,
           {
-            text: prompt,
+            text: finalPrompt, // Use the final, updated prompt
           },
         ],
       },
@@ -43,14 +52,15 @@ export async function extractID(file: File): Promise<GovernmentIdInfo> {
   });
 
   try {
-    // Expect the model response as a JSON string
     const data = result.text;
     if (typeof data !== 'string') {
       throw new Error('AI response did not return text');
     }
 
-    // Parse and return the structured GovernmentIdInfo
-    return JSON.parse(data) as GovernmentIdInfo;
+    const jsonString = data.replace(/```json\n?|```/g, '').trim();
+    // Parse the cleaned string
+
+    return JSON.parse(jsonString);
   } catch (e) {
     throw new Error(`Failed to parse JSON from AI response: ${e}`);
   }

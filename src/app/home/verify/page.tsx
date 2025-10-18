@@ -9,10 +9,16 @@ import {
   SubmissionReview,
   VerificationContainer,
 } from '@/components/verify';
-import type { VerificationStep } from '@/types/verify';
+import type {
+  VerificationStep,
+  GovernmentIdInfo,
+  IdType,
+} from '@/types/verify';
 
 export default function VerifyPage() {
   const [step, setStep] = useState<VerificationStep>('ID_SELECTION');
+  const [selectedIDType, setSelectedIDType] = useState<IdType | null>(null);
+  const [userData, setUserData] = useState<GovernmentIdInfo | null>(null);
 
   const goToNextStep = () => {
     const steps: VerificationStep[] = [
@@ -44,9 +50,23 @@ export default function VerifyPage() {
   const renderStep = () => {
     switch (step) {
       case 'ID_SELECTION':
-        return <IdSelection onNext={goToNextStep} />;
+        return (
+          <IdSelection
+            selectedIDType={selectedIDType}
+            setSelectedIDType={setSelectedIDType}
+            onNext={goToNextStep}
+          />
+        );
       case 'ID_CAPTURE':
-        return <IdCapture onNext={goToNextStep} onPrev={goToPrevStep} />;
+        return (
+          <IdCapture
+            selectedIdType={selectedIDType}
+            userData={userData}
+            setUserData={setUserData}
+            onNext={goToNextStep}
+            onPrev={goToPrevStep}
+          />
+        );
       case 'BIOMETRIC_CAPTURE':
         return <BiometricCapture onNext={goToNextStep} onPrev={goToPrevStep} />;
       case 'SUBMISSION_REVIEW':
@@ -54,7 +74,13 @@ export default function VerifyPage() {
       case 'SUBMISSION_PENDING':
         return <SubmissionPending />;
       default:
-        return <IdSelection onNext={goToNextStep} />;
+        return (
+          <IdSelection
+            selectedIDType={selectedIDType}
+            setSelectedIDType={setSelectedIDType}
+            onNext={goToNextStep}
+          />
+        );
     }
   };
 
