@@ -15,8 +15,8 @@ import {
   Sparkles,
   MapPinned,
 } from 'lucide-react';
-import { TransactionProgress } from '@/components/transaction/new/transaction-progress';
-import { TransactionCarousel } from '@/components/transaction/new/transaction-carousel';
+import { TransactionProgress } from '@/components/transaction/id/transaction-progress';
+import { TransactionCarousel } from '@/components/transaction/id/transaction-carousel';
 import { ProductInfoCard } from '@/components/transaction/id/product-info';
 import { SellerInfoCard } from '@/components/transaction/id/seller-info';
 import { AIChangesCard } from '@/components/transaction/id/ai-changes';

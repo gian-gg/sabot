@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ReviewAgreementInvitation } from '@/components/agreement/invite/review-invitation';
-import { ProjectQuestionnaire } from '@/components/agreement/editor/project-questionnaire';
+import { ProjectQuestionnaire } from '@/components/agreement/invite/project-questionnaire';
 
 type Step = 'review' | 'questionnaire';
 
