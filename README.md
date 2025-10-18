@@ -9,12 +9,14 @@
 - Your third-party safety layer for verified, transparent, and scam-free online transactions.
 
 ## Highlights
+
 - Purpose-built for auditable P2P transactions and invitation workflows.
 - Status-driven transaction lifecycle (pending → active → completed + report states).
 - Modular UI primitives (cards, buttons, badges, dialogs) and page layout docs.
 - This is a concise overview — full developer docs and local setup are in /docs.
 
 ## Contributing
+
 - This repo participates in Cebu Hacktoberfest — small, focused contributions are welcome.
 - Follow the structural docs in layout/ before changing page composition.
 - Keep changes small and componentized; update docs when structure changes.
