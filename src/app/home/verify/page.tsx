@@ -32,6 +32,8 @@ export default function VerifyPage() {
     if (currentIndex < steps.length - 1) {
       setStep(steps[currentIndex + 1]);
     }
+
+    console.log('User Data so far:', { userID, userData });
   };
 
   const goToPrevStep = () => {

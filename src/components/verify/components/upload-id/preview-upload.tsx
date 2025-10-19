@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, FileText, UploadCloud } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -6,7 +6,6 @@ import Image from 'next/image';
 
 interface PreviewUploadProps {
   file: File;
-  previewUrl?: string | null;
   isUploading?: boolean;
   openFileDialog: () => void;
   onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
@@ -14,11 +13,34 @@ interface PreviewUploadProps {
 
 const PreviewUpload: React.FC<PreviewUploadProps> = ({
   file,
-  previewUrl,
   isUploading = false,
   openFileDialog,
   onKeyDown = () => {},
 }) => {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Create a blob URL for images and revoke it when the file changes or
+    // the component unmounts to avoid memory leaks and performance issues.
+    if (!file) {
+      setObjectUrl(null);
+      return;
+    }
+
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setObjectUrl(url);
+      return () => {
+        // Revoke previously created URL
+        URL.revokeObjectURL(url);
+        setObjectUrl(null);
+      };
+    }
+
+    // Non-image files should not have an object URL
+    setObjectUrl(null);
+    return;
+  }, [file]);
   return (
     <div
       role="button"
@@ -51,16 +73,26 @@ const PreviewUpload: React.FC<PreviewUploadProps> = ({
         )}
       </div>
 
-      {file.type.startsWith('image/') && previewUrl ? (
+      {file.type.startsWith('image/') ? (
         <div className="relative mx-auto h-64 w-full max-w-md">
-          <Image
-            src={previewUrl}
-            alt="Uploaded ID preview"
-            fill
-            unoptimized
-            sizes="(max-width: 768px) 100vw, 512px"
-            className="rounded-md object-contain"
-          />
+          {objectUrl ? (
+            <Image
+              src={objectUrl}
+              alt="Uploaded ID preview"
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 512px"
+              className="rounded-md object-contain"
+            />
+          ) : (
+            // Fallback while URL is being created (very fast) to avoid
+            // passing an empty src to next/image
+            <div className="bg-muted flex h-64 w-full items-center justify-center rounded-md">
+              <span className="text-muted-foreground text-sm">
+                Preparing preview…
+              </span>
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/50 opacity-0 transition-all duration-200 group-hover:opacity-100">
             <div className="flex items-center gap-2 text-xs font-medium text-white md:text-sm">
               <UploadCloud className="size-4 md:size-5" />
@@ -75,7 +107,7 @@ const PreviewUpload: React.FC<PreviewUploadProps> = ({
             </div>
           )}
         </div>
-      ) : previewUrl ? (
+      ) : file ? (
         <div className="relative flex items-center justify-center">
           {!isUploading && (
             <>

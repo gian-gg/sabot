@@ -37,15 +37,6 @@ export function IdCapture({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [form, setForm] = useState<GovernmentIdInfo | null>(null);
-
-  // cleanup preview URL when unmounted or changed
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
 
   const openFileDialog = () => {
     if (isUploading) return;
@@ -80,9 +71,6 @@ export function IdCapture({
     setError(null);
     setIsUploading(true);
     setSelectedIDType({ type: selectedIDType.type, file: null });
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const url = URL.createObjectURL(f);
-    setPreviewUrl(url);
     setSelectedIDType({ type: selectedIDType.type, file: f });
 
     const data = await extractID(selectedIDType.type, f);
@@ -92,7 +80,6 @@ export function IdCapture({
     }
 
     setUserData(data as GovernmentIdInfo);
-    setForm(data as GovernmentIdInfo);
 
     // slight delay to keep spinner visible for better UX
     setTimeout(() => setIsUploading(false), 700);
@@ -133,12 +120,8 @@ export function IdCapture({
   const handleBackButton = () => {
     // Clear selected file and preview when going back
     setSelectedIDType({ type: selectedIDType?.type ?? 'passport', file: null });
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
+
     setError(null);
-    setForm(null);
     setUserData(null);
     if (onPrev) onPrev();
   };
@@ -157,7 +140,7 @@ export function IdCapture({
       'lastName',
       'idNumber',
       'dateOfBirth',
-      'expiryDate',
+      'issueDate',
     ];
 
     const missing = requiredFields.some((field) => {
@@ -202,7 +185,6 @@ export function IdCapture({
         ) : (
           <PreviewUpload
             file={selectedIDType?.file}
-            previewUrl={previewUrl}
             isUploading={isUploading}
             openFileDialog={openFileDialog}
             onKeyDown={onKeyDown}
@@ -228,12 +210,8 @@ export function IdCapture({
         )}
 
         {/* Extracted details form (editable) */}
-        {form && (
-          <PreviewForm
-            extractedData={userData}
-            setUserData={setUserData}
-            setForm={setForm}
-          />
+        {userData && (
+          <PreviewForm extractedData={userData} setUserData={setUserData} />
         )}
 
         <ul className="text-muted-foreground mt-4 mb-6 list-inside list-disc space-y-1 text-sm">
