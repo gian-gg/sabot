@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -39,85 +40,112 @@ export function IdCapture({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  const openFileDialog = () => {
+  const openFileDialog = useCallback(() => {
     if (isUploading) return;
     inputRef.current?.click();
-  };
+  }, [isUploading]);
 
   // validate file, show preview, and process data
-  const handleFiles = async (files: FileList | null) => {
-    if (!selectedIDType?.type) return;
-    if (!files || files.length === 0) return;
-    if (files.length > 1) return;
+  const handleFiles = useCallback(
+    async (files: FileList | null) => {
+      setUserData(null);
+      if (!files || files.length === 0) return;
+      if (files.length > 1) {
+        toast.error('Please upload only one file.');
+        return;
+      }
 
-    const f = files[0];
+      const f = files[0];
 
-    setIsUploading(true);
-    setSelectedIDType({ type: selectedIDType.type, file: null });
-    setSelectedIDType({ type: selectedIDType.type, file: f });
+      // Validate type
+      const isImage = f.type.startsWith('image/');
+      const isPdf = f.type === 'application/pdf';
+      if (!isImage && !isPdf) {
+        toast.error('Only images or PDF files are allowed.');
+        return;
+      }
 
-    const data = await extractID(selectedIDType.type, f);
+      // Validate size
+      if (f.size > maxSizeUploadIDDocument) {
+        toast.error('File is too large. Maximum size is 10MB.');
+        return;
+      }
 
-    setUserData(data as GovernmentIdInfo);
+      // Require an ID type before processing
+      if (!selectedIDType?.type) {
+        toast.error('Please select an ID type first.');
+        return;
+      }
 
-    // slight delay to keep spinner visible for better UX
-    setTimeout(() => {
-      setIsUploading(false);
-    }, 700);
-  };
+      setIsUploading(true);
+      setSelectedIDType({ type: selectedIDType.type, file: f });
+
+      try {
+        const data = await extractID(selectedIDType.type, f);
+        setUserData(data as GovernmentIdInfo);
+      } finally {
+        // small delay to show spinner for perceived responsiveness
+        setTimeout(() => setIsUploading(false), 400);
+      }
+    },
+    [selectedIDType?.type, setSelectedIDType, setUserData]
+  );
 
   // drag & drop handlers
-  const onDrop: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    setIsDragging(false);
-    handleFiles(e.dataTransfer?.files ?? null);
-  };
+  const onDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      setIsDragging(false);
+      handleFiles(e.dataTransfer?.files ?? null);
+    },
+    [handleFiles, isUploading]
+  );
 
-  const onDragOver: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    if (!isDragging) setIsDragging(true);
-  };
+  const onDragOver: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      if (!isDragging) setIsDragging(true);
+    },
+    [isDragging, isUploading]
+  );
 
-  const onDragLeave: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    setIsDragging(false);
-  };
+  const onDragLeave: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      setIsDragging(false);
+    },
+    [isUploading]
+  );
 
   // keyboard accessibility for clickable area
-  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (isUploading) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openFileDialog();
-    }
-  };
+  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      if (isUploading) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openFileDialog();
+      }
+    },
+    [isUploading, openFileDialog]
+  );
 
-  const handleBackButton = () => {
+  const handleBackButton = useCallback(() => {
     // Clear selected file and preview when going back
     setSelectedIDType({ type: selectedIDType?.type ?? 'passport', file: null });
     setUserData(null);
     if (onPrev) onPrev();
-  };
+  }, [onPrev, selectedIDType?.type, setSelectedIDType, setUserData]);
 
-  const handleDisableNext = (): boolean => {
-    if (isUploading) return true;
+  const missingRequirements = useMemo(() => {
+    const missing: string[] = [];
 
-    return getMissingRequirements().length > 0;
-  };
-
-  // Compute specific missing requirements to help users proceed
-  const getMissingRequirements = useMemo(() => {
-    if (userData?.notes) return () => [];
-
-    return () => {
-      const missing: string[] = [];
-
+    if (!userData?.notes) {
       if (!selectedIDType?.type) {
         missing.push('Select an ID type.');
       }
@@ -126,7 +154,6 @@ export function IdCapture({
         missing.push('Upload a clear photo or PDF of your ID.');
       }
 
-      // If we have extracted data, ensure required fields are present
       if (userData) {
         const labelMap: Record<keyof GovernmentIdInfo, string> = {
           idType: 'ID type',
@@ -150,21 +177,36 @@ export function IdCapture({
           'issueDate',
           'sex',
           'address',
-          'issueDate',
-          'expiryDate',
         ];
 
+        if (selectedIDType?.type !== 'umid') {
+          requiredFields.push('expiryDate');
+        }
+
         for (const field of requiredFields) {
-          const val = (userData as GovernmentIdInfo)[field];
+          const val = userData[field];
           const empty =
             val === null || val === undefined || String(val).trim() === '';
           if (empty) missing.push(`${labelMap[field]} is required.`);
         }
-      }
 
-      return missing;
-    };
+        // expiry date required unless UMID
+        if (selectedIDType?.type !== 'umid') {
+          const val = userData.expiryDate;
+          const empty =
+            val === null || val === undefined || String(val).trim() === '';
+          if (empty) missing.push('Expiry date is required.');
+        }
+      }
+    }
+
+    return missing;
   }, [selectedIDType?.type, selectedIDType?.file, userData]);
+
+  const handleDisableNext = useCallback((): boolean => {
+    if (isUploading) return true;
+    return missingRequirements.length > 0;
+  }, [isUploading, missingRequirements]);
 
   return (
     <Card>
@@ -222,7 +264,7 @@ export function IdCapture({
             <AlertTitle>Complete these items to continue</AlertTitle>
             <AlertDescription>
               <ul className="list-inside list-disc space-y-1">
-                {getMissingRequirements().map((item, idx) => (
+                {missingRequirements.map((item, idx) => (
                   <li key={idx}>{item}</li>
                 ))}
               </ul>
