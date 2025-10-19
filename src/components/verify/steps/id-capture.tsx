@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -19,6 +19,8 @@ import type {
 } from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export function IdCapture({
   onNext,
@@ -36,7 +38,6 @@ export function IdCapture({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const openFileDialog = () => {
     if (isUploading) return;
@@ -45,44 +46,24 @@ export function IdCapture({
 
   // validate file, show preview, and process data
   const handleFiles = async (files: FileList | null) => {
-    if (!selectedIDType?.type) {
-      setError('Please select an ID type first.');
-      return;
-    }
+    if (!selectedIDType?.type) return;
     if (!files || files.length === 0) return;
-    if (files.length > 1) {
-      setError('Please upload only one file.');
-      return;
-    }
+    if (files.length > 1) return;
 
     const f = files[0];
-    const isImage = f.type.startsWith('image/');
-    const isPdf = f.type === 'application/pdf';
-    if (!isImage && !isPdf) {
-      setError('Only images or PDF files are allowed.');
-      return;
-    }
 
-    if (f.size > maxSizeUploadIDDocument) {
-      setError('File is too large. Maximum size is 10MB.');
-      return;
-    }
-
-    setError(null);
     setIsUploading(true);
     setSelectedIDType({ type: selectedIDType.type, file: null });
     setSelectedIDType({ type: selectedIDType.type, file: f });
 
     const data = await extractID(selectedIDType.type, f);
 
-    if (data.notes) {
-      console.warn('⚠️ Quality Warning:', data.notes);
-    }
-
     setUserData(data as GovernmentIdInfo);
 
     // slight delay to keep spinner visible for better UX
-    setTimeout(() => setIsUploading(false), 700);
+    setTimeout(() => {
+      setIsUploading(false);
+    }, 700);
   };
 
   // drag & drop handlers
@@ -120,46 +101,70 @@ export function IdCapture({
   const handleBackButton = () => {
     // Clear selected file and preview when going back
     setSelectedIDType({ type: selectedIDType?.type ?? 'passport', file: null });
-
-    setError(null);
     setUserData(null);
     if (onPrev) onPrev();
   };
 
   const handleDisableNext = (): boolean => {
     if (isUploading) return true;
-    if (!selectedIDType?.file) return true;
-    if (userData?.notes) return true;
-    if (!userData) return true;
 
-    // required fields to consider present for progressing.
-    // expiryDate is ignored for UMID IDs.
-    const requiredFields: Array<keyof GovernmentIdInfo> = [
-      'idType',
-      'firstName',
-      'lastName',
-      'idNumber',
-      'dateOfBirth',
-      'issueDate',
-    ];
-
-    const missing = requiredFields.some((field) => {
-      if (field === 'expiryDate' && selectedIDType?.type === 'umid') {
-        return false; // ignore expiry for UMID
-      }
-
-      const val = (userData as GovernmentIdInfo)[field];
-
-      // idType is not a string so check null/undefined only
-      if (field === 'idType') {
-        return val === null || val === undefined;
-      }
-
-      return val === null || val === undefined || String(val).trim() === '';
-    });
-
-    return missing;
+    return getMissingRequirements().length > 0;
   };
+
+  // Compute specific missing requirements to help users proceed
+  const getMissingRequirements = useMemo(() => {
+    if (userData?.notes) return () => [];
+
+    return () => {
+      const missing: string[] = [];
+
+      if (!selectedIDType?.type) {
+        missing.push('Select an ID type.');
+      }
+
+      if (!selectedIDType?.file) {
+        missing.push('Upload a clear photo or PDF of your ID.');
+      }
+
+      // If we have extracted data, ensure required fields are present
+      if (userData) {
+        const labelMap: Record<keyof GovernmentIdInfo, string> = {
+          idType: 'ID type',
+          firstName: 'First name',
+          lastName: 'Last name',
+          middleName: 'Middle name',
+          idNumber: 'ID number',
+          dateOfBirth: 'Date of birth',
+          issueDate: 'Issue date',
+          expiryDate: 'Expiry date',
+          address: 'Address',
+          sex: 'Sex',
+          notes: 'Notes',
+        } as const;
+
+        const requiredFields: Array<keyof GovernmentIdInfo> = [
+          'firstName',
+          'lastName',
+          'idNumber',
+          'dateOfBirth',
+          'issueDate',
+          'sex',
+          'address',
+          'issueDate',
+          'expiryDate',
+        ];
+
+        for (const field of requiredFields) {
+          const val = (userData as GovernmentIdInfo)[field];
+          const empty =
+            val === null || val === undefined || String(val).trim() === '';
+          if (empty) missing.push(`${labelMap[field]} is required.`);
+        }
+      }
+
+      return missing;
+    };
+  }, [selectedIDType?.type, selectedIDType?.file, userData]);
 
   return (
     <Card>
@@ -202,23 +207,28 @@ export function IdCapture({
           onChange={(e) => !isUploading && handleFiles(e.currentTarget.files)}
         />
 
-        {/* Error message */}
-        {error && (
-          <p className="text-destructive mb-4 text-sm" role="alert">
-            {error}
-          </p>
-        )}
-
         {/* Extracted details form (editable) */}
         {userData && (
           <PreviewForm extractedData={userData} setUserData={setUserData} />
         )}
 
-        <ul className="text-muted-foreground mt-4 mb-6 list-inside list-disc space-y-1 text-sm">
-          <li>Avoid glare and shadows.</li>
-          <li>Use a well-lit area.</li>
-          <li>Ensure all text is readable.</li>
-        </ul>
+        {/* Guidance alert for missing requirements */}
+        {!isUploading && handleDisableNext() && (
+          <Alert
+            variant="destructive"
+            className="border-destructive bg-destructive/5 mt-2 mb-6"
+          >
+            <AlertTriangle className="mt-0.5 size-4" />
+            <AlertTitle>Complete these items to continue</AlertTitle>
+            <AlertDescription>
+              <ul className="list-inside list-disc space-y-1">
+                {getMissingRequirements().map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Navigation buttons */}
         <NavigationButtons

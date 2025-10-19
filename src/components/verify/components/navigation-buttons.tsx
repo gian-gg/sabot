@@ -16,7 +16,7 @@ const NavigationButtons = ({
   disableNext = false,
 }: NavigationButtonsProps) => {
   return (
-    <div className={`flex ${onPrev ? 'justify-between' : 'justify-end'}`}>
+    <div className={`flex ${onPrev ? 'justify-between' : 'justify-end'} mt-4`}>
       {onPrev && (
         <Button
           variant="outline"
