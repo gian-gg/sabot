@@ -7,11 +7,9 @@ import { getFormValueOrNull } from '@/lib/utils/helpers';
 
 const PreviewForm = ({
   extractedData,
-  setForm,
   setUserData,
 }: {
   extractedData: GovernmentIdInfo | null;
-  setForm: React.Dispatch<React.SetStateAction<GovernmentIdInfo | null>>;
   setUserData: (u: GovernmentIdInfo | null) => void;
 }) => {
   // Refs to avoid re-creating handlers and to minimize re-renders
@@ -53,12 +51,11 @@ const PreviewForm = ({
       // Only propagate if there's a real change to minimize upstream re-renders
       const snapshot = JSON.stringify(updated);
       if (snapshot !== lastSentSnapshotRef.current) {
-        setForm(() => updated);
         setUserData(updated);
         lastSentSnapshotRef.current = snapshot;
       }
     }, 300);
-  }, [setForm, setUserData]);
+  }, [setUserData]);
 
   useEffect(
     () => () => {

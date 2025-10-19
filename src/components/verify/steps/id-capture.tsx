@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -19,6 +20,8 @@ import type {
 } from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export function IdCapture({
   onNext,
@@ -36,147 +39,174 @@ export function IdCapture({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [form, setForm] = useState<GovernmentIdInfo | null>(null);
 
-  // cleanup preview URL when unmounted or changed
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
-
-  const openFileDialog = () => {
+  const openFileDialog = useCallback(() => {
     if (isUploading) return;
     inputRef.current?.click();
-  };
+  }, [isUploading]);
 
   // validate file, show preview, and process data
-  const handleFiles = async (files: FileList | null) => {
-    if (!selectedIDType?.type) {
-      setError('Please select an ID type first.');
-      return;
-    }
-    if (!files || files.length === 0) return;
-    if (files.length > 1) {
-      setError('Please upload only one file.');
-      return;
-    }
+  const handleFiles = useCallback(
+    async (files: FileList | null) => {
+      setUserData(null);
+      if (!files || files.length === 0) return;
+      if (files.length > 1) {
+        toast.error('Please upload only one file.');
+        return;
+      }
 
-    const f = files[0];
-    const isImage = f.type.startsWith('image/');
-    const isPdf = f.type === 'application/pdf';
-    if (!isImage && !isPdf) {
-      setError('Only images or PDF files are allowed.');
-      return;
-    }
+      const f = files[0];
 
-    if (f.size > maxSizeUploadIDDocument) {
-      setError('File is too large. Maximum size is 10MB.');
-      return;
-    }
+      // Validate type
+      const isImage = f.type.startsWith('image/');
+      const isPdf = f.type === 'application/pdf';
+      if (!isImage && !isPdf) {
+        toast.error('Only images or PDF files are allowed.');
+        return;
+      }
 
-    setError(null);
-    setIsUploading(true);
-    setSelectedIDType({ type: selectedIDType.type, file: null });
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const url = URL.createObjectURL(f);
-    setPreviewUrl(url);
-    setSelectedIDType({ type: selectedIDType.type, file: f });
+      // Validate size
+      if (f.size > maxSizeUploadIDDocument) {
+        toast.error('File is too large. Maximum size is 10MB.');
+        return;
+      }
 
-    const data = await extractID(selectedIDType.type, f);
+      // Require an ID type before processing
+      if (!selectedIDType?.type) {
+        toast.error('Please select an ID type first.');
+        return;
+      }
 
-    if (data.notes) {
-      console.warn('⚠️ Quality Warning:', data.notes);
-    }
+      setIsUploading(true);
+      setSelectedIDType({ type: selectedIDType.type, file: f });
 
-    setUserData(data as GovernmentIdInfo);
-    setForm(data as GovernmentIdInfo);
-
-    // slight delay to keep spinner visible for better UX
-    setTimeout(() => setIsUploading(false), 700);
-  };
+      try {
+        const data = await extractID(selectedIDType.type, f);
+        setUserData(data as GovernmentIdInfo);
+      } finally {
+        // small delay to show spinner for perceived responsiveness
+        setTimeout(() => setIsUploading(false), 400);
+      }
+    },
+    [selectedIDType?.type, setSelectedIDType, setUserData]
+  );
 
   // drag & drop handlers
-  const onDrop: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    setIsDragging(false);
-    handleFiles(e.dataTransfer?.files ?? null);
-  };
+  const onDrop: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      setIsDragging(false);
+      handleFiles(e.dataTransfer?.files ?? null);
+    },
+    [handleFiles, isUploading]
+  );
 
-  const onDragOver: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    if (!isDragging) setIsDragging(true);
-  };
+  const onDragOver: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      if (!isDragging) setIsDragging(true);
+    },
+    [isDragging, isUploading]
+  );
 
-  const onDragLeave: React.DragEventHandler<HTMLDivElement> = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isUploading) return;
-    setIsDragging(false);
-  };
+  const onDragLeave: React.DragEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isUploading) return;
+      setIsDragging(false);
+    },
+    [isUploading]
+  );
 
   // keyboard accessibility for clickable area
-  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (isUploading) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openFileDialog();
-    }
-  };
+  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      if (isUploading) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openFileDialog();
+      }
+    },
+    [isUploading, openFileDialog]
+  );
 
-  const handleBackButton = () => {
+  const handleBackButton = useCallback(() => {
     // Clear selected file and preview when going back
     setSelectedIDType({ type: selectedIDType?.type ?? 'passport', file: null });
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-    setError(null);
-    setForm(null);
     setUserData(null);
     if (onPrev) onPrev();
-  };
+  }, [onPrev, selectedIDType?.type, setSelectedIDType, setUserData]);
 
-  const handleDisableNext = (): boolean => {
-    if (isUploading) return true;
-    if (!selectedIDType?.file) return true;
-    if (userData?.notes) return true;
-    if (!userData) return true;
+  const missingRequirements = useMemo(() => {
+    const missing: string[] = [];
 
-    // required fields to consider present for progressing.
-    // expiryDate is ignored for UMID IDs.
-    const requiredFields: Array<keyof GovernmentIdInfo> = [
-      'idType',
-      'firstName',
-      'lastName',
-      'idNumber',
-      'dateOfBirth',
-      'expiryDate',
-    ];
-
-    const missing = requiredFields.some((field) => {
-      if (field === 'expiryDate' && selectedIDType?.type === 'umid') {
-        return false; // ignore expiry for UMID
+    if (!userData?.notes) {
+      if (!selectedIDType?.type) {
+        missing.push('Select an ID type.');
       }
 
-      const val = (userData as GovernmentIdInfo)[field];
-
-      // idType is not a string so check null/undefined only
-      if (field === 'idType') {
-        return val === null || val === undefined;
+      if (!selectedIDType?.file) {
+        missing.push('Upload a clear photo or PDF of your ID.');
       }
 
-      return val === null || val === undefined || String(val).trim() === '';
-    });
+      if (userData) {
+        const labelMap: Record<keyof GovernmentIdInfo, string> = {
+          idType: 'ID type',
+          firstName: 'First name',
+          lastName: 'Last name',
+          middleName: 'Middle name',
+          idNumber: 'ID number',
+          dateOfBirth: 'Date of birth',
+          issueDate: 'Issue date',
+          expiryDate: 'Expiry date',
+          address: 'Address',
+          sex: 'Sex',
+          notes: 'Notes',
+        } as const;
+
+        const requiredFields: Array<keyof GovernmentIdInfo> = [
+          'firstName',
+          'lastName',
+          'idNumber',
+          'dateOfBirth',
+          'issueDate',
+          'sex',
+          'address',
+        ];
+
+        if (selectedIDType?.type !== 'umid') {
+          requiredFields.push('expiryDate');
+        }
+
+        for (const field of requiredFields) {
+          const val = userData[field];
+          const empty =
+            val === null || val === undefined || String(val).trim() === '';
+          if (empty) missing.push(`${labelMap[field]} is required.`);
+        }
+
+        // expiry date required unless UMID
+        if (selectedIDType?.type !== 'umid') {
+          const val = userData.expiryDate;
+          const empty =
+            val === null || val === undefined || String(val).trim() === '';
+          if (empty) missing.push('Expiry date is required.');
+        }
+      }
+    }
 
     return missing;
-  };
+  }, [selectedIDType?.type, selectedIDType?.file, userData]);
+
+  const handleDisableNext = useCallback((): boolean => {
+    if (isUploading) return true;
+    return missingRequirements.length > 0;
+  }, [isUploading, missingRequirements]);
 
   return (
     <Card>
@@ -202,7 +232,6 @@ export function IdCapture({
         ) : (
           <PreviewUpload
             file={selectedIDType?.file}
-            previewUrl={previewUrl}
             isUploading={isUploading}
             openFileDialog={openFileDialog}
             onKeyDown={onKeyDown}
@@ -220,27 +249,28 @@ export function IdCapture({
           onChange={(e) => !isUploading && handleFiles(e.currentTarget.files)}
         />
 
-        {/* Error message */}
-        {error && (
-          <p className="text-destructive mb-4 text-sm" role="alert">
-            {error}
-          </p>
-        )}
-
         {/* Extracted details form (editable) */}
-        {form && (
-          <PreviewForm
-            extractedData={userData}
-            setUserData={setUserData}
-            setForm={setForm}
-          />
+        {userData && (
+          <PreviewForm extractedData={userData} setUserData={setUserData} />
         )}
 
-        <ul className="text-muted-foreground mt-4 mb-6 list-inside list-disc space-y-1 text-sm">
-          <li>Avoid glare and shadows.</li>
-          <li>Use a well-lit area.</li>
-          <li>Ensure all text is readable.</li>
-        </ul>
+        {/* Guidance alert for missing requirements */}
+        {!isUploading && handleDisableNext() && (
+          <Alert
+            variant="destructive"
+            className="border-destructive bg-destructive/5 mt-2 mb-6"
+          >
+            <AlertTriangle className="mt-0.5 size-4" />
+            <AlertTitle>Complete these items to continue</AlertTitle>
+            <AlertDescription>
+              <ul className="list-inside list-disc space-y-1">
+                {missingRequirements.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Navigation buttons */}
         <NavigationButtons
