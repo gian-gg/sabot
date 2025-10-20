@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Camera, AlertTriangle, Pin } from 'lucide-react';
@@ -22,6 +22,48 @@ const CameraView = ({
   error: string[];
   isLoading: boolean;
 }) => {
+  const [promptOverride, setPromptOverride] = useState<string | null>(null);
+  const holdTimerRef = useRef<number | null>(null);
+
+  // Handle capture click: show "Hold" then "Processing" until done
+  const handleCaptureClick = () => {
+    if (!isCameraOn || isLoading) return;
+
+    // Clear any previous timers
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    setPromptOverride('Hold still');
+
+    // After 2 seconds, switch to "Processing"
+    holdTimerRef.current = window.setTimeout(() => {
+      setPromptOverride('Processing');
+    }, 2000);
+
+    captureFrame();
+  };
+
+  // When loading completes, restore default prompt and clear timer
+  useEffect(() => {
+    if (!isLoading && promptOverride) {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+      setPromptOverride(null);
+    }
+  }, [isLoading, promptOverride]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    };
+  }, []);
+
+  const currentPrompt = promptOverride ?? screenPrompt();
   return (
     <>
       <div className="border-primary/30 from-primary/10 bg-background relative mb-4 flex aspect-video flex-col items-center justify-center border-2 bg-gradient-to-br to-transparent p-4">
@@ -42,20 +84,11 @@ const CameraView = ({
             <Button
               size="lg"
               className="mt-2 w-full"
-              onClick={captureFrame}
+              onClick={handleCaptureClick}
               disabled={!isCameraOn || isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Spinner />
-                  Processing
-                </>
-              ) : (
-                <>
-                  <Camera className="text-primary-foreground size-5" />
-                  Capture
-                </>
-              )}
+              <Camera className="text-primary-foreground size-5" />
+              Capture
             </Button>
 
             {/* Head shape overlay */}
@@ -86,7 +119,10 @@ const CameraView = ({
         )}
       </div>
 
-      <p className="mb-6 text-center text-lg font-medium">{screenPrompt()}</p>
+      <p className="mb-6 flex items-center justify-center gap-2 text-center text-lg font-medium">
+        {(promptOverride === 'Processing' || isLoading) && <Spinner />}
+        {currentPrompt}
+      </p>
 
       {error.length > 0 && (
         // make a component for this

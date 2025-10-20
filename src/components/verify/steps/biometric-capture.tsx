@@ -77,8 +77,13 @@ export function BiometricCapture({
     const video = videoRef.current;
     if (!video || !isCameraOn || !userIDCard?.file) return;
 
-    setIsLoading(true);
     setError([]);
+    setIsLoading(true);
+
+    // Yield one frame so UI can paint
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
 
     try {
       // Convert video frame to image file
@@ -86,12 +91,11 @@ export function BiometricCapture({
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Canvas context unavailable');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context unavailable');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Convert canvas to blob more efficiently
+      // Convert canvas to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           (b) =>
@@ -137,7 +141,6 @@ export function BiometricCapture({
     }
   }, [isCameraOn, userIDCard?.file, currentStep, setCapturedFrames]);
 
-  // Get instruction text for current step
   const screenPrompt = useCallback(() => {
     if (!isCameraOn) return 'Click "Start" to begin the liveness check.';
     return currentStep < LIVENESS_CHECK_STEPS.length
