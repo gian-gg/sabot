@@ -1,21 +1,12 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { CreateTransactionPage } from '@/components/transaction/invite/create-invitation-page';
-import { AcceptTransactionPage } from '@/components/transaction/invite/accept-invitation-page';
 import { Loader2 } from 'lucide-react';
 
 function InvitePageContent() {
-  const searchParams = useSearchParams();
-  const transactionId = searchParams.get('id');
-
-  // If there's an ID, show the accept transaction flow
-  if (transactionId) {
-    return <AcceptTransactionPage transactionId={transactionId} />;
-  }
-
-  // Otherwise, show the create transaction flow
+  // This page is for CREATING transactions and sharing invite links
+  // The invite link will point to /transaction/accept?id=xxx
   return <CreateTransactionPage />;
 }
 

@@ -13,10 +13,13 @@ export const ROUTES = {
   PROFILE: {
     VIEW: (id: string) => `/profile/${id}`,
   },
+  WALLET: '/wallet',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
   TRANSACTION: {
     NEW: '/transaction/new',
+    ACCEPT: '/transaction/accept',
+    UPLOAD: '/transaction/upload',
     INVITE: '/transaction/invite',
     VIEW: (id: string) => `/transaction/${id}`,
     ACTIVE: (id: string) => `/transaction/${id}/active`,
