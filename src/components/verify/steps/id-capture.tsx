@@ -11,7 +11,7 @@ import { maxSizeUploadIDDocument } from '@/constants/verify';
 import NavigationButtons from '../components/navigation-buttons';
 import PreviewForm from '../components/upload-id/preview-form';
 
-import { extractID } from '@/lib/gemini/verify';
+import { verifyUserId } from '@/lib/gemini/verify';
 
 import type {
   GovernmentIdInfo,
@@ -81,7 +81,7 @@ export function IdCapture({
       setSelectedIDType({ type: selectedIDType.type, file: f });
 
       try {
-        const data = await extractID(selectedIDType.type, f);
+        const data = await verifyUserId(selectedIDType.type, f);
         setUserData(data as GovernmentIdInfo);
       } finally {
         // small delay to show spinner for perceived responsiveness
@@ -277,7 +277,7 @@ export function IdCapture({
           onNext={onNext}
           disableNext={handleDisableNext()}
           onPrev={handleBackButton}
-          isUploading={isUploading}
+          isLoading={isUploading}
         />
       </CardContent>
     </Card>

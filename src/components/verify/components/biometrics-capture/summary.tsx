@@ -29,7 +29,11 @@ const Summary = ({ capturedFrames }: { capturedFrames: CaptureData[] }) => {
                       minute: '2-digit',
                     })}
                   </span>
-                  <span className="text-green-600">{frame.quality}</span>
+                  {frame.faceMatchConfidence !== null && (
+                    <span className="text-green-600">
+                      {Math.round(frame.faceMatchConfidence * 100)}% match
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

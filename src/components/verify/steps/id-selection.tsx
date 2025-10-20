@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -21,7 +22,17 @@ export function IdSelection({
   selectedIDType: UserIDType | null;
   setSelectedIDType: (arg: UserIDType | null) => void;
 }) {
-  const currentValue = selectedIDType?.type ?? idOptions[0].id;
+  const currentValue = useMemo(
+    () => selectedIDType?.type ?? idOptions[0].id,
+    [selectedIDType]
+  );
+
+  const handleNext = useCallback(() => {
+    if (!selectedIDType) {
+      setSelectedIDType({ type: idOptions[0].id, file: null });
+    }
+    onNext();
+  }, [selectedIDType, setSelectedIDType, onNext]);
 
   return (
     <Card>
@@ -51,15 +62,7 @@ export function IdSelection({
             </Label>
           ))}
         </RadioGroup>
-        <NavigationButtons
-          onNext={() => {
-            if (!selectedIDType) {
-              setSelectedIDType({ type: idOptions[0].id, file: null });
-            }
-            onNext();
-          }}
-          isUploading={false}
-        />
+        <NavigationButtons onNext={handleNext} isLoading={false} />
       </CardContent>
     </Card>
   );

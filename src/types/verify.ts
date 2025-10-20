@@ -31,9 +31,14 @@ export type GovernmentIdInfo = {
   notes?: string;
 };
 
-export interface CaptureData {
+export interface LivenessCheckResult {
+  isLivenessVerified: boolean;
+  isFaceMatchVerified: boolean;
+  faceMatchConfidence: number | null;
+  notes: string[];
+}
+
+export interface CaptureData extends LivenessCheckResult {
   step: string;
   timestamp: string;
-  quality: 'High' | 'Medium';
-  status: 'Completed';
 }

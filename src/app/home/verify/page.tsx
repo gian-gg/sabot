@@ -13,12 +13,16 @@ import type {
   VerificationStep,
   GovernmentIdInfo,
   UserIDType,
+  CaptureData,
 } from '@/types/verify';
 
 export default function VerifyPage() {
   const [step, setStep] = useState<VerificationStep>('ID_SELECTION');
-  const [userID, setUserID] = useState<UserIDType | null>(null);
-  const [userData, setUserData] = useState<GovernmentIdInfo | null>(null);
+  const [userID, setUserID] = useState<UserIDType | null>(null); // step 1
+  const [userData, setUserData] = useState<GovernmentIdInfo | null>(null); // step 2
+  const [livenessCheckCaptures, setLivenessCheckCaptures] = useState<
+    CaptureData[]
+  >([]); // step 3
 
   const goToNextStep = () => {
     const steps: VerificationStep[] = [
@@ -33,7 +37,11 @@ export default function VerifyPage() {
       setStep(steps[currentIndex + 1]);
     }
 
-    console.log('User Data so far:', { userID, userData });
+    console.log('User Data so far:', {
+      userID,
+      userData,
+      livenessCheckCaptures,
+    });
   };
 
   const goToPrevStep = () => {
@@ -71,7 +79,15 @@ export default function VerifyPage() {
           />
         );
       case 'BIOMETRIC_CAPTURE':
-        return <BiometricCapture onNext={goToNextStep} onPrev={goToPrevStep} />;
+        return (
+          <BiometricCapture
+            capturedFrames={livenessCheckCaptures}
+            setCapturedFrames={setLivenessCheckCaptures}
+            userIDCard={userID}
+            onNext={goToNextStep}
+            onPrev={goToPrevStep}
+          />
+        );
       case 'SUBMISSION_REVIEW':
         return <SubmissionReview onNext={goToNextStep} onPrev={goToPrevStep} />;
       case 'SUBMISSION_PENDING':
