@@ -2,9 +2,38 @@ import { Card } from '@/components/ui/card';
 import { Play } from 'lucide-react';
 import { useUserStore } from '@/store/user/userStore';
 import HeroAction from './hero-action';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 
 export function HeroSection() {
   const user = useUserStore();
+  const router = useRouter();
+
+  // Create dropdown state & click-outside handler
+  const [createOpen, setCreateOpen] = useState(false);
+  const createRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!createRef.current) return;
+      if (!createRef.current.contains(e.target as Node)) {
+        setCreateOpen(false);
+      }
+    }
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
+  }, []);
+
+  function goToTransactionNew() {
+    setCreateOpen(false);
+    router.push(ROUTES.TRANSACTION.NEW);
+  }
+
+  function goToAgreementNew() {
+    setCreateOpen(false);
+    router.push(ROUTES.AGREEMENT.NEW);
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       {/* Left side - Description and CTA */}
@@ -23,8 +52,36 @@ export function HeroSection() {
             enterprise-grade security protocols.
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          {/* existing verify/account actions */}
           <HeroAction />
+
+          {/* Create dropdown placed beside the verify/account area */}
+          <div ref={createRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setCreateOpen((v) => !v)}
+              className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white"
+            >
+              Create
+            </button>
+            {createOpen && (
+              <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                <button
+                  onClick={goToTransactionNew}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  Transaction
+                </button>
+                <button
+                  onClick={goToAgreementNew}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  Agreement
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

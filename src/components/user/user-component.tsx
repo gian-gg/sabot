@@ -1,6 +1,12 @@
 'use client';
 
-import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from 'lucide-react';
+import {
+  BadgeCheck,
+  Bell,
+  CreditCard,
+  LogOut,
+  CirclePoundSterling,
+} from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -40,6 +46,15 @@ export default function HeaderAction({ user }: { user: User }) {
     });
   }
 
+  function handleNotifications() {
+    toast('No new notifications', {
+      action: {
+        label: 'View',
+        onClick: () => router.push(ROUTES.REPORTS),
+      },
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer" asChild>
@@ -75,21 +90,23 @@ export default function HeaderAction({ user }: { user: User }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            <Sparkles />
-            Upgrade to Pro
+            <CirclePoundSterling />
+            Buy Tokens
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push(ROUTES.PROFILE.VIEW(user.id))}
+          >
             <BadgeCheck />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(ROUTES.WALLET)}>
             <CreditCard />
-            Billing
+            Wallet
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleNotifications}>
             <Bell />
             Notifications
           </DropdownMenuItem>

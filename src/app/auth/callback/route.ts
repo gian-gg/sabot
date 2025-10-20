@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 
         // Redirect to a new page to display the mnemonic phrase securely.
         // We pass the mnemonic as a query parameter for the one-time display.
-        const redirectUrl = new URL(`${origin}/wallet-setup`);
+        const redirectUrl = new URL(`${origin}/wallet/setup`);
         redirectUrl.searchParams.append('mnemonic', mnemonic);
         redirectUrl.searchParams.append('address', publicAddress);
         redirectUrl.searchParams.append('privateKey', privateKey);
