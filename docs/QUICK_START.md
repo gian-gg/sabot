@@ -34,11 +34,11 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 supabase migration up
 ```
 
-### 3. Enable Realtime
+### 3. Realtime Setup
 
-1. Go to **Database** → **Replication**
-2. Enable for: `transactions`, `transaction_participants`
-3. Select all events
+✅ **No configuration needed!**
+
+The system uses Supabase Broadcast Channels which work on all plans without database replication. A 5-second polling fallback ensures reliability.
 
 ### 4. Start Development Server
 
@@ -97,7 +97,7 @@ supabase/migrations/
 
 ### Real-time not working
 
-→ Verify Realtime is enabled in Supabase Dashboard
+→ Check browser console for errors. System will fall back to polling (5s intervals)
 
 ### Upload fails
 

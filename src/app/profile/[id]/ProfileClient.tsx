@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -34,13 +34,88 @@ type Props = {
 };
 
 export default function ProfileClient({ id }: Props) {
+  // phone stays blank per request
   const [isEditingPhone, setIsEditingPhone] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('+1 (555) 123-4567');
-  const [tempPhone, setTempPhone] = useState(phoneNumber);
+  const [phoneNumber, setPhoneNumber] = useState(''); // blank
+  const [tempPhone, setTempPhone] = useState(''); // blank
 
-  const handleSavePhone = () => {
+  // profile state loaded from API
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    avatar: '/placeholder.svg',
+    isVerified: false,
+    idExpiration: '',
+    trustStatus: 'unknown',
+    // optional: provider info to show "synced from Google"
+    provider: '' as string | undefined,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadProfile() {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+
+      async function tryFetch(url: string) {
+        try {
+          const res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data;
+        } catch {
+          return null;
+        }
+      }
+
+      // Primary: fetch by route id (server should return Google-synced profile for that id)
+      const primary = await tryFetch(`/api/profile/${encodeURIComponent(id)}`);
+      // Fallback: current session user (useful when viewing own profile)
+      const fallback = primary ? null : await tryFetch(`/api/auth/me`);
+
+      const data = primary ?? fallback;
+      if (!mounted) return;
+
+      if (!data) {
+        setError(
+          'Profile data not found. Implement /api/profile/[id] or /api/auth/me.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Map and apply fetched values safely
+      setUserData((prev) => ({
+        ...prev,
+        name: data.name ?? prev.name,
+        email: data.email ?? prev.email,
+        avatar: data.avatar ?? prev.avatar,
+        isVerified: data.isVerified ?? prev.isVerified,
+        idExpiration: data.idExpiration ?? prev.idExpiration,
+        trustStatus: data.trustStatus ?? prev.trustStatus,
+        provider: data.provider ?? prev.provider,
+      }));
+
+      setLoading(false);
+    }
+
+    loadProfile();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const handleSavePhone = async () => {
     setPhoneNumber(tempPhone);
     setIsEditingPhone(false);
+    // TODO: persist phone to server, e.g. POST /api/profile/:id/phone { phone: tempPhone }
+    // await fetch(`/api/profile/${encodeURIComponent(id)}/phone`, { method: 'POST', body: JSON.stringify({phone: tempPhone}) })
   };
 
   const handleCancelEdit = () => {
@@ -48,19 +123,9 @@ export default function ProfileClient({ id }: Props) {
     setIsEditingPhone(false);
   };
 
-  // Mock data
-  const userData = {
-    name: 'John Anderson',
-    email: 'john.anderson@gmail.com',
-    avatar: '/professional-male-avatar.png',
-    isVerified: true,
-    idExpiration: 'March 15, 2026',
-    trustStatus: 'good',
-  };
-
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-4">
         <h1 className="mb-2 text-4xl font-bold text-balance">
           Profile Settings
         </h1>
@@ -70,6 +135,16 @@ export default function ProfileClient({ id }: Props) {
         <p className="text-muted-foreground mt-2 text-sm">
           Route user id: {id}
         </p>
+        {loading && (
+          <p className="text-muted-foreground mt-2 text-sm">Loading profile…</p>
+        )}
+        {error && <p className="mt-2 text-sm text-red-500">Error: {error}</p>}
+        {/* show provider sync info if available */}
+        {!loading && !error && userData.provider && (
+          <p className="text-muted-foreground mt-2 text-sm">
+            Synced from {userData.provider}
+          </p>
+        )}
       </div>
 
       <div className="grid gap-6">
@@ -87,13 +162,13 @@ export default function ProfileClient({ id }: Props) {
               <Avatar className="border-border h-24 w-24 border-2">
                 <AvatarImage
                   src={userData.avatar || '/placeholder.svg'}
-                  alt={userData.name}
+                  alt={userData.name || 'User'}
                 />
                 <AvatarFallback className="text-2xl">
-                  {userData.name
+                  {(userData.name || '')
                     .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
+                    .map((n) => n?.[0] ?? '')
+                    .join('') || 'U'}
                 </AvatarFallback>
               </Avatar>
 
@@ -120,6 +195,7 @@ export default function ProfileClient({ id }: Props) {
                     value={userData.name}
                     disabled
                     className="bg-muted cursor-not-allowed"
+                    placeholder={loading ? 'Loading name…' : 'No name'}
                   />
                 </div>
 
@@ -146,6 +222,7 @@ export default function ProfileClient({ id }: Props) {
                     value={userData.email}
                     disabled
                     className="bg-muted cursor-not-allowed"
+                    placeholder={loading ? 'Loading email…' : 'No email'}
                   />
                 </div>
 
@@ -160,12 +237,16 @@ export default function ProfileClient({ id }: Props) {
                       onChange={(e) => setTempPhone(e.target.value)}
                       disabled={!isEditingPhone}
                       className={!isEditingPhone ? 'bg-muted' : ''}
+                      placeholder=""
                     />
                     {!isEditingPhone ? (
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => setIsEditingPhone(true)}
+                        onClick={() => {
+                          setTempPhone(phoneNumber);
+                          setIsEditingPhone(true);
+                        }}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -241,7 +322,7 @@ export default function ProfileClient({ id }: Props) {
                       <TooltipContent>
                         <p className="max-w-xs text-pretty">
                           You will need to reverify your identity on{' '}
-                          {userData.idExpiration}
+                          {userData.idExpiration || '—'}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -250,7 +331,7 @@ export default function ProfileClient({ id }: Props) {
                 <div>
                   <p className="font-medium">ID Expiration Date</p>
                   <p className="text-muted-foreground text-sm">
-                    Expires on {userData.idExpiration}
+                    Expires on {userData.idExpiration || '—'}
                   </p>
                 </div>
               </div>

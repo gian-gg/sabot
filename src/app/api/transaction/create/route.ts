@@ -12,7 +12,15 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
+    console.log('Auth check:', {
+      hasUser: !!user,
+      userId: user?.id,
+      hasError: !!authError,
+      error: authError?.message,
+    });
+
     if (authError || !user) {
+      console.error('Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,6 +28,7 @@ export async function POST(request: NextRequest) {
     const payload: CreateTransactionPayload = await request.json();
 
     // Create transaction
+    console.log('Creating transaction for user:', user.id);
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .insert({
@@ -35,12 +44,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (transactionError) {
-      console.error('Transaction creation error:', transactionError);
+      console.error('Transaction creation error:', {
+        code: transactionError.code,
+        message: transactionError.message,
+        details: transactionError.details,
+        hint: transactionError.hint,
+      });
       return NextResponse.json(
-        { error: 'Failed to create transaction' },
+        { error: transactionError.message || 'Failed to create transaction' },
         { status: 500 }
       );
     }
+
+    console.log('Transaction created successfully:', transaction.id);
 
     // Add creator as participant
     const { error: participantError } = await supabase

@@ -68,11 +68,23 @@ export async function GET(
 
     let is_ready_for_next_step = false;
 
-    if (transaction.status === 'waiting_for_participant' && bothJoined) {
-      is_ready_for_next_step = true;
-    } else if (transaction.status === 'both_joined' && bothUploaded) {
+    // Ready to move to upload screen if both users have joined
+    if (bothJoined && transaction.status === 'both_joined' && !bothUploaded) {
       is_ready_for_next_step = true;
     }
+    // Ready to move to transaction details if both uploaded
+    else if (transaction.status === 'screenshots_uploaded' && bothUploaded) {
+      is_ready_for_next_step = true;
+    }
+
+    console.log(`Status API [${id}]:`, {
+      status: transaction.status,
+      participantCount,
+      bothJoined,
+      bothUploaded,
+      is_ready_for_next_step,
+      user: user.id.slice(0, 8),
+    });
 
     const response: TransactionStatusResponse = {
       transaction,

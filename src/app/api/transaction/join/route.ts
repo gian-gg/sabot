@@ -12,12 +12,23 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
+    console.log('Join - Auth check:', {
+      hasUser: !!user,
+      userId: user?.id,
+      hasError: !!authError,
+    });
+
     if (authError || !user) {
+      console.error('Join - Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Parse request body
     const payload: JoinTransactionPayload = await request.json();
+    console.log(
+      'Join - Attempting to join transaction:',
+      payload.transaction_id
+    );
 
     // Check if transaction exists
     const { data: transaction, error: transactionError } = await supabase
@@ -27,11 +38,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (transactionError || !transaction) {
+      console.error('Join - Transaction not found:', {
+        transactionId: payload.transaction_id,
+        error: transactionError,
+      });
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
       );
     }
+
+    console.log('Join - Transaction found:', transaction.id);
 
     // Check if user is already a participant
     const { data: existingParticipant } = await supabase
@@ -70,6 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add user as participant
+    console.log('Join - Adding user as participant...');
     const { data: participant, error: participantError } = await supabase
       .from('transaction_participants')
       .insert({
@@ -81,22 +99,46 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (participantError) {
-      console.error('Failed to add participant:', participantError);
+      console.error('Join - Failed to add participant:', {
+        code: participantError.code,
+        message: participantError.message,
+        details: participantError.details,
+        hint: participantError.hint,
+      });
       return NextResponse.json(
-        { error: 'Failed to join transaction' },
+        { error: participantError.message || 'Failed to join transaction' },
         { status: 500 }
       );
     }
 
+    console.log('Join - Participant added successfully:', participant.id);
+
     // Update transaction status to 'both_joined'
-    const { error: updateError } = await supabase
+    console.log('Join - Updating transaction status to both_joined...');
+    const { data: updateData, error: updateError } = await supabase
       .from('transactions')
       .update({ status: 'both_joined' })
-      .eq('id', payload.transaction_id);
+      .eq('id', payload.transaction_id)
+      .select();
 
     if (updateError) {
-      console.error('Failed to update transaction status:', updateError);
+      console.error('Join - Failed to update transaction status:', updateError);
+    } else {
+      console.log('Join - Transaction status updated:', updateData);
     }
+
+    // Broadcast update to all clients subscribed to this transaction
+    // This works without database replication enabled
+    const channel = supabase.channel(`transaction:${payload.transaction_id}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'transaction_update',
+      payload: {
+        type: 'participant_joined',
+        transaction_id: payload.transaction_id,
+        user_id: user.id,
+      },
+    });
 
     return NextResponse.json({
       participant,

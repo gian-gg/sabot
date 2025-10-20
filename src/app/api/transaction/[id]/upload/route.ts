@@ -142,6 +142,19 @@ export async function POST(
       screenshot,
       both_uploaded: bothUploaded,
     });
+    // Broadcast update to all clients subscribed to this transaction
+    // This works without database replication enabled
+    const channel = supabase.channel(`transaction:${transactionId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'transaction_update',
+      payload: {
+        type: 'screenshot_uploaded',
+        transaction_id: transactionId,
+        user_id: user.id,
+        both_uploaded: bothUploaded,
+      },
+    });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

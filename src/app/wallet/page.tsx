@@ -31,7 +31,7 @@ export default async function WalletPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/sign-in');
+    redirect('/');
   }
 
   // Fetch user's wallet address from database

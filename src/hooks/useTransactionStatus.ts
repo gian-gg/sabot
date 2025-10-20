@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { TransactionStatusResponse } from '@/types/transaction';
+
+const POLL_INTERVAL = 5000; // Poll every 5 seconds as fallback
 
 export function useTransactionStatus(transactionId: string | null) {
   const [status, setStatus] = useState<TransactionStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!transactionId) {
@@ -26,6 +29,11 @@ export function useTransactionStatus(transactionId: string | null) {
           throw new Error('Failed to fetch transaction status');
         }
         const data = await response.json();
+        console.log('Hook - Status fetched:', {
+          status: data.transaction?.status,
+          participantCount: data.participants?.length,
+          isReady: data.is_ready_for_next_step,
+        });
         setStatus(data);
         setError(null);
       } catch (err) {
@@ -37,38 +45,31 @@ export function useTransactionStatus(transactionId: string | null) {
 
     fetchStatus();
 
-    // Subscribe to real-time updates
+    // Subscribe to Supabase Broadcast channel (works without database replication)
     const channel = supabase
-      .channel(`transaction-${transactionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transactions',
-          filter: `id=eq.${transactionId}`,
-        },
-        () => {
-          // Refetch status when transaction changes
-          fetchStatus();
+      .channel(`transaction:${transactionId}`)
+      .on('broadcast', { event: 'transaction_update' }, (payload) => {
+        console.log('Received broadcast:', payload);
+        // Refetch status when broadcast received
+        fetchStatus();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscribed to transaction updates');
         }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transaction_participants',
-          filter: `transaction_id=eq.${transactionId}`,
-        },
-        () => {
-          // Refetch status when participants change
-          fetchStatus();
-        }
-      )
-      .subscribe();
+      });
+
+    // Fallback: Poll for updates every 5 seconds
+    // This ensures updates even if broadcast fails or is delayed
+    pollIntervalRef.current = setInterval(() => {
+      fetchStatus();
+    }, POLL_INTERVAL);
 
     return () => {
+      // Cleanup
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, [transactionId]);

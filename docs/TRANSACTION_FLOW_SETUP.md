@@ -112,15 +112,14 @@ Run the SQL from `supabase/migrations/001_create_transactions.sql`:
 pending → waiting_for_participant → both_joined → screenshots_uploaded → active → completed
 ```
 
-### Step 3: Enable Realtime
+### Step 3: Verify Realtime is Available
 
-In Supabase Dashboard:
+Supabase Realtime is enabled by default on all plans. The system uses **Broadcast Channels** which work without database replication configuration.
 
-1. Go to **Database** → **Replication**
-2. Enable replication for:
-   - `transactions` table
-   - `transaction_participants` table
-3. Select all events: `INSERT`, `UPDATE`, `DELETE`
+**No additional configuration needed!** The system will:
+
+- Use Supabase Broadcast for instant updates
+- Fall back to polling (every 5 seconds) as a safety net
 
 ---
 
@@ -301,11 +300,18 @@ function MyComponent({ transactionId }) {
 **How it works:**
 
 1. Fetches initial status via API
-2. Subscribes to Realtime changes on:
-   - `transactions` table
-   - `transaction_participants` table
-3. Automatically refetches when changes detected
-4. Cleans up subscription on unmount
+2. Subscribes to Supabase Broadcast channel for instant updates
+3. Polls every 5 seconds as a fallback (ensures reliability)
+4. Automatically refetches when:
+   - Broadcast event received (instant)
+   - Poll interval triggers (reliable fallback)
+5. Cleans up subscription and polling on unmount
+
+**Why Broadcast + Polling?**
+
+- **Broadcast**: Instant updates when other user acts (<500ms)
+- **Polling**: Guaranteed updates even if broadcast fails
+- **No database replication needed**: Works on all Supabase plans
 
 ---
 
@@ -409,8 +415,7 @@ bun run dev
 - [ ] RLS policies tested and verified
 - [ ] Environment variables set correctly
 - [ ] `NEXT_PUBLIC_BASE_URL` points to production domain
-- [ ] Realtime enabled on required tables
-- [ ] CORS configured for production domain
+- [ ] CORS configured for production domain (if needed)
 
 ### Deployment Steps
 
@@ -439,6 +444,9 @@ bun run start
 
 Ensure all `NEXT_PUBLIC_*` variables are set in your hosting platform's dashboard.
 
+- Uses Broadcast Channels (no database replication needed)
+- Falls back to 5-second polling for reliability
+
 **4. Test Production Flow:**
 
 Use the same testing checklist as local development.
@@ -456,8 +464,7 @@ Already created in migration for:
 **Realtime Optimization:**
 
 - Only subscribe when component mounted
-- Unsubscribe on unmount
-- Use specific filters (`transaction_id=eq.uuid`)
+- Cleanup polling and subscriptions on unmount
 
 ---
 
@@ -482,15 +489,16 @@ SELECT * FROM transactions WHERE id = 'uuid';  -- As authenticated user
 
 **Possible Causes:**
 
-- Realtime not enabled on tables
 - User not authenticated
-- Subscription filter incorrect
+- Network connectivity issues
+- Broadcast channel not subscribed correctly
 
 **Solution:**
 
-1. Check Supabase Dashboard → Database → Replication
-2. Verify authentication: `supabase.auth.getUser()`
-3. Check browser console for Realtime connection errors
+1. Verify authentication: `supabase.auth.getUser()`
+2. Check browser console for connection errors
+3. Ensure `transactionId` is valid and passed to hook
+4. System will fall back to polling automatically (updates within 5 seconds)
 
 ### Issue: Screenshot upload fails
 
