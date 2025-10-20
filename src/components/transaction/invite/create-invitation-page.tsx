@@ -55,7 +55,7 @@ export function CreateTransactionPage() {
       <div>
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-xl">Create New Transactionz</CardTitle>
+            <CardTitle className="text-xl">Create New Transaction</CardTitle>
             <CardDescription>
               Generate a secure transaction link to share with your
               counterparty. Both parties must be verified to proceed.

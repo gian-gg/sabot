@@ -40,6 +40,15 @@ export default function HeaderAction({ user }: { user: User }) {
     });
   }
 
+  function handleNotifications() {
+    toast('No new notifications', {
+      action: {
+        label: 'View',
+        onClick: () => router.push(ROUTES.REPORTS),
+      },
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer" asChild>
@@ -81,15 +90,17 @@ export default function HeaderAction({ user }: { user: User }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push(ROUTES.PROFILE.VIEW(user.id))}
+          >
             <BadgeCheck />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(ROUTES.WALLET)}>
             <CreditCard />
             Billing
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleNotifications}>
             <Bell />
             Notifications
           </DropdownMenuItem>

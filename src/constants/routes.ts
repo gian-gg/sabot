@@ -13,6 +13,7 @@ export const ROUTES = {
   PROFILE: {
     VIEW: (id: string) => `/profile/${id}`,
   },
+  WALLET: '/wallet',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
   TRANSACTION: {
