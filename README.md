@@ -1,4 +1,3 @@
-
 <h1 align="center">Sabot 🛡️</h1>
 <a id="readme-top"></a>
 
@@ -74,18 +73,15 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
   <img src="https://coin-images.coingecko.com/coins/images/385/large/Lisk_logo.png?1722338450" height="40" width="40" alt="Lisk" style="border-radius:8px;"  />
 </p>
 
-
-
 <!-- SCREENSHOTS -->
 
 ## 📱 Screenshots & Features
+
 > _For more examples, please refer to the [Documentation](https://www.canva.com/design/DAG1XQBRczA/I1Ty55pcAZTr-qltGVJwlg/edit?utm_content=DAG1XQBRczA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)_
 
 <div align="center">
 
 </div>
-
-
 
 <!-- GETTING STARTED -->
 
@@ -94,7 +90,6 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
 Follow these steps to get Sabot running on your local machine.
 
 ### 🔧 Prerequisites
-
 
 ### 🛠️ Installation
 
@@ -123,7 +118,6 @@ Edit the `.env` file with your configuration (API keys, database URL, etc.)
 
 #### 4. Database Setup
 
-
 Apply database migrations:
 
 ```sh
@@ -137,8 +131,6 @@ bun run dev
 ```
 
 ## 📝 Notes
-
-
 
 <!-- CONTRIBUTING -->
 
@@ -164,7 +156,6 @@ Don't forget to give the project a star! Thanks again!
 ## ⚖️ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
