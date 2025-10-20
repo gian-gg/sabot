@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ethers } from 'ethers';
+import { encryptPrivateKey } from '@/lib/blockchain/helper';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -28,13 +29,10 @@ export async function GET(request: Request) {
           .eq('id', user.id)
           .single();
 
-        // If the user profile exists and already has a wallet, redirect to the main app.
         if (userProfile && userProfile.address) {
           return NextResponse.redirect(`${origin}${next}`);
         }
 
-        // --- NEW LOGIC ---
-        // If the user is new or doesn't have a wallet, create one.
         const newWallet = ethers.Wallet.createRandom();
         const publicAddress = newWallet.address;
         const privateKey = newWallet.privateKey;
@@ -45,10 +43,14 @@ export async function GET(request: Request) {
         }
 
         const mnemonic = newWallet.mnemonic.phrase;
+        const secretKey = process.env.PRIVATE_KEY_SECRET!;
+        const encryptedKey = encryptPrivateKey(privateKey, secretKey);
 
         const { error: updateError } = await supabase
           .from('user_wallet')
-          .insert([{ address: publicAddress }])
+          .insert([
+            { address: publicAddress, encrypt_private_key: encryptedKey },
+          ])
           .eq('id', user.id);
 
         if (updateError) {
@@ -59,7 +61,7 @@ export async function GET(request: Request) {
 
         // Redirect to a new page to display the mnemonic phrase securely.
         // We pass the mnemonic as a query parameter for the one-time display.
-        const redirectUrl = new URL(`${origin}/wallet-setup`);
+        const redirectUrl = new URL(`${origin}/wallet/setup`);
         redirectUrl.searchParams.append('mnemonic', mnemonic);
         redirectUrl.searchParams.append('address', publicAddress);
         redirectUrl.searchParams.append('privateKey', privateKey);
