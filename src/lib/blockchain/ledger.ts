@@ -15,7 +15,7 @@ export async function getLedgerContract(
   const provider = new ethers.JsonRpcProvider(RPC_URL);
 
   const signer = new ethers.Wallet(
-    decryptPrivateKey(custodialPrivateKey),
+    decryptPrivateKey(encrypted_private_key),
     provider
   );
 
