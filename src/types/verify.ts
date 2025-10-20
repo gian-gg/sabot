@@ -30,3 +30,10 @@ export type GovernmentIdInfo = {
   sex: string | null;
   notes?: string;
 };
+
+export interface CaptureData {
+  step: string;
+  timestamp: string;
+  quality: 'High' | 'Medium';
+  status: 'Completed';
+}
