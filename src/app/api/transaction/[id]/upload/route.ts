@@ -22,12 +22,15 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Capture user id immediately to preserve non-null typing across awaits
+    const userId = user.id;
+
     // Check if user is a participant
     const { data: participant, error: participantError } = await supabase
       .from('transaction_participants')
       .select('*')
       .eq('transaction_id', transactionId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (participantError || !participant) {
@@ -63,7 +66,7 @@ export async function POST(
 
     // Upload to Supabase Storage
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${transactionId}-${Date.now()}.${fileExt}`;
+    const fileName = `${userId}/${transactionId}-${Date.now()}.${fileExt}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('transaction-screenshots')
@@ -90,7 +93,7 @@ export async function POST(
       .from('transaction_screenshots')
       .insert({
         transaction_id: transactionId,
-        user_id: user.id,
+        user_id: userId,
         file_path: uploadData.path,
         file_size: file.size,
       })
@@ -138,10 +141,6 @@ export async function POST(
         .eq('id', transactionId);
     }
 
-    return NextResponse.json({
-      screenshot,
-      both_uploaded: bothUploaded,
-    });
     // Broadcast update to all clients subscribed to this transaction
     // This works without database replication enabled
     const channel = supabase.channel(`transaction:${transactionId}`);
@@ -151,9 +150,14 @@ export async function POST(
       payload: {
         type: 'screenshot_uploaded',
         transaction_id: transactionId,
-        user_id: user.id,
+        user_id: userId,
         both_uploaded: bothUploaded,
       },
+    });
+
+    return NextResponse.json({
+      screenshot,
+      both_uploaded: bothUploaded,
     });
   } catch (error) {
     console.error('Unexpected error:', error);

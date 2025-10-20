@@ -10,10 +10,12 @@ export function useTransactionStatus(transactionId: string | null) {
   const [status, setStatus] = useState<TransactionStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // create supabase client inside effect so it's not a dependency
+    const supabase = createClient();
+
     if (!transactionId) {
       setLoading(false);
       return;
@@ -70,6 +72,7 @@ export function useTransactionStatus(transactionId: string | null) {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
+      // removeChannel on the same client instance created above
       supabase.removeChannel(channel);
     };
   }, [transactionId]);

@@ -5,7 +5,6 @@ import {
   Bell,
   CreditCard,
   LogOut,
-  Sparkles,
   CirclePoundSterling,
 } from 'lucide-react';
 
