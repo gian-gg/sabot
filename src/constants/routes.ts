@@ -18,6 +18,8 @@ export const ROUTES = {
   REPORTS: '/reports',
   TRANSACTION: {
     NEW: '/transaction/new',
+    ACCEPT: '/transaction/accept',
+    UPLOAD: '/transaction/upload',
     INVITE: '/transaction/invite',
     VIEW: (id: string) => `/transaction/${id}`,
     ACTIVE: (id: string) => `/transaction/${id}/active`,

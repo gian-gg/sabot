@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/constants/routes';
 import {
@@ -10,14 +10,9 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ReviewTransactionInvitation } from '@/components/transaction/invite/review-invitation';
-import { UploadScreenshotStep } from '@/components/transaction/invite/upload-screenshot';
-import { VerificationStep } from '@/components/transaction/invite/verification-step';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { toast } from 'sonner';
-
-type Step = 'review' | 'upload' | 'verification';
 
 interface AcceptTransactionPageProps {
   transactionId: string;
@@ -37,35 +32,24 @@ export function AcceptTransactionPage({
   transactionId,
 }: AcceptTransactionPageProps) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('review');
-  const [file, setFile] = useState<File | null>(null);
-  const [joining, setJoining] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   const { status } = useTransactionStatus(transactionId);
 
-  // Automatically move to upload step when both joined
-  useEffect(() => {
-    if (status?.transaction.status === 'both_joined' && step === 'review') {
-      setStep('upload');
-    }
-  }, [status, step]);
-
-  // Navigate when both screenshots uploaded
+  // Navigate to upload page when both users join
   useEffect(() => {
     if (
       status?.is_ready_for_next_step &&
-      status.transaction.status === 'screenshots_uploaded'
+      status.transaction.status === 'both_joined'
     ) {
-      toast.success('Both screenshots uploaded! Proceeding...');
+      console.log('Invitee - Both joined! Navigating to upload page...');
+      toast.success('Both joined! Proceeding to upload...');
       setTimeout(() => {
-        router.push(ROUTES.TRANSACTION.VIEW(transactionId));
+        router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
       }, 1500);
     }
   }, [status, transactionId, router]);
 
   const handleAcceptInvite = async () => {
-    setJoining(true);
     try {
       const response = await fetch('/api/transaction/join', {
         method: 'POST',
@@ -74,16 +58,19 @@ export function AcceptTransactionPage({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to join transaction');
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to join transaction');
       }
 
       toast.success('Successfully joined transaction!');
-      setStep('upload');
+      // Wait for status update via real-time hook
     } catch (error) {
       console.error('Error joining transaction:', error);
-      toast.error('Failed to join transaction');
-    } finally {
-      setJoining(false);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to join transaction'
+      );
     }
   };
 
@@ -91,103 +78,21 @@ export function AcceptTransactionPage({
     router.push(ROUTES.HOME.ROOT);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) return;
-
-    setUploading(true);
-    setStep('verification');
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch(`/api/transaction/${transactionId}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload screenshot');
-      }
-
-      const data = await response.json();
-      toast.success('Screenshot uploaded successfully!');
-
-      if (data.both_uploaded) {
-        toast.success('Both parties have uploaded! Processing...');
-        setTimeout(() => {
-          router.push(ROUTES.TRANSACTION.VIEW(transactionId));
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error uploading screenshot:', error);
-      toast.error('Failed to upload screenshot');
-      setStep('upload');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const getStepNumber = () => {
-    switch (step) {
-      case 'review':
-        return 1;
-      case 'upload':
-        return 2;
-      case 'verification':
-        return 3;
-      default:
-        return 1;
-    }
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <CardTitle className="text-xl">Transaction Invitation</CardTitle>
-              <CardDescription>
-                {step === 'review' &&
-                  "You've been invited to a verified transaction"}
-                {step === 'upload' && 'Upload your conversation screenshot'}
-                {step === 'verification' && 'Verifying transaction details'}
-              </CardDescription>
-            </div>
-            <Badge
-              variant="outline"
-              className="border-primary/30 bg-primary/10 text-primary"
-            >
-              Step {getStepNumber()}/3
-            </Badge>
-          </div>
+          <CardTitle className="text-xl">Transaction Invitation</CardTitle>
+          <CardDescription>
+            You&apos;ve been invited to a verified transaction
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {step === 'review' && (
-            <ReviewTransactionInvitation
-              inviter={mockInviter}
-              onAccept={handleAcceptInvite}
-              onDecline={handleDecline}
-            />
-          )}
-
-          {step === 'upload' && (
-            <UploadScreenshotStep
-              file={file}
-              onFileChange={handleFileChange}
-              onUpload={handleUpload}
-            />
-          )}
-
-          {step === 'verification' && <VerificationStep />}
+          <ReviewTransactionInvitation
+            inviter={mockInviter}
+            onAccept={handleAcceptInvite}
+            onDecline={handleDecline}
+          />
         </CardContent>
       </Card>
     </div>

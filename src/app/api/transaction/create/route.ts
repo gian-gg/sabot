@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       transaction,
-      invite_url: `${process.env.NEXT_PUBLIC_BASE_URL}/transaction/invite?id=${transaction.id}`,
+      invite_url: `${process.env.NEXT_PUBLIC_BASE_URL}/transaction/accept?id=${transaction.id}`,
     });
   } catch (error) {
     console.error('Unexpected error:', error);

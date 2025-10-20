@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +27,7 @@ import { ROUTES } from '@/constants/routes';
 
 export function CreateTransactionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -37,8 +38,19 @@ export function CreateTransactionPage() {
 
   const { status } = useTransactionStatus(transactionId);
 
-  // Create transaction on mount
+  // Check for existing transaction ID in URL first, then create if needed
   useEffect(() => {
+    const existingId = searchParams.get('id');
+    if (existingId) {
+      console.log('Reusing existing transaction ID:', existingId);
+      setTransactionId(existingId);
+      setTransactionLink(
+        `${window.location.origin}/transaction/accept?id=${existingId}`
+      );
+      toast.info('Resumed existing transaction');
+      return;
+    }
+
     const createTransaction = async () => {
       try {
         const response = await fetch('/api/transaction/create', {
@@ -87,6 +99,14 @@ export function CreateTransactionPage() {
         const data = await response.json();
         setTransactionId(data.transaction.id);
         setTransactionLink(data.invite_url);
+
+        // Update URL with transaction ID to prevent duplicate creation on refresh
+        window.history.replaceState(
+          null,
+          '',
+          `/transaction/new?id=${data.transaction.id}`
+        );
+
         toast.success('Transaction created successfully');
       } catch (error) {
         console.error('Error creating transaction:', error);
@@ -100,7 +120,7 @@ export function CreateTransactionPage() {
     };
 
     createTransaction();
-  }, [router]);
+  }, [router, searchParams]);
 
   // Navigate to screenshot upload when both users join
   useEffect(() => {
@@ -114,12 +134,12 @@ export function CreateTransactionPage() {
       status?.is_ready_for_next_step &&
       status.transaction.status === 'both_joined'
     ) {
-      console.log('Creator - Both joined! Navigating...');
+      console.log('Creator - Both joined! Navigating to upload page...');
       toast.success(
         'Other party has joined! Proceeding to screenshot upload...'
       );
       setTimeout(() => {
-        router.push(`${ROUTES.TRANSACTION.VIEW(transactionId!)}`);
+        router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
       }, 1500);
     }
   }, [status, transactionId, router]);
