@@ -12,21 +12,27 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Summary from '@/components/verify/components/biometrics-capture/summary';
 import CameraView from '@/components/verify/components/biometrics-capture/camera-view';
 import { LIVENESS_CHECK_STEPS } from '@/constants/verify';
+import { verifyLivenessCheck } from '@/lib/gemini/verify';
 
-import type { CaptureData } from '@/types/verify';
+import type { CaptureData, StepNavProps, UserIDType } from '@/types/verify';
 
-import type { StepNavProps } from '@/types/verify';
-
-type BiometricCaptureProps = StepNavProps;
-
-export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
+export function BiometricCapture({
+  onNext,
+  onPrev,
+  userIDCard,
+  capturedFrames,
+  setCapturedFrames,
+}: StepNavProps & {
+  userIDCard: UserIDType | null;
+  capturedFrames: CaptureData[];
+  setCapturedFrames: React.Dispatch<React.SetStateAction<CaptureData[]>>;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [capturedFrames, setCapturedFrames] = useState<CaptureData[]>([]);
+  const [currentStep, setCurrentStep] = useState<number>(capturedFrames.length);
 
   // Function to start the camera stream
   const startCamera = async () => {
@@ -46,14 +52,16 @@ export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
           videoRef.current.srcObject = stream;
         }
         setIsCameraOn(true);
-        setError(null);
+        setError([]);
       } catch (err) {
         // Handle errors (e.g., user denies permission)
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        setError([
+          err instanceof Error ? err.message : 'Unknown error occurred',
+        ]);
         setIsCameraOn(false);
       }
     } else {
-      setError('Your browser does not support camera access.');
+      setError(['Your browser does not support camera access.']);
     }
   };
 
@@ -75,10 +83,14 @@ export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
     setIsCameraOn(false);
   }, []);
 
-  const captureFrame = () => {
+  const captureFrame = async () => {
     if (!videoRef.current) return null;
+    if (!isCameraOn) return null;
+    if (!userIDCard?.file) return null;
 
     setIsLoading(true);
+    setError([]);
+
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -87,19 +99,47 @@ export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
     if (context) {
       const stepName = LIVENESS_CHECK_STEPS[currentStep];
 
-      // Store capture metadata
-      const captureData: CaptureData = {
-        step: stepName,
-        timestamp: new Date().toISOString(),
-        quality: video.videoWidth >= 640 ? 'High' : 'Medium',
-        status: 'Completed',
-      };
-
-      setCapturedFrames((prev) => [...prev, captureData]);
-      setCurrentStep((prev) => prev + 1);
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      setIsLoading(false);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const faceCaptureFile = new File([blob], 'face-capture.jpg', {
+        type: 'image/jpeg',
+      });
+
+      // Call the Gemini liveness check verification
+      try {
+        const data = await verifyLivenessCheck(
+          faceCaptureFile,
+          userIDCard.file,
+          stepName
+        );
+        console.log('Liveness Check Result:', data);
+
+        if (data.notes.length > 0) {
+          setError(data.notes);
+          setIsLoading(false);
+          return null;
+        }
+
+        // Store capture metadata
+        const captureData: CaptureData = {
+          ...data,
+          step: stepName,
+          timestamp: new Date().toISOString(),
+        };
+
+        setCapturedFrames((prev) => [...prev, captureData]);
+        setCurrentStep((prev) => prev + 1);
+      } catch (e) {
+        setError([
+          e instanceof Error ? e.message : 'Liveness verification failed.',
+        ]);
+        setIsLoading(false);
+        return null;
+      }
     }
+
     setIsLoading(false);
     return null;
   };
@@ -109,6 +149,21 @@ export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
     if (!isCameraOn) return 'Click "Start" to begin the liveness check.';
     if (currentStep < LIVENESS_CHECK_STEPS.length)
       return LIVENESS_CHECK_STEPS[currentStep];
+  };
+
+  const handleBack = () => {
+    stopCamera();
+    setError([]);
+    setCapturedFrames([]);
+    setIsLoading(false);
+    setCurrentStep(0);
+
+    if (onPrev) onPrev();
+  };
+
+  const handleDisableNext = () => {
+    const isComplete = currentStep >= LIVENESS_CHECK_STEPS.length;
+    return isLoading || !isComplete;
   };
 
   // This useEffect handles stopping the camera when the component unmounts
@@ -149,13 +204,15 @@ export function BiometricCapture({ onNext, onPrev }: BiometricCaptureProps) {
             captureFrame={captureFrame}
             screenPrompt={screenPrompt}
             error={error}
+            isLoading={isLoading}
           />
         )}
 
         <NavigationButtons
-          isUploading={isLoading}
+          isLoading={isLoading}
+          disableNext={handleDisableNext()}
           onNext={onNext}
-          onPrev={onPrev}
+          onPrev={handleBack}
         />
       </CardContent>
     </Card>

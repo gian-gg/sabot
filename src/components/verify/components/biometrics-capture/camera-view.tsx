@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Camera, AlertTriangle, Pin } from 'lucide-react';
 import { BIOMETRICS_INSTRUCTIONS } from '@/constants/verify';
+import { Spinner } from '@/components/ui/spinner';
 
 const CameraView = ({
   videoRef,
@@ -11,13 +12,15 @@ const CameraView = ({
   captureFrame,
   screenPrompt,
   error,
+  isLoading,
 }: {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   isCameraOn: boolean;
   startCamera: () => Promise<void>;
   captureFrame: () => void;
   screenPrompt: () => string | undefined;
-  error: string | null;
+  error: string[];
+  isLoading: boolean;
 }) => {
   return (
     <>
@@ -27,7 +30,7 @@ const CameraView = ({
           autoPlay
           playsInline
           muted
-          className={`h-auto w-full -scale-x-100 ${isCameraOn ? 'block' : 'hidden'} `}
+          className={`h-auto w-full ${isCameraOn ? 'block' : 'hidden'} `}
         />
         {!isCameraOn ? (
           <Button onClick={startCamera} size="lg">
@@ -40,10 +43,19 @@ const CameraView = ({
               size="lg"
               className="mt-2 w-full"
               onClick={captureFrame}
-              disabled={!isCameraOn}
+              disabled={!isCameraOn || isLoading}
             >
-              <Camera className="text-primary-foreground size-5" />
-              Capture
+              {isLoading ? (
+                <>
+                  <Spinner />
+                  Processing
+                </>
+              ) : (
+                <>
+                  <Camera className="text-primary-foreground size-5" />
+                  Capture
+                </>
+              )}
             </Button>
 
             {/* Head shape overlay */}
@@ -76,22 +88,32 @@ const CameraView = ({
 
       <p className="mb-6 text-center text-lg font-medium">{screenPrompt()}</p>
 
-      {error && (
+      {error.length > 0 && (
         // make a component for this
         <Alert
           variant="destructive"
           className="border-destructive bg-destructive/5 mt-2"
         >
           <AlertTriangle className="mt-0.5 size-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertTitle>Error, please try again.</AlertTitle>
+          <AlertDescription>
+            {error.length === 1 ? (
+              error[0]
+            ) : (
+              <ul className="ml-5 list-disc space-y-1">
+                {error.map((err, index) => (
+                  <li key={index}>{err}</li>
+                ))}
+              </ul>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* make a component for this */}
       <Alert className="mt-2 border-2 border-dashed border-blue-400/30 bg-gradient-to-br from-blue-400/10 to-transparent p-4">
         <Pin className="h-4 w-4 flex-shrink-0" />
-        <AlertTitle>Preparation</AlertTitle>
+        <AlertTitle>Note</AlertTitle>
         <AlertDescription>
           <ul className="ml-5 list-disc space-y-1">
             {BIOMETRICS_INSTRUCTIONS.map((instruction) => (
