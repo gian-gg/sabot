@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/constants/routes';
 import {
@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { ReviewTransactionInvitation } from '@/components/transaction/invite/review-invitation';
 import { UploadScreenshotStep } from '@/components/transaction/invite/upload-screenshot';
 import { VerificationStep } from '@/components/transaction/invite/verification-step';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { toast } from 'sonner';
 
 type Step = 'review' | 'upload' | 'verification';
 
@@ -37,9 +39,52 @@ export function AcceptTransactionPage({
   const router = useRouter();
   const [step, setStep] = useState<Step>('review');
   const [file, setFile] = useState<File | null>(null);
+  const [joining, setJoining] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const handleAcceptInvite = () => {
-    setStep('upload');
+  const { status } = useTransactionStatus(transactionId);
+
+  // Automatically move to upload step when both joined
+  useEffect(() => {
+    if (status?.transaction.status === 'both_joined' && step === 'review') {
+      setStep('upload');
+    }
+  }, [status, step]);
+
+  // Navigate when both screenshots uploaded
+  useEffect(() => {
+    if (
+      status?.is_ready_for_next_step &&
+      status.transaction.status === 'screenshots_uploaded'
+    ) {
+      toast.success('Both screenshots uploaded! Proceeding...');
+      setTimeout(() => {
+        router.push(ROUTES.TRANSACTION.VIEW(transactionId));
+      }, 1500);
+    }
+  }, [status, transactionId, router]);
+
+  const handleAcceptInvite = async () => {
+    setJoining(true);
+    try {
+      const response = await fetch('/api/transaction/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: transactionId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to join transaction');
+      }
+
+      toast.success('Successfully joined transaction!');
+      setStep('upload');
+    } catch (error) {
+      console.error('Error joining transaction:', error);
+      toast.error('Failed to join transaction');
+    } finally {
+      setJoining(false);
+    }
   };
 
   const handleDecline = () => {
@@ -52,17 +97,42 @@ export function AcceptTransactionPage({
     }
   };
 
-  const handleUpload = (e: React.FormEvent) => {
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
+    setUploading(true);
     setStep('verification');
 
-    // Simulate verification process
-    setTimeout(() => {
-      // After verification, navigate to transaction details
-      router.push(`/transaction/${transactionId}`);
-    }, 3000);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`/api/transaction/${transactionId}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload screenshot');
+      }
+
+      const data = await response.json();
+      toast.success('Screenshot uploaded successfully!');
+
+      if (data.both_uploaded) {
+        toast.success('Both parties have uploaded! Processing...');
+        setTimeout(() => {
+          router.push(ROUTES.TRANSACTION.VIEW(transactionId));
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error uploading screenshot:', error);
+      toast.error('Failed to upload screenshot');
+      setStep('upload');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const getStepNumber = () => {

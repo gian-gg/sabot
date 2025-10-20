@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,21 +21,70 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { toast } from 'sonner';
+import { ROUTES } from '@/constants/routes';
 
 export function CreateTransactionPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
+  const [transactionLink, setTransactionLink] = useState('');
 
-  const transactionId = 'abc123';
-  const transactionLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/transaction/invite?id=${transactionId}`;
+  const { status } = useTransactionStatus(transactionId);
+
+  // Create transaction on mount
+  useEffect(() => {
+    const createTransaction = async () => {
+      try {
+        const response = await fetch('/api/transaction/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create transaction');
+        }
+
+        const data = await response.json();
+        setTransactionId(data.transaction.id);
+        setTransactionLink(data.invite_url);
+        toast.success('Transaction created successfully');
+      } catch (error) {
+        console.error('Error creating transaction:', error);
+        toast.error('Failed to create transaction');
+      }
+    };
+
+    createTransaction();
+  }, []);
+
+  // Navigate to screenshot upload when both users join
+  useEffect(() => {
+    if (
+      status?.is_ready_for_next_step &&
+      status.transaction.status === 'both_joined'
+    ) {
+      toast.success(
+        'Other party has joined! Proceeding to screenshot upload...'
+      );
+      setTimeout(() => {
+        router.push(`${ROUTES.TRANSACTION.VIEW(transactionId!)}`);
+      }, 1500);
+    }
+  }, [status, transactionId, router]);
 
   const handleSendInvitation = async () => {
     if (!email) return;
     setSending(true);
+    // TODO: Integrate with email service (Resend/SendGrid)
     await new Promise((r) => setTimeout(r, 1200));
     console.log('Sending invitation to:', email);
+    toast.success(`Invitation sent to ${email}`);
     setSending(false);
     setDialogOpen(false);
     setEmail('');
@@ -44,11 +94,32 @@ export function CreateTransactionPage() {
     try {
       await navigator.clipboard.writeText(transactionLink);
       setCopied(true);
+      toast.success('Link copied to clipboard');
       setTimeout(() => setCopied(false), 1200);
     } catch {
-      // Optionally handle error
+      toast.error('Failed to copy link');
     }
   };
+
+  if (!transactionId) {
+    return (
+      <div className="flex min-h-screen w-screen items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+              <p className="text-muted-foreground mt-4 text-sm">
+                Creating transaction...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const participantCount = status?.participants.length || 1;
+  const isWaitingForParticipant = participantCount < 2;
 
   return (
     <div className="flex min-h-screen w-screen items-center justify-center p-4 pt-18">
@@ -123,9 +194,22 @@ export function CreateTransactionPage() {
               </Dialog>
             </div>
             <div className="justify-cente flex items-center">
-              <Button disabled size="lg" className="w-full">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Waiting for other party...
+              <Button
+                disabled={isWaitingForParticipant}
+                size="lg"
+                className="w-full"
+              >
+                {isWaitingForParticipant ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Waiting for other party...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Both parties joined!
+                  </>
+                )}
               </Button>
             </div>
             <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">

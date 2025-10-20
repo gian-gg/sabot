@@ -1,6 +1,13 @@
 'use client';
 
-import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from 'lucide-react';
+import {
+  BadgeCheck,
+  Bell,
+  CreditCard,
+  LogOut,
+  Sparkles,
+  CirclePoundSterling,
+} from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -84,8 +91,8 @@ export default function HeaderAction({ user }: { user: User }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            <Sparkles />
-            Upgrade to Pro
+            <CirclePoundSterling />
+            Buy Tokens
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -98,7 +105,7 @@ export default function HeaderAction({ user }: { user: User }) {
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(ROUTES.WALLET)}>
             <CreditCard />
-            Billing
+            Wallet
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleNotifications}>
             <Bell />

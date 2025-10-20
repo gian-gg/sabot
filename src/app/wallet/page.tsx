@@ -110,28 +110,19 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p>
-              A blockchain wallet is like a digital bank account, but with key
-              differences:
+            <p className="text-base leading-relaxed">
+              A blockchain wallet is a digital wallet that functions like a bank
+              account but operates without central control. It is{' '}
+              <span className="text-primary font-medium">decentralized</span>,
+              meaning you alone own and manage it;{' '}
+              <span className="text-primary font-medium">transparent</span>, as
+              all transactions are publicly recorded on the blockchain;{' '}
+              <span className="text-primary font-medium">secure</span>, using
+              cryptographic keys to protect access and authorize transactions;
+              and <span className="text-primary font-medium">immutable</span>,
+              ensuring that once recorded, transactions cannot be changed or
+              deleted.
             </p>
-            <ul className="space-y-2 pl-5">
-              <li className="list-disc">
-                <strong>Decentralized</strong> - No bank or company controls it.
-                You are the sole owner.
-              </li>
-              <li className="list-disc">
-                <strong>Transparent</strong> - All transactions are recorded on
-                a public ledger (blockchain) that anyone can verify.
-              </li>
-              <li className="list-disc">
-                <strong>Secure</strong> - Uses cryptographic keys to ensure only
-                you can authorize transactions.
-              </li>
-              <li className="list-disc">
-                <strong>Immutable</strong> - Once a transaction is recorded, it
-                cannot be altered or deleted.
-              </li>
-            </ul>
           </CardContent>
         </Card>
 
@@ -144,30 +135,24 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p>
+            <p className="text-base leading-relaxed">
               Sabot uses blockchain technology to provide trust and safety for
-              peer-to-peer transactions:
+              peer-to-peer transactions. It ensures{' '}
+              <span className="text-primary font-medium">
+                transaction verification
+              </span>{' '}
+              by recording every trade on the blockchain, creating an immutable
+              history. Your wallet address acts as{' '}
+              <span className="text-primary font-medium">identity proof</span>,
+              building trust between buyers and sellers. In cases of conflict,{' '}
+              <span className="text-primary font-medium">
+                dispute resolution
+              </span>
+              is supported by undeniable blockchain records. Finally,{' '}
+              <span className="text-primary font-medium">fraud prevention</span>{' '}
+              is enhanced through public ledgers that allow the community to
+              detect and report suspicious activities.
             </p>
-            <ul className="space-y-2 pl-5">
-              <li className="list-disc">
-                <strong>Transaction Verification</strong> - Every transaction is
-                recorded on the blockchain, creating an immutable history of all
-                trades.
-              </li>
-              <li className="list-disc">
-                <strong>Identity Proof</strong> - Your wallet address serves as
-                your verified digital identity, building trust between buyers
-                and sellers.
-              </li>
-              <li className="list-disc">
-                <strong>Dispute Resolution</strong> - Blockchain records provide
-                undeniable proof of transaction details if disputes arise.
-              </li>
-              <li className="list-disc">
-                <strong>Fraud Prevention</strong> - Public transaction ledgers
-                allow the community to spot and report suspicious patterns.
-              </li>
-            </ul>
           </CardContent>
         </Card>
 
@@ -336,28 +321,36 @@ export default async function WalletPage() {
                 <Info className="h-4 w-4" />
                 <AlertTitle>Keep Your Credentials Safe</AlertTitle>
                 <AlertDescription className="space-y-2">
-                  <ul className="mt-2 space-y-1 pl-4">
-                    <li className="list-disc">
-                      <strong>Never share</strong> your private key or recovery
-                      phrase with anyone, including Sabot support
-                    </li>
-                    <li className="list-disc">
-                      <strong>Store offline</strong> - Write down your recovery
-                      phrase on paper and keep it in a secure location
-                    </li>
-                    <li className="list-disc">
-                      <strong>Use a password manager</strong> for your private
-                      key (offline storage is even better)
-                    </li>
-                    <li className="list-disc">
-                      <strong>Beware of phishing</strong> - Always verify
-                      you&apos;re on the official Sabot website
-                    </li>
-                    <li className="list-disc">
-                      <strong>Test with small amounts</strong> before making
-                      large transactions
-                    </li>
-                  </ul>
+                  <p className="text-base leading-relaxed">
+                    To keep your wallet secure,{' '}
+                    <span className="text-primary font-medium">
+                      never share
+                    </span>{' '}
+                    your private key or recovery phrase with anyone, including
+                    Sabot support.
+                    <span className="text-primary font-medium">
+                      {' '}
+                      Store offline
+                    </span>{' '}
+                    by writing down your recovery phrase on paper and keeping it
+                    in a secure place.
+                    <span className="text-primary font-medium">
+                      {' '}
+                      Use a password manager
+                    </span>{' '}
+                    to protect your private key (offline storage is even
+                    better).
+                    <span className="text-primary font-medium">
+                      {' '}
+                      Beware of phishing
+                    </span>{' '}
+                    and always make sure you’re on the official Sabot website.
+                    Finally,{' '}
+                    <span className="text-primary font-medium">
+                      test with small amounts
+                    </span>{' '}
+                    before making large transactions.
+                  </p>
                 </AlertDescription>
               </Alert>
 
