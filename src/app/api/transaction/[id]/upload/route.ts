@@ -139,6 +139,21 @@ export async function POST(
         .from('transactions')
         .update({ status: 'screenshots_uploaded' })
         .eq('id', transactionId);
+
+      // Trigger automatic analysis
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_APP_URL}/api/transaction/${transactionId}/analyze-screenshots`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+          }
+        );
+      } catch (error) {
+        console.error('Failed to trigger analysis:', error);
+      }
     }
 
     // Broadcast update to all clients subscribed to this transaction

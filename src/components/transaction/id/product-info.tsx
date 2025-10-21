@@ -57,7 +57,7 @@ export function ProductInfoCard({
       setCopied(true);
       toast.success('Transaction ID copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to copy transaction ID');
     }
   };

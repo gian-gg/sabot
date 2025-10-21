@@ -12,6 +12,7 @@ import {
   User,
   Sparkles,
   MapPinned,
+  Scan,
 } from 'lucide-react';
 import { StepIndicator } from '@/components/verify/components/step-indicator';
 import { TransactionCarousel } from '@/components/transaction/id/transaction-carousel';
@@ -19,6 +20,7 @@ import { ProductInfoCard } from '@/components/transaction/id/product-info';
 import { SellerInfoCard } from '@/components/transaction/id/seller-info';
 import { AIChangesCard } from '@/components/transaction/id/ai-changes';
 import { OccurrenceDetailsCard } from '@/components/transaction/id/occurrence-details';
+import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
 const aiChanges = {
@@ -214,6 +216,19 @@ export default function TransactionPage({
       content: (
         <div className="space-y-3">
           <AIChangesCard aiChanges={aiChanges} />
+        </div>
+      ),
+    },
+    {
+      id: 'analysis',
+      title: 'AI Analysis',
+      icon: Scan,
+      content: (
+        <div className="space-y-3">
+          <ScreenshotAnalysis
+            transactionId={id}
+            currentUserId={transformedTransaction.buyerName}
+          />
         </div>
       ),
     },

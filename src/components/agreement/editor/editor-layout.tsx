@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
 import { IdeaBlocksPanel } from '@/components/agreement/editor/idea-blocks-panel';
-import { CollaborativeEditor } from '@/components/agreement/editor/collaborative-editor';
+import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
 import { AiAssistant } from '@/components/agreement/editor/ai-assistant';
 import { DocumentOutline } from '@/components/agreement/editor/document-outline';
 import { SignatureModal } from '@/components/agreement/editor/signature-modal';
@@ -45,8 +45,9 @@ export function EditorLayout({
         {/* Left: Idea Blocks Panel */}
         <IdeaBlocksPanel ideaBlocks={initialIdeaBlocks} />
 
-        {/* Center: Collaborative Editor */}
-        <CollaborativeEditor
+        {/* Center: TipTap Editor */}
+        <TiptapEditor
+          documentId={documentId}
           onOpenSignature={() => setIsSignatureOpen(true)}
           isReviewing={isReviewing}
         />
