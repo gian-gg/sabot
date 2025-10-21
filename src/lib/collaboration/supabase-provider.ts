@@ -51,14 +51,12 @@ export class SupabaseProvider {
         this.syncPresence();
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.channel.on(
         'presence',
         { event: 'join' },
-        ({ newPresences }: any) => {
+        ({ newPresences }: { newPresences?: unknown[] }) => {
           if (this.awareness && newPresences) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            newPresences.forEach((presence: any) => {
+            newPresences.forEach((presence: unknown) => {
               if (
                 presence.user?.id &&
                 presence.user?.id !== this.getCurrentUserId()

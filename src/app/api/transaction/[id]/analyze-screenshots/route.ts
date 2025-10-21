@@ -51,6 +51,17 @@ export async function POST(
         // Extract conversation data
         const conversationData = await extractConversation(file);
 
+        // Validate analysis data has required fields
+        if (
+          !conversationData ||
+          typeof conversationData.confidence !== 'number'
+        ) {
+          console.error(
+            `Invalid analysis data for screenshot ${screenshot.id}`
+          );
+          continue;
+        }
+
         // Save analysis result
         const { error: analysisError } = await supabase
           .from('transaction_analyses')

@@ -83,11 +83,6 @@ export async function POST(
       );
     }
 
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('transaction-screenshots').getPublicUrl(fileName);
-
     // Save screenshot record
     const { data: screenshot, error: screenshotError } = await supabase
       .from('transaction_screenshots')
@@ -110,12 +105,11 @@ export async function POST(
       );
     }
 
-    // Update participant record
+    // Update participant record (remove screenshot_url since we use signed URLs now)
     const { error: updateError } = await supabase
       .from('transaction_participants')
       .update({
         screenshot_uploaded: true,
-        screenshot_url: publicUrl,
       })
       .eq('id', participant.id);
 

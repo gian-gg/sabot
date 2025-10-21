@@ -39,14 +39,27 @@ export async function GET(
       );
     }
 
-    // Add public URLs to the response
-    const analysesWithUrls = analyses?.map((analysis) => ({
-      ...analysis,
-      screenshot_url: supabase.storage
-        .from('transaction-screenshots')
-        .getPublicUrl(analysis.transaction_screenshots.file_path).data
-        .publicUrl,
-    }));
+    const analysesWithUrls = await Promise.all(
+      analyses?.map(async (analysis) => {
+        const { data: signedUrlData, error: signedUrlError } =
+          await supabase.storage
+            .from('transaction-screenshots')
+            .createSignedUrl(analysis.transaction_screenshots.file_path, 3600); // 1 hour expiry
+
+        if (signedUrlError) {
+          console.error(
+            'Failed to create signed URL for:',
+            analysis.transaction_screenshots.file_path,
+            signedUrlError
+          );
+        }
+
+        return {
+          ...analysis,
+          screenshot_url: signedUrlData?.signedUrl || '',
+        };
+      }) || []
+    );
 
     return NextResponse.json({ analyses: analysesWithUrls || [] });
   } catch (_error) {

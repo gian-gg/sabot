@@ -2,6 +2,7 @@
 
 import geminiClient from '@/lib/gemini';
 import { Part } from '@google/genai';
+import { retryWithBackoff } from './retry';
 
 export interface ConversationData {
   platform: 'whatsapp' | 'telegram' | 'messenger' | 'other';
@@ -56,20 +57,29 @@ export async function extractConversation(
     },
   };
 
-  const result = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          imagePart,
+  // Retry with exponential backoff for transient errors (503, 429)
+  const result = await retryWithBackoff(
+    async () =>
+      ai.models.generateContent({
+        model: 'gemini-2.5-flash', // Using proven stable model
+        contents: [
           {
-            text: conversationPrompt,
+            role: 'user',
+            parts: [
+              imagePart,
+              {
+                text: conversationPrompt,
+              },
+            ],
           },
         ],
-      },
-    ],
-  });
+      }),
+    {
+      maxRetries: 3,
+      initialDelayMs: 1000,
+      maxDelayMs: 8000,
+    }
+  );
 
   try {
     const data = result.text;
@@ -78,7 +88,22 @@ export async function extractConversation(
     }
 
     const jsonString = data.replace(/```json\n?|```/g, '').trim();
-    return JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonString);
+
+    // Provide defaults for missing required fields
+    return {
+      platform: parsed.platform || 'other',
+      buyerName: parsed.buyerName,
+      sellerName: parsed.sellerName,
+      itemDescription: parsed.itemDescription,
+      agreedPrice: parsed.agreedPrice,
+      currency: parsed.currency,
+      meetingLocation: parsed.meetingLocation,
+      meetingTime: parsed.meetingTime,
+      riskFlags: parsed.riskFlags || [],
+      confidence: parsed.confidence || 0,
+      extractedText: parsed.extractedText || '',
+    } as ConversationData;
   } catch (e) {
     throw new Error(`Failed to parse JSON from AI response: ${e}`);
   }

@@ -77,14 +77,14 @@ export async function GET(
       is_ready_for_next_step = true;
     }
 
-    console.log(`Status API [${id}]:`, {
-      status: transaction.status,
-      participantCount,
-      bothJoined,
-      bothUploaded,
-      is_ready_for_next_step,
-      user: user.id.slice(0, 8),
-    });
+    // console.log(`Status API [${id}]:`, {
+    //   status: transaction.status,
+    //   participantCount,
+    //   bothJoined,
+    //   bothUploaded,
+    //   is_ready_for_next_step,
+    //   user: user.id.slice(0, 8),
+    // });
 
     const response: TransactionStatusResponse = {
       transaction,
