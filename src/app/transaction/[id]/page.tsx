@@ -225,10 +225,7 @@ export default function TransactionPage({
       icon: Scan,
       content: (
         <div className="space-y-3">
-          <ScreenshotAnalysis
-            transactionId={id}
-            currentUserId={transformedTransaction.buyerName}
-          />
+          <ScreenshotAnalysis transactionId={id} />
         </div>
       ),
     },
