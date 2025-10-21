@@ -26,13 +26,15 @@ export function HeroSection() {
 
   function goToTransactionNew() {
     setCreateOpen(false);
-    router.push(ROUTES.TRANSACTION.NEW);
+    router.push(ROUTES.TRANSACTION.INVITE);
   }
 
   function goToAgreementNew() {
     setCreateOpen(false);
     router.push(ROUTES.AGREEMENT.NEW);
   }
+
+  // Removed goToEscrowNew - escrow is now part of agreement finalization
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
