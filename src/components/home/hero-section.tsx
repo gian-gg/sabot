@@ -26,7 +26,7 @@ export function HeroSection() {
 
   function goToTransactionNew() {
     setCreateOpen(false);
-    router.push(ROUTES.TRANSACTION.NEW);
+    router.push(ROUTES.TRANSACTION.INVITE);
   }
 
   function goToAgreementNew() {

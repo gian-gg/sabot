@@ -104,7 +104,7 @@ export function CreateTransactionPage() {
         window.history.replaceState(
           null,
           '',
-          `/transaction/new?id=${data.transaction.id}`
+          `/transaction/invite?id=${data.transaction.id}`
         );
 
         toast.success('Transaction created successfully');
@@ -122,7 +122,7 @@ export function CreateTransactionPage() {
     createTransaction();
   }, [router, searchParams]);
 
-  // Navigate to screenshot upload when both users join
+  // Navigate to configure transaction when both users join
   useEffect(() => {
     console.log('Creator - Status check:', {
       status: status?.transaction.status,
@@ -134,12 +134,14 @@ export function CreateTransactionPage() {
       status?.is_ready_for_next_step &&
       status.transaction.status === 'both_joined'
     ) {
-      console.log('Creator - Both joined! Navigating to upload page...');
+      console.log(
+        'Creator - Both joined! Navigating to configure transaction...'
+      );
       toast.success(
-        'Other party has joined! Proceeding to screenshot upload...'
+        "Other party has joined! Let's configure the transaction together..."
       );
       setTimeout(() => {
-        router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
+        router.push(`${ROUTES.TRANSACTION.NEW}?id=${transactionId}`);
       }, 1500);
     }
   }, [status, transactionId, router]);

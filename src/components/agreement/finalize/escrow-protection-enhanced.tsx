@@ -17,7 +17,15 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Plus, X, Sparkles } from 'lucide-react';
 import type { EscrowType, Deliverable, PartyResponsible } from '@/types/escrow';
-import { ArbiterSelection } from './arbiter-selection';
+
+interface ItemDetails {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  category: string;
+  condition: string;
+}
 
 interface EscrowProtectionEnhancedProps {
   enabled: boolean;
@@ -25,6 +33,7 @@ interface EscrowProtectionEnhancedProps {
   onEscrowDataChange: (data: EnhancedEscrowData) => void;
   agreementTitle?: string;
   agreementTerms?: string;
+  itemDetails?: ItemDetails;
   initiatorId: string;
   participantId: string;
   initiatorName?: string; // Actual user name
@@ -85,6 +94,36 @@ function determineResponsibleParty(sentence: string): PartyResponsible {
   ).length;
 
   return participantScore > initiatorScore ? 'participant' : 'initiator';
+}
+
+/**
+ * Parse deliverables from structured item details
+ */
+function parseDeliverablesFromItemDetails(
+  itemDetails: ItemDetails
+): Deliverable[] {
+  const deliverables: Deliverable[] = [];
+
+  // Create item deliverable (seller provides item)
+  deliverables.push({
+    id: 'deliverable-item',
+    type: 'item',
+    description: `${itemDetails.name} - ${itemDetails.condition.replace('-', ' ')} condition. ${itemDetails.description}`,
+    quantity: itemDetails.quantity,
+    party_responsible: 'initiator', // Seller provides the item
+  });
+
+  // Create payment deliverable (buyer pays)
+  deliverables.push({
+    id: 'deliverable-payment',
+    type: 'digital_transfer',
+    description: `Payment for ${itemDetails.name}`,
+    value: itemDetails.price,
+    currency: 'PHP',
+    party_responsible: 'participant', // Buyer pays
+  });
+
+  return deliverables;
 }
 
 /**
@@ -230,19 +269,26 @@ export function EscrowProtectionEnhanced({
   onEscrowDataChange,
   agreementTitle,
   agreementTerms,
-  initiatorId,
-  participantId,
+  itemDetails,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initiatorId: _initiatorId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  participantId: _participantId,
   initiatorName,
   participantName,
 }: EscrowProtectionEnhancedProps) {
-  // Auto-infer from agreement
-  const inferredDeliverables = useMemo(
-    () =>
-      agreementTerms
-        ? parseDeliverablesFromAgreement(agreementTerms, agreementTitle)
-        : [],
-    [agreementTerms, agreementTitle]
-  );
+  // Auto-infer from item details or agreement
+  const inferredDeliverables = useMemo(() => {
+    // Prefer structured item details if available
+    if (itemDetails && itemDetails.name && itemDetails.price > 0) {
+      return parseDeliverablesFromItemDetails(itemDetails);
+    }
+    // Fall back to parsing agreement text
+    if (agreementTerms) {
+      return parseDeliverablesFromAgreement(agreementTerms, agreementTitle);
+    }
+    return [];
+  }, [itemDetails, agreementTerms, agreementTitle]);
 
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData>({
     deliverables: inferredDeliverables,
@@ -299,459 +345,426 @@ export function EscrowProtectionEnhanced({
     });
   };
 
-  const handleArbiterSelected = (arbiterId: string) => {
-    handleDataChange({ arbiter_id: arbiterId });
-  };
-
-  const hasInferredData =
-    inferredDeliverables.length > 0 || inferredAmount.amount;
+  const hasInferredData = inferredDeliverables.length > 0;
 
   return (
-    <div className="space-y-6">
-      <Card className="mx-auto max-w-4xl">
-        <div className="border-b p-6 pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
-                <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+    <div>
+      <div className="bg-muted/30 border-b p-6 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
+              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Escrow Protection</h3>
+              <p className="text-muted-foreground text-sm">
+                Secure holding until deliverables are completed
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={enabled}
+            onCheckedChange={onEnabledChange}
+            aria-label="Enable escrow protection"
+            className="ring-1 ring-green-200 ring-offset-1 data-[state=checked]:bg-green-600 data-[state=checked]:ring-blue-400 dark:ring-green-800"
+          />
+        </div>
+      </div>
+
+      {enabled && (
+        <div className="max-h-[600px] overflow-auto [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-green-500 [&::-webkit-scrollbar-thumb]:hover:bg-green-600 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800">
+          <div className="space-y-6 px-6 py-6">
+            {/* Info Alert */}
+            {hasInferredData && (
+              <Alert className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  <strong>Smart Escrow:</strong> We&apos;ve automatically
+                  created deliverables from your item details - the item
+                  you&apos;re selling and the payment. You can edit or add more
+                  if needed.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Deliverables - Separated by Party */}
+            <div className="space-y-6">
+              <Label className="text-base font-semibold">
+                Deliverables <span className="text-destructive">*</span>
+              </Label>
+
+              {/* Initiator Deliverables */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                    {initiatorName
+                      ? `${initiatorName}'s Obligations`
+                      : "Initiator's Obligations"}
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addDeliverable('initiator')}
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add
+                  </Button>
+                </div>
+
+                {escrowData.deliverables
+                  .filter((d) => d.party_responsible === 'initiator')
+                  .map((deliverable, index) => (
+                    <Card key={deliverable.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            Deliverable {index + 1}
+                          </span>
+                          {escrowData.deliverables.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeDeliverable(deliverable.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div
+                            className={`space-y-2 ${deliverable.type === 'item' || deliverable.type === 'document' ? '' : 'sm:col-span-2'}`}
+                          >
+                            <Label htmlFor={`type-${deliverable.id}`}>
+                              Type
+                            </Label>
+                            <Select
+                              value={deliverable.type}
+                              onValueChange={(value) =>
+                                updateDeliverable(deliverable.id, {
+                                  type: value as EscrowType,
+                                })
+                              }
+                            >
+                              <SelectTrigger id={`type-${deliverable.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DELIVERABLE_TYPES.map((type) => (
+                                  <SelectItem
+                                    key={type.value}
+                                    value={type.value}
+                                  >
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Quantity field - only for items and documents */}
+                          {(deliverable.type === 'item' ||
+                            deliverable.type === 'document') && (
+                            <div className="space-y-2">
+                              <Label htmlFor={`quantity-${deliverable.id}`}>
+                                Quantity
+                              </Label>
+                              <Input
+                                id={`quantity-${deliverable.id}`}
+                                type="number"
+                                min="1"
+                                placeholder="1"
+                                value={deliverable.quantity || ''}
+                                onChange={(e) =>
+                                  updateDeliverable(deliverable.id, {
+                                    quantity: e.target.value
+                                      ? parseInt(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`desc-${deliverable.id}`}>
+                            Description
+                          </Label>
+                          <Textarea
+                            id={`desc-${deliverable.id}`}
+                            placeholder="Describe what needs to be delivered..."
+                            value={deliverable.description}
+                            onChange={(e) =>
+                              updateDeliverable(deliverable.id, {
+                                description: e.target.value,
+                              })
+                            }
+                            rows={2}
+                          />
+                        </div>
+
+                        {/* Amount field - only for payment types */}
+                        {(deliverable.type === 'cash' ||
+                          deliverable.type === 'digital_transfer') && (
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor={`value-${deliverable.id}`}>
+                                Amount{' '}
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                id={`value-${deliverable.id}`}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                value={deliverable.value || ''}
+                                onChange={(e) =>
+                                  updateDeliverable(deliverable.id, {
+                                    value: e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`currency-${deliverable.id}`}>
+                                Currency
+                              </Label>
+                              <Select
+                                value={deliverable.currency || 'PHP'}
+                                onValueChange={(value) =>
+                                  updateDeliverable(deliverable.id, {
+                                    currency: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger
+                                  id={`currency-${deliverable.id}`}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PHP">PHP</SelectItem>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">EUR</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
               </div>
-              <div>
-                <h3 className="text-xl font-bold">Escrow Protection</h3>
-                <p className="text-muted-foreground text-sm">
-                  Secure holding until deliverables are completed
-                </p>
+
+              {/* Participant Deliverables */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    {participantName
+                      ? `${participantName}'s Obligations`
+                      : "Participant's Obligations"}
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addDeliverable('participant')}
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Add
+                  </Button>
+                </div>
+
+                {escrowData.deliverables
+                  .filter((d) => d.party_responsible === 'participant')
+                  .map((deliverable, index) => (
+                    <Card key={deliverable.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            Deliverable {index + 1}
+                          </span>
+                          {escrowData.deliverables.filter(
+                            (d) => d.party_responsible === 'participant'
+                          ).length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeDeliverable(deliverable.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div
+                            className={`space-y-2 ${deliverable.type === 'item' || deliverable.type === 'document' ? '' : 'sm:col-span-2'}`}
+                          >
+                            <Label htmlFor={`type-${deliverable.id}`}>
+                              Type
+                            </Label>
+                            <Select
+                              value={deliverable.type}
+                              onValueChange={(value) =>
+                                updateDeliverable(deliverable.id, {
+                                  type: value as EscrowType,
+                                })
+                              }
+                            >
+                              <SelectTrigger id={`type-${deliverable.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DELIVERABLE_TYPES.map((type) => (
+                                  <SelectItem
+                                    key={type.value}
+                                    value={type.value}
+                                  >
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Quantity field - only for items and documents */}
+                          {(deliverable.type === 'item' ||
+                            deliverable.type === 'document') && (
+                            <div className="space-y-2">
+                              <Label htmlFor={`quantity-${deliverable.id}`}>
+                                Quantity
+                              </Label>
+                              <Input
+                                id={`quantity-${deliverable.id}`}
+                                type="number"
+                                min="1"
+                                placeholder="1"
+                                value={deliverable.quantity || ''}
+                                onChange={(e) =>
+                                  updateDeliverable(deliverable.id, {
+                                    quantity: e.target.value
+                                      ? parseInt(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`desc-${deliverable.id}`}>
+                            Description
+                          </Label>
+                          <Textarea
+                            id={`desc-${deliverable.id}`}
+                            placeholder="Describe what needs to be delivered..."
+                            value={deliverable.description}
+                            onChange={(e) =>
+                              updateDeliverable(deliverable.id, {
+                                description: e.target.value,
+                              })
+                            }
+                            rows={2}
+                          />
+                        </div>
+
+                        {/* Amount field - only for payment types */}
+                        {(deliverable.type === 'cash' ||
+                          deliverable.type === 'digital_transfer') && (
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor={`value-${deliverable.id}`}>
+                                Amount{' '}
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                id={`value-${deliverable.id}`}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                value={deliverable.value || ''}
+                                onChange={(e) =>
+                                  updateDeliverable(deliverable.id, {
+                                    value: e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`currency-${deliverable.id}`}>
+                                Currency
+                              </Label>
+                              <Select
+                                value={deliverable.currency || 'PHP'}
+                                onValueChange={(value) =>
+                                  updateDeliverable(deliverable.id, {
+                                    currency: value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger
+                                  id={`currency-${deliverable.id}`}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PHP">PHP</SelectItem>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">EUR</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
               </div>
             </div>
-            <Switch
-              checked={enabled}
-              onCheckedChange={onEnabledChange}
-              aria-label="Enable escrow protection"
-              className="ring-1 ring-green-200 ring-offset-1 data-[state=checked]:bg-green-600 data-[state=checked]:ring-blue-400 dark:ring-green-800"
-            />
+
+            {/* Expected Completion Date */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="completion-date"
+                className="text-muted-foreground"
+              >
+                Expected Completion Date{' '}
+                <span className="text-xs">(Optional)</span>
+              </Label>
+              <Input
+                id="completion-date"
+                type="date"
+                value={escrowData.expected_completion_date || ''}
+                onChange={(e) =>
+                  handleDataChange({
+                    expected_completion_date: e.target.value,
+                  })
+                }
+                min={new Date().toISOString().split('T')[0]}
+                placeholder="Select a date..."
+              />
+              <p className="text-muted-foreground text-xs">
+                Set a deadline for when deliverables should be completed
+              </p>
+            </div>
           </div>
         </div>
-
-        {enabled && (
-          <div className="max-h-[600px] overflow-auto [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-green-500 [&::-webkit-scrollbar-thumb]:hover:bg-green-600 [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-gray-800">
-            <div className="space-y-6 px-6 py-6">
-              {/* Info Alert */}
-              {hasInferredData && (
-                <Alert className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-                  <Sparkles className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800 dark:text-blue-200">
-                    <strong>Smart Escrow:</strong> We&apos;ve automatically
-                    analyzed your agreement and extracted the deliverables,
-                    amount, and payment method. You can edit these if needed.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Deliverables - Separated by Party */}
-              <div className="space-y-6">
-                <Label className="text-base font-semibold">
-                  Deliverables <span className="text-destructive">*</span>
-                </Label>
-
-                {/* Initiator Deliverables */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      {initiatorName
-                        ? `${initiatorName}'s Obligations`
-                        : "Initiator's Obligations"}
-                    </h4>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addDeliverable('initiator')}
-                    >
-                      <Plus className="mr-1 h-3 w-3" />
-                      Add
-                    </Button>
-                  </div>
-
-                  {escrowData.deliverables
-                    .filter((d) => d.party_responsible === 'initiator')
-                    .map((deliverable, index) => (
-                      <Card key={deliverable.id} className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
-                              Deliverable {index + 1}
-                            </span>
-                            {escrowData.deliverables.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  removeDeliverable(deliverable.id)
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div
-                              className={`space-y-2 ${deliverable.type === 'item' || deliverable.type === 'document' ? '' : 'sm:col-span-2'}`}
-                            >
-                              <Label htmlFor={`type-${deliverable.id}`}>
-                                Type
-                              </Label>
-                              <Select
-                                value={deliverable.type}
-                                onValueChange={(value) =>
-                                  updateDeliverable(deliverable.id, {
-                                    type: value as EscrowType,
-                                  })
-                                }
-                              >
-                                <SelectTrigger id={`type-${deliverable.id}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {DELIVERABLE_TYPES.map((type) => (
-                                    <SelectItem
-                                      key={type.value}
-                                      value={type.value}
-                                    >
-                                      {type.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Quantity field - only for items and documents */}
-                            {(deliverable.type === 'item' ||
-                              deliverable.type === 'document') && (
-                              <div className="space-y-2">
-                                <Label htmlFor={`quantity-${deliverable.id}`}>
-                                  Quantity
-                                </Label>
-                                <Input
-                                  id={`quantity-${deliverable.id}`}
-                                  type="number"
-                                  min="1"
-                                  placeholder="1"
-                                  value={deliverable.quantity || ''}
-                                  onChange={(e) =>
-                                    updateDeliverable(deliverable.id, {
-                                      quantity: e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    })
-                                  }
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`desc-${deliverable.id}`}>
-                              Description
-                            </Label>
-                            <Textarea
-                              id={`desc-${deliverable.id}`}
-                              placeholder="Describe what needs to be delivered..."
-                              value={deliverable.description}
-                              onChange={(e) =>
-                                updateDeliverable(deliverable.id, {
-                                  description: e.target.value,
-                                })
-                              }
-                              rows={2}
-                            />
-                          </div>
-
-                          {/* Amount field - only for payment types */}
-                          {(deliverable.type === 'cash' ||
-                            deliverable.type === 'digital_transfer') && (
-                            <div className="grid gap-3 sm:grid-cols-3">
-                              <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor={`value-${deliverable.id}`}>
-                                  Amount{' '}
-                                  <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                  id={`value-${deliverable.id}`}
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  placeholder="0.00"
-                                  value={deliverable.value || ''}
-                                  onChange={(e) =>
-                                    updateDeliverable(deliverable.id, {
-                                      value: e.target.value
-                                        ? parseFloat(e.target.value)
-                                        : undefined,
-                                    })
-                                  }
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`currency-${deliverable.id}`}>
-                                  Currency
-                                </Label>
-                                <Select
-                                  value={deliverable.currency || 'PHP'}
-                                  onValueChange={(value) =>
-                                    updateDeliverable(deliverable.id, {
-                                      currency: value,
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger
-                                    id={`currency-${deliverable.id}`}
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="PHP">PHP</SelectItem>
-                                    <SelectItem value="USD">USD</SelectItem>
-                                    <SelectItem value="EUR">EUR</SelectItem>
-                                    <SelectItem value="GBP">GBP</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
-                </div>
-
-                {/* Participant Deliverables */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-green-600 dark:text-green-400">
-                      {participantName
-                        ? `${participantName}'s Obligations`
-                        : "Participant's Obligations"}
-                    </h4>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addDeliverable('participant')}
-                    >
-                      <Plus className="mr-1 h-3 w-3" />
-                      Add
-                    </Button>
-                  </div>
-
-                  {escrowData.deliverables
-                    .filter((d) => d.party_responsible === 'participant')
-                    .map((deliverable, index) => (
-                      <Card key={deliverable.id} className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
-                              Deliverable {index + 1}
-                            </span>
-                            {escrowData.deliverables.filter(
-                              (d) => d.party_responsible === 'participant'
-                            ).length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  removeDeliverable(deliverable.id)
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div
-                              className={`space-y-2 ${deliverable.type === 'item' || deliverable.type === 'document' ? '' : 'sm:col-span-2'}`}
-                            >
-                              <Label htmlFor={`type-${deliverable.id}`}>
-                                Type
-                              </Label>
-                              <Select
-                                value={deliverable.type}
-                                onValueChange={(value) =>
-                                  updateDeliverable(deliverable.id, {
-                                    type: value as EscrowType,
-                                  })
-                                }
-                              >
-                                <SelectTrigger id={`type-${deliverable.id}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {DELIVERABLE_TYPES.map((type) => (
-                                    <SelectItem
-                                      key={type.value}
-                                      value={type.value}
-                                    >
-                                      {type.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Quantity field - only for items and documents */}
-                            {(deliverable.type === 'item' ||
-                              deliverable.type === 'document') && (
-                              <div className="space-y-2">
-                                <Label htmlFor={`quantity-${deliverable.id}`}>
-                                  Quantity
-                                </Label>
-                                <Input
-                                  id={`quantity-${deliverable.id}`}
-                                  type="number"
-                                  min="1"
-                                  placeholder="1"
-                                  value={deliverable.quantity || ''}
-                                  onChange={(e) =>
-                                    updateDeliverable(deliverable.id, {
-                                      quantity: e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    })
-                                  }
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`desc-${deliverable.id}`}>
-                              Description
-                            </Label>
-                            <Textarea
-                              id={`desc-${deliverable.id}`}
-                              placeholder="Describe what needs to be delivered..."
-                              value={deliverable.description}
-                              onChange={(e) =>
-                                updateDeliverable(deliverable.id, {
-                                  description: e.target.value,
-                                })
-                              }
-                              rows={2}
-                            />
-                          </div>
-
-                          {/* Amount field - only for payment types */}
-                          {(deliverable.type === 'cash' ||
-                            deliverable.type === 'digital_transfer') && (
-                            <div className="grid gap-3 sm:grid-cols-3">
-                              <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor={`value-${deliverable.id}`}>
-                                  Amount{' '}
-                                  <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                  id={`value-${deliverable.id}`}
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  placeholder="0.00"
-                                  value={deliverable.value || ''}
-                                  onChange={(e) =>
-                                    updateDeliverable(deliverable.id, {
-                                      value: e.target.value
-                                        ? parseFloat(e.target.value)
-                                        : undefined,
-                                    })
-                                  }
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor={`currency-${deliverable.id}`}>
-                                  Currency
-                                </Label>
-                                <Select
-                                  value={deliverable.currency || 'PHP'}
-                                  onValueChange={(value) =>
-                                    updateDeliverable(deliverable.id, {
-                                      currency: value,
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger
-                                    id={`currency-${deliverable.id}`}
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="PHP">PHP</SelectItem>
-                                    <SelectItem value="USD">USD</SelectItem>
-                                    <SelectItem value="EUR">EUR</SelectItem>
-                                    <SelectItem value="GBP">GBP</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
-                </div>
-              </div>
-
-              {/* Expected Completion Date */}
-              <div className="space-y-2">
-                <Label htmlFor="completion-date">
-                  Expected Completion Date (Optional)
-                </Label>
-                <Input
-                  id="completion-date"
-                  type="date"
-                  value={escrowData.expected_completion_date || ''}
-                  onChange={(e) =>
-                    handleDataChange({
-                      expected_completion_date: e.target.value,
-                    })
-                  }
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-
-              {/* Arbiter Toggle */}
-              <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
-                <div className="space-y-0.5">
-                  <Label htmlFor="arbiter" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-amber-600" />
-                    Include Arbiter Oversight
-                  </Label>
-                  <p className="text-muted-foreground text-sm">
-                    Select an arbiter to oversee this escrow
-                  </p>
-                </div>
-                <Switch
-                  id="arbiter"
-                  checked={escrowData.arbiter_required}
-                  onCheckedChange={(checked) =>
-                    handleDataChange({ arbiter_required: checked })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* Arbiter Selection (shown when enabled) */}
-      {enabled && escrowData.arbiter_required && (
-        <ArbiterSelection
-          initiatorId={initiatorId}
-          participantId={participantId}
-          initiatorName={initiatorName}
-          participantName={participantName}
-          onArbiterSelected={handleArbiterSelected}
-        />
       )}
     </div>
   );
