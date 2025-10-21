@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { mockTransactions } from '@/lib/mock-data/transactions';
-import { getUserById } from '@/lib/mock-data/users';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,12 +13,13 @@ import {
   Sparkles,
   MapPinned,
 } from 'lucide-react';
-import { TransactionProgress } from '@/components/transaction/id/transaction-progress';
+import { StepIndicator } from '@/components/verify/components/step-indicator';
 import { TransactionCarousel } from '@/components/transaction/id/transaction-carousel';
 import { ProductInfoCard } from '@/components/transaction/id/product-info';
 import { SellerInfoCard } from '@/components/transaction/id/seller-info';
 import { AIChangesCard } from '@/components/transaction/id/ai-changes';
 import { OccurrenceDetailsCard } from '@/components/transaction/id/occurrence-details';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
 const aiChanges = {
   original:
@@ -69,7 +68,49 @@ export default function TransactionPage({
   const [reportNotes, setReportNotes] = useState('');
   const [currentSection, setCurrentSection] = useState(0);
 
-  const transaction = mockTransactions.find((t) => t.id === id);
+  // Use real data instead of mock data
+  const { status, loading, error } = useTransactionStatus(id);
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-screen w-full flex-col pt-14">
+        <div className="flex flex-1 items-center justify-center p-8">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-neutral-400">Loading transaction...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="flex min-h-screen w-full flex-col pt-14">
+        <div className="flex flex-1 items-center justify-center p-8">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-neutral-400">
+                  Error loading transaction: {error}
+                </p>
+                <Button asChild className="mt-4 w-full">
+                  <Link href={ROUTES.HOME.ROOT}>Go Home</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const transaction = status?.transaction;
 
   if (!transaction) {
     return (
@@ -90,7 +131,38 @@ export default function TransactionPage({
     );
   }
 
-  const seller = getUserById('user-2') ?? null;
+  // Transform real data to match expected format
+  const transformedTransaction = {
+    id: transaction.id,
+    type: 'other' as const, // Map from real data or add to DB
+    buyerName:
+      status.participants.find((p) => p.role === 'invitee')?.user_id ||
+      'Unknown Buyer',
+    sellerName:
+      status.participants.find((p) => p.role === 'creator')?.user_id ||
+      'Unknown Seller',
+    price: transaction.price || 0,
+    currency: 'USD', // Add to DB schema if needed
+    status: transaction.status,
+    method: 'meetup' as const, // Map from real data
+    location: transaction.meeting_location || 'Location not set',
+    timestamp: new Date(transaction.created_at),
+    platform: undefined,
+  };
+
+  // Get seller from real participants data
+  const seller = status.participants.find((p) => p.role === 'creator')
+    ? {
+        id: status.participants.find((p) => p.role === 'creator')!.user_id,
+        name:
+          status.participants.find((p) => p.role === 'creator')!.user_id ||
+          'Unknown',
+        avatar: undefined, // Add to participants if needed
+        trustScore: 85, // Add to user profile
+        isVerified: true, // Add verification status
+        completedTransactions: 10, // Add to user profile
+      }
+    : null;
 
   const handleReport = () => {
     console.log('Creating report with notes:', reportNotes);
@@ -99,13 +171,15 @@ export default function TransactionPage({
   };
 
   const transactionOccurrence = {
-    location: transaction.location,
+    location: transformedTransaction.location,
     exactLocation: 'Central Mall, Food Court Level 2',
     scheduledTime: 'Dec 15, 2024 at 3:00 PM',
     actualTime:
-      transaction.status === 'completed' ? 'Dec 15, 2024 at 3:15 PM' : null,
+      transformedTransaction.status === 'completed'
+        ? 'Dec 15, 2024 at 3:15 PM'
+        : null,
     disputes: [],
-    status: transaction.status,
+    status: transformedTransaction.status,
   };
 
   // --- Section Definitions ---
@@ -116,7 +190,7 @@ export default function TransactionPage({
       icon: Package,
       content: (
         <div className="space-y-3">
-          <ProductInfoCard transaction={transaction} />
+          <ProductInfoCard transaction={transformedTransaction} />
         </div>
       ),
     },
@@ -126,7 +200,10 @@ export default function TransactionPage({
       icon: User,
       content: (
         <div className="space-y-3">
-          <SellerInfoCard seller={seller} transaction={transaction} />
+          <SellerInfoCard
+            seller={seller}
+            transaction={transformedTransaction}
+          />
         </div>
       ),
     },
@@ -161,21 +238,23 @@ export default function TransactionPage({
 
   // --- Main Render ---
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-hidden pt-14">
-      <div className="mx-auto max-w-3xl">
-        <TransactionProgress
-          currentSection={currentSection}
-          totalSections={sections.length}
-          onSectionClick={setCurrentSection}
-        />
-      </div>
-      <div className="flex-1 overflow-hidden">
+    <div className="animate-in fade-in-0 slide-in-from-bottom-2 container mx-auto max-w-2xl py-8 pt-20 duration-200">
+      <h1 className="mb-6 text-center text-2xl font-bold md:mb-8 md:text-3xl">
+        Transaction Summary
+      </h1>
+      <StepIndicator
+        steps={sections.map((s) => s.title)}
+        currentStep={currentSection}
+      />
+
+      <div className="animate-in fade-in-0 mt-6 duration-200 md:mt-8">
         <TransactionCarousel
           sections={sections}
           currentSection={currentSection}
           onSectionChange={setCurrentSection}
         />
       </div>
+
       <div className="border-t border-neutral-800 bg-neutral-950 px-4 py-3">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <Button

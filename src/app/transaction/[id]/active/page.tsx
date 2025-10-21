@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/core/page-header';
 import { UserAvatar } from '@/components/user/user-avatar';
-import { mockTransactions } from '@/lib/mock-data/transactions';
-import { getUserById } from '@/lib/mock-data/users';
 import {
   Radio,
   MapPin,
@@ -19,6 +17,7 @@ import {
   CheckCircle2,
   Phone,
 } from 'lucide-react';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
 interface ActiveTransactionPageProps {
   params: Promise<{ id: string }>;
@@ -32,7 +31,47 @@ export default function ActiveTransactionPage({
   const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   const [sellerConfirmed] = useState(false);
 
-  const transaction = mockTransactions.find((t) => t.id === id);
+  // Use real data instead of mock data
+  const { status, loading, error } = useTransactionStatus(id);
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen flex-col">
+        <div className="flex flex-1 items-center justify-center p-8">
+          <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-neutral-400">Loading transaction...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="flex h-screen w-screen flex-col">
+        <div className="flex flex-1 items-center justify-center p-8">
+          <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-neutral-400">Error: {error}</p>
+                <Button asChild className="mt-4 w-full">
+                  <Link href={ROUTES.HOME.ROOT}>Go Home</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const transaction = status?.transaction;
 
   if (!transaction) {
     return (
@@ -53,8 +92,26 @@ export default function ActiveTransactionPage({
     );
   }
 
-  const buyer = getUserById('user-1');
-  const seller = getUserById('user-2');
+  // Transform data for component compatibility
+  const transformedTransaction = {
+    id: transaction.id,
+    price: transaction.price || 0,
+    currency: 'USD',
+    status: transaction.status,
+    location: transaction.meeting_location || 'Location not set',
+  };
+
+  // Get participants from real data
+  const creator = status.participants.find((p) => p.role === 'creator');
+  const invitee = status.participants.find((p) => p.role === 'invitee');
+
+  // Mock user data - replace with real user fetching
+  const buyer = invitee
+    ? { id: invitee.user_id, name: 'Buyer Name', avatar: undefined }
+    : null; // Fetch real user data
+  const seller = creator
+    ? { id: creator.user_id, name: 'Seller Name', avatar: undefined }
+    : null; // Fetch real user data
 
   const handleConfirmCompletion = () => {
     // Simulate current user confirming (in this case, buyer)
@@ -115,7 +172,9 @@ export default function ActiveTransactionPage({
                     <p className="mb-1 text-xs text-neutral-500">
                       Meetup Location
                     </p>
-                    <p className="text-sm text-white">{transaction.location}</p>
+                    <p className="text-sm text-white">
+                      {transformedTransaction.location}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 rounded-lg bg-black/40 p-3">
@@ -135,8 +194,8 @@ export default function ActiveTransactionPage({
               <div className="mt-4 rounded-lg bg-black/40 p-3">
                 <p className="mb-2 text-xs text-neutral-500">Amount</p>
                 <p className="text-2xl font-bold text-white">
-                  {transaction.currency}
-                  {transaction.price.toLocaleString()}
+                  {transformedTransaction.currency}
+                  {transformedTransaction.price.toLocaleString()}
                 </p>
               </div>
             </CardContent>
@@ -153,13 +212,13 @@ export default function ActiveTransactionPage({
                 <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar
-                      name={buyer?.name || transaction.buyerName}
+                      name={buyer?.name || 'Unknown Buyer'}
                       avatar={buyer?.avatar}
                       size="md"
                     />
                     <div>
                       <p className="text-sm font-medium text-white">
-                        {buyer?.name || transaction.buyerName}
+                        {buyer?.name || 'Unknown Buyer'}
                       </p>
                       <p className="text-xs text-neutral-500">Buyer</p>
                     </div>
@@ -175,13 +234,13 @@ export default function ActiveTransactionPage({
                 <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar
-                      name={seller?.name || transaction.sellerName}
+                      name={seller?.name || 'Unknown Seller'}
                       avatar={seller?.avatar}
                       size="md"
                     />
                     <div>
                       <p className="text-sm font-medium text-white">
-                        {seller?.name || transaction.sellerName}
+                        {seller?.name || 'Unknown Seller'}
                       </p>
                       <p className="text-xs text-neutral-500">Seller</p>
                     </div>
@@ -292,7 +351,9 @@ export default function ActiveTransactionPage({
                   className="w-full border-neutral-700 text-neutral-300 hover:bg-white/5"
                   asChild
                 >
-                  <Link href={ROUTES.TRANSACTION.VIEW(transaction.id)}>
+                  <Link
+                    href={ROUTES.TRANSACTION.VIEW(transformedTransaction.id)}
+                  >
                     Back to Transaction
                   </Link>
                 </Button>
