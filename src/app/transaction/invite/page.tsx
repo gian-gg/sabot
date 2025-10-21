@@ -1,25 +1,30 @@
 'use client';
 
-import { Suspense } from 'react';
-import { CreateTransactionPage } from '@/components/transaction/invite/create-invitation-page';
-import { Loader2 } from 'lucide-react';
-
-function InvitePageContent() {
-  // This page is for CREATING transactions and sharing invite links
-  // The invite link will point to /transaction/accept?id=xxx
-  return <CreateTransactionPage />;
-}
+import { useState } from 'react';
+import { CreateTransactionForm } from '@/components/transaction/invite/create-transaction-form';
+import { InvitationCreatedView } from '@/components/transaction/invite/invitation-created-view';
 
 export default function TransactionInvitePage() {
+  const [transactionCreated, setTransactionCreated] = useState(false);
+  const [transactionId, setTransactionId] = useState('');
+  const [inviteUrl, setInviteUrl] = useState('');
+
+  const handleTransactionCreated = (id: string, url: string) => {
+    setTransactionId(id);
+    setInviteUrl(url);
+    setTransactionCreated(true);
+  };
+
+  if (transactionCreated) {
+    return (
+      <InvitationCreatedView
+        transactionId={transactionId}
+        inviteUrl={inviteUrl}
+      />
+    );
+  }
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen w-screen items-center justify-center">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        </div>
-      }
-    >
-      <InvitePageContent />
-    </Suspense>
+    <CreateTransactionForm onTransactionCreated={handleTransactionCreated} />
   );
 }
