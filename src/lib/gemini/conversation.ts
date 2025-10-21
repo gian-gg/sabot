@@ -1,55 +1,20 @@
 'use server';
 
 import geminiClient from '@/lib/gemini';
+import type { ConversationData } from '@/types/conversation'; // assuming you move the interface here
+import { conversationPromptTemplate, geminiModel } from '@/constants/gemini'; // keep prompt externally like the ID version
 import { Part } from '@google/genai';
-import { retryWithBackoff } from './retry';
-
-export interface ConversationData {
-  platform: 'whatsapp' | 'telegram' | 'messenger' | 'other';
-  buyerName?: string;
-  sellerName?: string;
-  itemDescription?: string;
-  agreedPrice?: number;
-  currency?: string;
-  meetingLocation?: string;
-  meetingTime?: string;
-  riskFlags: string[];
-  confidence: number;
-  extractedText: string;
-}
-
-const conversationPrompt = `
-Analyze this conversation screenshot and extract key transaction information.
-Return a JSON object with:
-- platform: The messaging platform used (whatsapp, telegram, messenger, other)
-- buyerName/sellerName: Names of parties if identifiable
-- itemDescription: What is being sold
-- agreedPrice: Final agreed price (number only)
-- currency: Currency used (USD, PHP, etc.)
-- meetingLocation: Where to meet
-- meetingTime: When to meet
-- riskFlags: Array of potential red flags or concerns
-- confidence: Confidence score (0-1)
-- extractedText: Full conversation text
-
-Focus on identifying:
-- Platform indicators (UI elements, branding, colors)
-- Names and contact info
-- Item details and pricing negotiations
-- Meeting arrangements and logistics
-- Any suspicious language, urgent requests, or red flags
-- Payment methods discussed
-
-Be thorough but conservative - only extract information you're confident about.
-`;
 
 export async function extractConversation(
   file: File
 ): Promise<ConversationData> {
   const ai = geminiClient();
+
+  // Convert file to base64 string
   const buffer = await file.arrayBuffer();
   const base64Data = Buffer.from(buffer).toString('base64');
 
+  // Build the image part for the AI request
   const imagePart: Part = {
     inlineData: {
       data: base64Data,
@@ -57,29 +22,21 @@ export async function extractConversation(
     },
   };
 
-  // Retry with exponential backoff for transient errors (503, 429)
-  const result = await retryWithBackoff(
-    async () =>
-      ai.models.generateContent({
-        model: 'gemini-2.5-flash', // Using proven stable model
-        contents: [
+  // Build the content structure for Gemini API
+  const result = await ai.models.generateContent({
+    model: geminiModel,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          imagePart,
           {
-            role: 'user',
-            parts: [
-              imagePart,
-              {
-                text: conversationPrompt,
-              },
-            ],
+            text: conversationPromptTemplate,
           },
         ],
-      }),
-    {
-      maxRetries: 3,
-      initialDelayMs: 1000,
-      maxDelayMs: 8000,
-    }
-  );
+      },
+    ],
+  });
 
   try {
     const data = result.text;
@@ -90,20 +47,24 @@ export async function extractConversation(
     const jsonString = data.replace(/```json\n?|```/g, '').trim();
     const parsed = JSON.parse(jsonString);
 
-    // Provide defaults for missing required fields
+    // ✅ Basic validation & defaults
     return {
       platform: parsed.platform || 'other',
-      buyerName: parsed.buyerName,
-      sellerName: parsed.sellerName,
-      itemDescription: parsed.itemDescription,
-      agreedPrice: parsed.agreedPrice,
-      currency: parsed.currency,
-      meetingLocation: parsed.meetingLocation,
-      meetingTime: parsed.meetingTime,
-      riskFlags: parsed.riskFlags || [],
-      confidence: parsed.confidence || 0,
-      extractedText: parsed.extractedText || '',
-    } as ConversationData;
+      buyerName: parsed.buyerName ?? null,
+      sellerName: parsed.sellerName ?? null,
+      itemDescription: parsed.itemDescription ?? null,
+      agreedPrice:
+        typeof parsed.agreedPrice === 'number' ? parsed.agreedPrice : null,
+      currency: parsed.currency ?? null,
+      meetingLocation: parsed.meetingLocation ?? null,
+      meetingTime: parsed.meetingTime ?? null,
+      riskFlags: Array.isArray(parsed.riskFlags) ? parsed.riskFlags : [],
+      confidence:
+        typeof parsed.confidence === 'number'
+          ? Math.max(0, Math.min(1, parsed.confidence))
+          : 0,
+      extractedText: parsed.extractedText ?? '',
+    };
   } catch (e) {
     throw new Error(`Failed to parse JSON from AI response: ${e}`);
   }

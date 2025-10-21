@@ -34,7 +34,8 @@ export async function POST(
     // Process each screenshot
     const analysisResults = [];
 
-    for (const screenshot of screenshots) {
+    for (let i = 0; i < screenshots.length; i++) {
+      const screenshot = screenshots[i];
       try {
         // Download file from Supabase storage
         const { data: fileData, error: downloadError } = await supabase.storage
@@ -48,8 +49,16 @@ export async function POST(
           type: 'image/jpeg', // Adjust based on actual file type
         });
 
+        console.log(
+          `🔍 Processing screenshot ${screenshot.id} (${i + 1}/${screenshots.length})`
+        );
+
         // Extract conversation data
         const conversationData = await extractConversation(file);
+        console.log(
+          `📊 Extracted data for screenshot ${screenshot.id}:`,
+          conversationData
+        );
 
         // Validate analysis data has required fields
         if (
@@ -57,7 +66,8 @@ export async function POST(
           typeof conversationData.confidence !== 'number'
         ) {
           console.error(
-            `Invalid analysis data for screenshot ${screenshot.id}`
+            `❌ Invalid analysis data for screenshot ${screenshot.id}:`,
+            conversationData
           );
           continue;
         }
