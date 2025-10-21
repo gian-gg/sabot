@@ -54,7 +54,9 @@ export async function extractConversation(
       sellerName: parsed.sellerName ?? null,
       itemDescription: parsed.itemDescription ?? null,
       agreedPrice:
-        typeof parsed.agreedPrice === 'number' ? parsed.agreedPrice : null,
+        typeof parsed.agreedPrice === 'number'
+          ? parsed.agreedPrice
+          : parseFloat(parsed.agreedPrice) || undefined,
       currency: parsed.currency ?? null,
       meetingLocation: parsed.meetingLocation ?? null,
       meetingTime: parsed.meetingTime ?? null,

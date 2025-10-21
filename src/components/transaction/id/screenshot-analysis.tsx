@@ -9,7 +9,7 @@ interface ScreenshotAnalysisProps {
 }
 
 export function ScreenshotAnalysis({ transactionId }: ScreenshotAnalysisProps) {
-  const [step, setStep] = useState<AnalysisStep>('FETCHING_ANALYSES');
+  const [step, setStep] = useState<AnalysisStep>('NO_ANALYSES');
   const [analyses, setAnalyses] = useState<AnalysisData[]>([]);
   const [error, setError] = useState<string>();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -43,10 +43,6 @@ export function ScreenshotAnalysis({ transactionId }: ScreenshotAnalysisProps) {
       setStep('ANALYSIS_ERROR');
     }
   }, [transactionId]);
-
-  useEffect(() => {
-    fetchAnalyses();
-  }, [fetchAnalyses]);
 
   const startAnalysis = async () => {
     console.log('🚀 Starting analysis for transaction:', transactionId);

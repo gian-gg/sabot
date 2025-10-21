@@ -55,8 +55,9 @@ export async function GET(
         }
 
         return {
-          ...analysis,
+          id: analysis.id,
           screenshot_url: signedUrlData?.signedUrl || '',
+          ...analysis.analysis_data,
         };
       }) || []
     );
