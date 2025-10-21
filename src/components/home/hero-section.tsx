@@ -34,6 +34,8 @@ export function HeroSection() {
     router.push(ROUTES.AGREEMENT.NEW);
   }
 
+  // Removed goToEscrowNew - escrow is now part of agreement finalization
+
   return (
     <div className="grid gap-8 lg:grid-cols-2">
       {/* Left side - Description and CTA */}
