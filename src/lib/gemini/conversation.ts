@@ -52,11 +52,15 @@ export async function extractConversation(
       platform: parsed.platform || 'other',
       buyerName: parsed.buyerName ?? null,
       sellerName: parsed.sellerName ?? null,
+      transactionType: parsed.transactionType || 'other',
       itemDescription: parsed.itemDescription ?? null,
-      agreedPrice:
-        typeof parsed.agreedPrice === 'number'
-          ? parsed.agreedPrice
-          : parseFloat(parsed.agreedPrice) || undefined,
+      productType: parsed.productType ?? null,
+      productModel: parsed.productModel ?? null,
+      productCondition: parsed.productCondition ?? null,
+      proposedPrice:
+        typeof parsed.proposedPrice === 'number'
+          ? parsed.proposedPrice
+          : parseFloat(parsed.proposedPrice) || undefined,
       currency: parsed.currency ?? null,
       meetingLocation: parsed.meetingLocation ?? null,
       meetingTime: parsed.meetingTime ?? null,

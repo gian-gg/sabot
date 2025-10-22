@@ -187,6 +187,16 @@ export default function TransactionPage({
   // --- Section Definitions ---
   const sections = [
     {
+      id: 'analysis',
+      title: 'AI Analysis',
+      icon: Scan,
+      content: (
+        <div className="space-y-3">
+          <ScreenshotAnalysis transactionId={id} />
+        </div>
+      ),
+    },
+    {
       id: 'product',
       title: 'Product Details',
       icon: Package,
@@ -220,16 +230,6 @@ export default function TransactionPage({
       ),
     },
     {
-      id: 'analysis',
-      title: 'AI Analysis',
-      icon: Scan,
-      content: (
-        <div className="space-y-3">
-          <ScreenshotAnalysis transactionId={id} />
-        </div>
-      ),
-    },
-    {
       id: 'occurrence',
       title: 'Transaction Details',
       icon: MapPinned,
@@ -250,52 +250,56 @@ export default function TransactionPage({
 
   // --- Main Render ---
   return (
-    <div className="animate-in fade-in-0 slide-in-from-bottom-2 container mx-auto max-w-2xl py-8 pt-20 duration-200">
+    <div className="animate-in fade-in-0 slide-in-from-bottom-2 relative container mx-auto py-8 pt-20 duration-200">
       <h1 className="mb-6 text-center text-2xl font-bold md:mb-8 md:text-3xl">
         Transaction Summary
       </h1>
-      <StepIndicator
-        steps={sections.map((s) => s.title)}
-        currentStep={currentSection}
-      />
+      <div className="relative flex-1">
+        <div className="absolute left-1/2 w-full max-w-2xl -translate-x-1/2 transform">
+          <StepIndicator
+            steps={sections.map((s) => s.title)}
+            currentStep={currentSection}
+          />
+        </div>
 
-      <div className="animate-in fade-in-0 mt-6 duration-200 md:mt-8">
-        <TransactionCarousel
-          sections={sections}
-          currentSection={currentSection}
-          onSectionChange={setCurrentSection}
-        />
-      </div>
+        <div className="animate-in fade-in-0 pt-25 duration-200">
+          <TransactionCarousel
+            sections={sections}
+            currentSection={currentSection}
+            onSectionChange={setCurrentSection}
+          />
+        </div>
 
-      <div className="border-t border-neutral-800 bg-neutral-950 px-4 py-3">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
-            disabled={currentSection === 0}
-            className="flex-1"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Previous
-          </Button>
-          <div className="text-xs text-neutral-500">
-            {currentSection + 1} / {sections.length}
+        <div className="border-t border-neutral-800 bg-neutral-950 px-4 py-3">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentSection(Math.max(0, currentSection - 1))}
+              disabled={currentSection === 0}
+              className="flex-1"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-xs text-neutral-500">
+              {currentSection + 1} / {sections.length}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentSection(
+                  Math.min(sections.length - 1, currentSection + 1)
+                )
+              }
+              disabled={currentSection === sections.length - 1}
+              className="flex-1"
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setCurrentSection(
-                Math.min(sections.length - 1, currentSection + 1)
-              )
-            }
-            disabled={currentSection === sections.length - 1}
-            className="flex-1"
-          >
-            Next
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>

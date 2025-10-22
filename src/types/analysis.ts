@@ -12,20 +12,21 @@ export interface AnalysisStepNavProps {
 
 export interface AnalysisData {
   id?: string;
-  buyerName?: string;
-  sellerName?: string;
   user_id: string;
-  platform: string;
-  screenshot_url: string;
+  platform: 'whatsapp' | 'telegram' | 'messenger' | 'other';
   itemDescription?: string;
+  transactionType: 'meetup' | 'online';
+  productType: string;
+  productModel: string;
+  productCondition: string;
   proposedPrice?: number;
-  agreedPrice?: number; // Add this field
   currency?: string;
   meetingLocation?: string;
   meetingTime?: string;
-  extractedText?: string;
   riskFlags?: string[];
   confidence?: number;
+  extractedText?: string;
+  screenshot_url: string;
 }
 
 export interface AnalysisState {

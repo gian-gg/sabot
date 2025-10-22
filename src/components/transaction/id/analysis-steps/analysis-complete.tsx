@@ -65,28 +65,52 @@ export function AnalysisComplete({
                 {analysis.itemDescription && (
                   <div className="bg-muted/50 rounded-md p-3">
                     <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                      Item
+                      Item Details
                     </span>
                     <p className="mt-1 text-sm font-medium">
                       {analysis.itemDescription}
                     </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {analysis.productType ? (
+                        <Badge variant="secondary">
+                          {analysis.productType}
+                        </Badge>
+                      ) : null}
+                      {analysis.productModel ? (
+                        <Badge variant="secondary">
+                          {analysis.productModel}
+                        </Badge>
+                      ) : null}
+                      {analysis.productCondition ? (
+                        <Badge variant="secondary">
+                          {analysis.productCondition}
+                        </Badge>
+                      ) : null}
+                    </div>
                   </div>
                 )}
 
-                {(analysis.agreedPrice || analysis.proposedPrice) && (
+                <div className="bg-muted/50 rounded-md p-3">
+                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                    Transaction Method
+                  </span>
+                  <p className="mt-1 text-sm font-medium capitalize">
+                    <p className="mt-1 text-lg font-bold text-green-600">
+                      {analysis.transactionType}
+                    </p>
+                  </p>
+                </div>
+
+                {analysis.proposedPrice && (
                   <div className="bg-muted/50 rounded-md p-3">
                     <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                       Price
                     </span>
                     <p className="mt-1 text-lg font-bold text-green-600">
                       {analysis.currency || 'USD'}{' '}
-                      {(
-                        analysis.agreedPrice ||
-                        analysis.proposedPrice ||
-                        0
-                      ).toLocaleString()}
+                      {(analysis.proposedPrice || 0).toLocaleString()}
                     </p>
-                    {analysis.agreedPrice !== analysis.proposedPrice &&
+                    {analysis.proposedPrice !== analysis.proposedPrice &&
                       analysis.proposedPrice && (
                         <p className="text-muted-foreground mt-0.5 text-xs">
                           Initial proposal: {analysis.currency || 'USD'}{' '}
