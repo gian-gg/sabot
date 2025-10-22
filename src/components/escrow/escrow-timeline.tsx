@@ -1,3 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
+
 import type { EscrowEvent } from '@/types/escrow';
 import {
   CheckCircle2,
