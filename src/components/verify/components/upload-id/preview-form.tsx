@@ -2,6 +2,13 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { GovernmentIdInfo } from '@/types/verify';
 import { getFormValueOrNull } from '@/lib/utils/helpers';
 
@@ -17,9 +24,15 @@ const PreviewForm = ({
   const latestExtractedRef = useRef<GovernmentIdInfo | null>(extractedData);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentSnapshotRef = useRef<string | null>(null);
+  const [sexValue, setSexValue] = React.useState<string>(
+    extractedData?.sex ?? ''
+  );
 
   useEffect(() => {
     latestExtractedRef.current = extractedData;
+    if (extractedData?.sex) {
+      setSexValue(extractedData.sex);
+    }
   }, [extractedData]);
 
   // Debounced autosave to avoid excessive updates on every keystroke
@@ -44,7 +57,7 @@ const PreviewForm = ({
             issueDate: getFormValueOrNull(formData.get('issueDate')),
             expiryDate: getFormValueOrNull(formData.get('expiryDate')),
             address: getFormValueOrNull(formData.get('address')),
-            sex: getFormValueOrNull(formData.get('sex')),
+            sex: sexValue || null,
           }
         : null;
 
@@ -122,21 +135,30 @@ const PreviewForm = ({
               </div>
 
               <div className="space-y-1.5">
+                <Label htmlFor="sex">Sex</Label>
+                <Select
+                  value={sexValue}
+                  onValueChange={(value) => {
+                    setSexValue(value);
+                    scheduleAutoSave();
+                  }}
+                >
+                  <SelectTrigger id="sex" className="w-full">
+                    <SelectValue placeholder="Select sex" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Male</SelectItem>
+                    <SelectItem value="F">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
                 <Input
                   id="dateOfBirth"
                   type="date"
                   name="dateOfBirth"
                   defaultValue={extractedData?.dateOfBirth ?? ''}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sex">Sex</Label>
-                <Input
-                  id="sex"
-                  name="sex"
-                  defaultValue={extractedData?.sex ?? ''}
-                  placeholder="Sex"
                 />
               </div>
               <div className="space-y-1.5">
