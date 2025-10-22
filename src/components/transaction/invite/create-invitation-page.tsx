@@ -141,7 +141,7 @@ export function CreateTransactionPage() {
         "Other party has joined! Let's configure the transaction together..."
       );
       setTimeout(() => {
-        router.push(`${ROUTES.TRANSACTION.NEW}?id=${transactionId}`);
+        router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
       }, 1500);
     }
   }, [status, transactionId, router]);

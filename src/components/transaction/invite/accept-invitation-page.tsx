@@ -50,7 +50,7 @@ export function AcceptTransactionPage({
 
       // Redirect to configure transaction immediately
       setTimeout(() => {
-        router.push(`${ROUTES.TRANSACTION.NEW}?id=${transactionId}`);
+        router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
       }, 800);
     } catch (error) {
       console.error('Error joining transaction:', error);

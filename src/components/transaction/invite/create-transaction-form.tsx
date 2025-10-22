@@ -42,12 +42,14 @@ import {
   type EnhancedEscrowData,
 } from '@/components/agreement/finalize/escrow-protection-enhanced';
 import { ArbiterSelection } from '@/components/agreement/finalize/arbiter-selection';
+import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
 
 const STEPS = [
-  { id: 1, name: 'Item Details', icon: Package },
-  { id: 2, name: 'Exchange Info', icon: MapPin },
-  { id: 3, name: 'Safety Options', icon: Shield },
-  { id: 4, name: 'Review', icon: CheckCircle2 },
+  { id: 1, name: 'Screenshot Analysis', icon: Shield },
+  { id: 2, name: 'Item Details', icon: Package },
+  { id: 3, name: 'Exchange Info', icon: MapPin },
+  { id: 4, name: 'Safety Options', icon: Shield },
+  { id: 5, name: 'Review', icon: CheckCircle2 },
 ];
 
 interface TransactionFormData {
@@ -159,6 +161,10 @@ export function CreateTransactionForm({
   const canProceedToNext = () => {
     switch (currentStep) {
       case 1:
+        // Screenshot analysis step - only allow proceeding if we have a transactionId
+        // This ensures the analysis can be performed
+        return !!transactionId;
+      case 2:
         return (
           formData.item_name &&
           formData.item_description &&
@@ -201,7 +207,7 @@ export function CreateTransactionForm({
           return false;
         }
         return true;
-      case 4:
+      case 5:
         return true;
       default:
         return false;
@@ -325,6 +331,19 @@ export function CreateTransactionForm({
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
+        if (!transactionId) {
+          return (
+            <Alert>
+              <AlertDescription>
+                Screenshot analysis requires an existing transaction. Please
+                create the transaction first by proceeding through the other
+                steps.
+              </AlertDescription>
+            </Alert>
+          );
+        }
+        return <ScreenshotAnalysis transactionId={transactionId} />;
+      case 2:
         return (
           <div className="space-y-6">
             <div className="space-y-2">
@@ -441,7 +460,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 2:
+      case 3:
         return (
           <div className="space-y-6">
             <div className="space-y-3">
@@ -583,7 +602,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -681,7 +700,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <Card>
@@ -829,13 +848,14 @@ export function CreateTransactionForm({
           </div>
           <div className="mt-4 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
-              {currentStep === 1 && '📦 Tell us about your item'}
-              {currentStep === 2 && '🚚 How will you exchange?'}
-              {currentStep === 3 && '🛡️ Add security features'}
-              {currentStep === 4 && '✅ Review and create'}
+              {currentStep === 1 && '🔍 Analyze screenshots'}
+              {currentStep === 2 && '📦 Tell us about your item'}
+              {currentStep === 3 && '🚚 How will you exchange?'}
+              {currentStep === 4 && '🛡️ Add security features'}
+              {currentStep === 5 && '✅ Review and create'}
             </div>
             <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-medium shadow-sm">
-              Step {currentStep}/4
+              Step {currentStep}/{STEPS.length}
             </span>
           </div>
         </div>
@@ -844,22 +864,25 @@ export function CreateTransactionForm({
         <Card className="border-2 shadow-xl">
           <CardHeader className="bg-muted/30 space-y-3 border-b">
             <CardTitle className="text-2xl">
-              {currentStep === 1 && 'Item Details'}
-              {currentStep === 2 && 'Exchange Information'}
-              {currentStep === 3 && 'Safety & Protection'}
-              {currentStep === 4 &&
+              {currentStep === 1 && 'Screenshot Analysis'}
+              {currentStep === 2 && 'Item Details'}
+              {currentStep === 3 && 'Exchange Information'}
+              {currentStep === 4 && 'Safety & Protection'}
+              {currentStep === 5 &&
                 (transactionId ? 'Review & Confirm' : 'Create Transaction')}
             </CardTitle>
             <CardDescription className="text-base">
               {currentStep === 1 &&
+                'AI-powered analysis of your conversation screenshots to extract transaction details and detect fraud'}
+              {currentStep === 2 &&
                 (transactionId
                   ? 'Update transaction details'
                   : "Describe what you're buying or selling")}
-              {currentStep === 2 &&
-                "Choose how you'll exchange (meetup or delivery)"}
               {currentStep === 3 &&
-                'Add optional escrow protection and arbiter oversight'}
+                "Choose how you'll exchange (meetup or delivery)"}
               {currentStep === 4 &&
+                'Add optional escrow protection and arbiter oversight'}
+              {currentStep === 5 &&
                 'Review and confirm your transaction details'}
             </CardDescription>
           </CardHeader>

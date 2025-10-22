@@ -22,10 +22,7 @@ export function NoAnalyses({ onStartAnalysis, isAnalyzing }: NoAnalysesProps) {
               Analyzing...
             </>
           ) : (
-            <>
-              <Scan className="mr-2 h-4 w-4" />
-              Start Analysis
-            </>
+            <>Start Analysis</>
           )}
         </Button>
       </CardContent>

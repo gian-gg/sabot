@@ -60,17 +60,5 @@ export function AnalysisContainer({
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scan className="h-5 w-5" />
-            Conversation Analysis
-          </CardTitle>
-        </CardHeader>
-        {renderStep()}
-      </Card>
-    </div>
-  );
+  return <div className="space-y-4">{renderStep()}</div>;
 }
