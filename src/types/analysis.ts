@@ -15,7 +15,7 @@ export interface AnalysisData {
   user_id: string;
   platform: 'whatsapp' | 'telegram' | 'messenger' | 'other';
   itemDescription?: string;
-  transactionType: 'meetup' | 'online';
+  transactionType: 'meetup' | 'online' | 'other';
   productType: string;
   productModel: string;
   productCondition: string;

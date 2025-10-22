@@ -18,7 +18,7 @@ export type TransactionType =
   | 'collectibles'
   | 'other';
 
-export type TransactionMethod = 'meetup' | 'online';
+export type TransactionMethod = 'meetup' | 'online' | 'other';
 
 export type ParticipantRole = 'creator' | 'invitee';
 

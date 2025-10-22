@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/core/page-header';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
 import { getUserById } from '@/lib/mock-data/users';
-import { mockTransactions } from '@/lib/mock-data/transactions';
+// import { mockTransactions } from '@/lib/mock-data/transactions';
 
 interface ProfilePageProps {
   params: Promise<{ id: string }>;
@@ -37,12 +37,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     );
   }
 
-  // Get user's transactions
-  const userTransactions = mockTransactions.filter(
-    (t) =>
-      t.buyerName.includes(user.name.split(' ')[0]) ||
-      t.sellerName.includes(user.name.split(' ')[0])
-  );
+  // // Get user's transactions
+  // const userTransactions = mockTransactions.filter(
+  //   (t) =>
+  //     t.buyerName.includes(user.name.split(' ')[0]) ||
+  //     t.sellerName.includes(user.name.split(' ')[0])
+  // );
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-black">
@@ -126,7 +126,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <CardHeader>
               <CardTitle className="text-white">Transaction History</CardTitle>
             </CardHeader>
-            <CardContent>
+            {/*   <CardContent>
               {userTransactions.length > 0 ? (
                 <div className="space-y-3">
                   {userTransactions.map((transaction) => (
@@ -170,7 +170,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   No transactions yet
                 </p>
               )}
-            </CardContent>
+            </CardContent> */}
           </Card>
         </div>
       </div>

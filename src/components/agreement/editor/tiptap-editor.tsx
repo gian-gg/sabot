@@ -32,12 +32,8 @@ export function TiptapEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        history: {
-          // Disable history as it's handled by Yjs
-          exclude: ['Collaboration'],
-        },
-      }),
+      // Use StarterKit directly — do not pass a non-existent 'history' option
+      StarterKit,
       Placeholder.configure({
         placeholder: 'Start typing your agreement...',
       }),

@@ -29,6 +29,7 @@ export default function TransactionActive({
   const { id } = use(params);
   const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   const [sellerConfirmed] = useState(false);
+  const router = useRouter(); // ✅ Initialize router here
 
   // Use real data instead of mock data
   const { status, loading, error } = useTransactionStatus(id);
