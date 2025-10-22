@@ -63,6 +63,15 @@
 
 This repository, submitted for Cebu Hacktoberfest, features Sabot — a composable platform designed for **peer-to-peer transaction verification**, offering clear transaction lifecycles, invite-and-accept flows, and structured UI primitives that make it easy to extend or re-implement. Acting as a **third-party safety layer**, Sabot ensures verified, transparent, and scam-free online transactions.
 
+### 🆕 Latest Features
+
+- **🔗 Blockchain Escrow Integration**: Comprehensive smart contract integration for secure fund management
+- **🔮 Oracle Verification System**: Decentralized dispute resolution with oracle-based verification
+- **⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows
+- **📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking
+- **🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection
+- **📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality
+
 ### 📚 Built With
 
 <p align="left">
@@ -121,7 +130,23 @@ Edit the `.env` file with your configuration (API keys, database URL, etc.)
 Apply database migrations:
 
 ```sh
+# Run Supabase migrations
+npx supabase db push
+```
 
+#### 5. Blockchain Setup (Optional)
+
+For full escrow functionality, set up the smart contract:
+
+```sh
+# Navigate to blockchain directory
+cd ../SabotBlockchain/transaction-smart-contract
+
+# Install dependencies
+npm install
+
+# Deploy contracts (local development)
+npx hardhat run scripts/deploy-local.ts --network localhost
 ```
 
 ### ▶️ Running the Application
@@ -131,6 +156,35 @@ bun run dev
 ```
 
 ## 📝 Notes
+
+### 🔗 Blockchain Integration
+
+Sabot now includes comprehensive blockchain integration for secure escrow management:
+
+- **Smart Contract**: Deployed AgreementLedger contract with advanced escrow functionality
+- **Oracle System**: Decentralized verification for dispute resolution
+- **Token Economics**: ERC-20 token integration with fee distribution
+- **Security**: Multi-layer security with access controls and reentrancy protection
+
+### 📚 Documentation
+
+- [Blockchain Escrow Integration Guide](docs/BLOCKCHAIN_ESCROW_INTEGRATION.md)
+- [Oracle Verification Guide](docs/ORACLE_VERIFICATION_GUIDE.md)
+- [API Documentation](docs/)
+- [Component Documentation](docs/components.md)
+
+### 🧪 Testing
+
+The platform includes comprehensive testing for both frontend and smart contract functionality:
+
+```sh
+# Frontend tests
+bun test
+
+# Smart contract tests
+cd ../SabotBlockchain/transaction-smart-contract
+npx hardhat test
+```
 
 <!-- CONTRIBUTING -->
 
