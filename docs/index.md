@@ -4,12 +4,12 @@ Welcome to the Sabot documentation. This collection explains how the project is 
 
 Contents
 
-- [Architecture](architecture.md)
-- [Tech Stack](tech-stack.md)
-- [Setup & Local Development](setup.md)
-- [Development Workflow](development.md)
-- [UI Components & Patterns](components.md)
-- [Routes & Pages](routes.md)
-- [Contributing](contributing.md)
+- [Architecture](content/architecture.md)
+- [Tech Stack](content/tech-stack.md)
+- [Setup & Local Development](content/setup.md)
+- [Development Workflow](content/development.md)
+- [UI Components & Patterns](content/components.md)
+- [Routes & Pages](content/routes.md)
+- [Contributing](content/contributing.md)
 
 If something is missing or out-of-date, open a PR — documentation is code.

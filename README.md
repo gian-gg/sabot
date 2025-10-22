@@ -1,4 +1,4 @@
-# <img src="public/logo2-dark.svg" alt="Sabot logo" width="128" />
+# <img src="public/logo-white.svg" alt="Sabot logo" width="128" />
 
 !["tech stack"](https://skills.syvixor.com/api/icons?perline=15&i=googlegemini,nextjs,typescript,supabase,tailwindcss,shadcnui,zustand),ethers,ethereum,lisk
 
