@@ -40,7 +40,7 @@ export function createAwareness(ydoc: Y.Doc): awarenessProtocol.Awareness {
   // Set initial awareness state
   awareness.setLocalState({
     user: {
-      id: `user-${Math.random().toString(36).substr(2, 9)}`,
+      id: `user-${Math.random().toString(36).substring(2, 11)}`,
       email: 'user@example.com',
       name: 'User',
       color: randomColor,
