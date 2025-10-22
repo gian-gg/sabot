@@ -11,12 +11,12 @@ export const maxSizeUploadIDDocument = 10 * 1024 * 1024; // 10 MB
 
 export const LIVENESS_CHECK_STEPS = [
   'Look straight ahead',
-  'Turn your head to the left',
-  'Turn your head to the right',
-  'Smile',
-  'Blink your eyes',
-  'Open your mouth',
-  'Raise your eyebrows',
+  // 'Turn your head to the left',
+  // 'Turn your head to the right',
+  // 'Smile',
+  // 'Blink your eyes',
+  // 'Open your mouth',
+  // 'Raise your eyebrows',
 ];
 
 export const BIOMETRICS_INSTRUCTIONS = [
