@@ -57,11 +57,9 @@ export class SupabaseProvider {
         ({ newPresences }: { newPresences?: unknown[] }) => {
           if (this.awareness && newPresences) {
             newPresences.forEach((presence: unknown) => {
-              if (
-                presence.user?.id &&
-                presence.user?.id !== this.getCurrentUserId()
-              ) {
-                this.awareness.setLocalState({ ...presence.user });
+              const p = presence as { user?: { id: string } };
+              if (p.user?.id && p.user?.id !== this.getCurrentUserId()) {
+                this.awareness.setLocalState({ ...p.user });
               }
             });
           }

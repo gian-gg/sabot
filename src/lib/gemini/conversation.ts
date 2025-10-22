@@ -50,20 +50,20 @@ export async function extractConversation(
     // ✅ Basic validation & defaults
     return {
       platform: parsed.platform || 'other',
-      buyerName: parsed.buyerName ?? null,
-      sellerName: parsed.sellerName ?? null,
+      buyerName: parsed.buyerName ?? undefined,
+      sellerName: parsed.sellerName ?? undefined,
       transactionType: parsed.transactionType || 'other',
-      itemDescription: parsed.itemDescription ?? null,
-      productType: parsed.productType ?? null,
-      productModel: parsed.productModel ?? null,
-      productCondition: parsed.productCondition ?? null,
+      itemDescription: parsed.itemDescription ?? undefined,
+      productType: parsed.productType ?? undefined,
+      productModel: parsed.productModel ?? undefined,
+      productCondition: parsed.productCondition ?? undefined,
       proposedPrice:
         typeof parsed.proposedPrice === 'number'
           ? parsed.proposedPrice
           : parseFloat(parsed.proposedPrice) || undefined,
-      currency: parsed.currency ?? null,
-      meetingLocation: parsed.meetingLocation ?? null,
-      meetingTime: parsed.meetingTime ?? null,
+      currency: parsed.currency ?? undefined,
+      meetingLocation: parsed.meetingLocation ?? undefined,
+      meetingTime: parsed.meetingTime ?? undefined,
       riskFlags: Array.isArray(parsed.riskFlags) ? parsed.riskFlags : [],
       confidence:
         typeof parsed.confidence === 'number'

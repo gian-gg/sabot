@@ -67,7 +67,7 @@ export function getActiveUsers(
     }
   });
 
-  return users.filter((user) => user.id !== awareness.clientID);
+  return users.filter((user) => user.id !== String(awareness.clientID));
 }
 
 /**
@@ -105,6 +105,25 @@ export function updateSelection(
       user: {
         ...(state.user as UserPresence),
         selection: { anchor, head },
+      },
+    });
+  }
+}
+
+/**
+ * Update user presence
+ */
+export function updateUserPresence(
+  _payload: unknown,
+  awareness: awarenessProtocol.Awareness
+): void {
+  const state = awareness.getLocalState();
+  if (state) {
+    awareness.setLocalState({
+      ...state,
+      user: {
+        ...(state.user as UserPresence),
+        cursor: { line: 0, ch: 0 },
       },
     });
   }

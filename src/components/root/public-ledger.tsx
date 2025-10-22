@@ -105,8 +105,8 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
         </Badge>
       </CardHeader>
 
-      <CardContent className="p-0">
-        {/* Ledger Header */}
+      {/*   <CardContent className="p-0">
+      
         <div className="border-b border-neutral-800/50 bg-neutral-900/20 px-5 py-4">
           <h2 className="mb-1.5 text-lg font-semibold text-white">
             Recent Transactions
@@ -116,7 +116,7 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
           </p>
         </div>
 
-        {/* Transaction List - Limited to 10 */}
+   
         <div className="divide-y divide-neutral-800/50">
           {recentTransactions.map((transaction) => (
             <Link
@@ -125,7 +125,7 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
               className="group block bg-black/20 px-5 py-4 transition-all duration-200 hover:bg-neutral-900/40"
             >
               <div className="flex items-center justify-between gap-4">
-                {/* Left Section */}
+    
                 <div className="flex-1 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-white">
@@ -160,7 +160,7 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
                   </div>
                 </div>
 
-                {/* Right Section */}
+           
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="text-lg font-bold text-white">
@@ -182,7 +182,7 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
             </Link>
           ))}
         </div>
-      </CardContent>
+      </CardContent> */}
     </Card>
   );
 }

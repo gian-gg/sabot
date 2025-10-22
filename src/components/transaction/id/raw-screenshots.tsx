@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ImageIcon } from 'lucide-react';
@@ -107,12 +108,12 @@ export function RawScreenshots({ transactionId }: RawScreenshotsProps) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {screenshots.map((screenshot) => (
             <div key={screenshot.id} className="space-y-2">
-              <div className="overflow-hidden rounded-lg border border-neutral-700 bg-black/40">
-                <img
+              <div className="relative h-[300px] overflow-hidden rounded-lg border border-neutral-700 bg-black/40">
+                <Image
                   src={screenshot.screenshot_url}
                   alt="Transaction screenshot"
-                  className="h-auto w-full object-cover"
-                  style={{ maxHeight: '300px' }}
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="text-xs text-neutral-500">
