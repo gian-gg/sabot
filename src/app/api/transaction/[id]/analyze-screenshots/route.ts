@@ -18,6 +18,46 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if analysis already exists
+    console.log('🔍 Checking if analysis already exists...');
+    const { data: existingAnalyses, error: analysisCheckError } = await supabase
+      .from('transaction_analyses')
+      .select('id')
+      .eq('transaction_id', transactionId);
+
+    if (analysisCheckError) {
+      console.error('❌ Error checking existing analyses:', analysisCheckError);
+    }
+
+    // If analyses already exist, return them instead of reprocessing
+    if (existingAnalyses && existingAnalyses.length > 0) {
+      console.log('✅ Analysis already exists, returning existing results');
+
+      // Get the full analysis data
+      const { data: analyses, error: fetchError } = await supabase
+        .from('transaction_analyses')
+        .select('*')
+        .eq('transaction_id', transactionId);
+
+      if (fetchError) {
+        console.error('❌ Error fetching existing analyses:', fetchError);
+      } else {
+        // Update status to active if not already
+        await supabase
+          .from('transactions')
+          .update({ status: 'active' })
+          .eq('id', transactionId);
+
+        return NextResponse.json({
+          results: analyses || [],
+          status: 'active',
+          cached: true,
+        });
+      }
+    }
+
+    console.log('🚀 No existing analysis found, proceeding with analysis...');
+
     // Get all screenshots for this transaction
     const { data: screenshots, error } = await supabase
       .from('transaction_screenshots')
@@ -109,20 +149,34 @@ export async function POST(
       }
     }
 
-    // Update transaction status
-    await supabase
+    // Update transaction status to 'active' (analysis complete, ready for transaction details)
+    console.log('🔄 Updating transaction status to active...');
+    const { error: updateError } = await supabase
       .from('transactions')
-      .update({ status: 'analysis_complete' })
+      .update({ status: 'active' })
       .eq('id', transactionId);
+
+    if (updateError) {
+      console.error('❌ Failed to update transaction status:', updateError);
+    } else {
+      console.log('✅ Transaction status updated to active');
+    }
 
     console.log(
       `✅ Analysis complete. Returning ${analysisResults.length} results`
     );
     console.log('Results:', JSON.stringify(analysisResults, null, 2));
 
-    return NextResponse.json({ results: analysisResults });
+    return NextResponse.json({
+      results: analysisResults,
+      status: 'active',
+    });
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('❌ Analysis error:', error);
+    console.error(
+      'Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
   }
 }
