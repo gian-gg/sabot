@@ -69,8 +69,11 @@ export function DataConflictResolver({
     'productCondition',
     'proposedPrice',
     'currency',
+    'quantity',
     'meetingLocation',
-    'meetingTime',
+    'meetingSchedule',
+    'deliveryAddress',
+    'deliveryMethod',
   ];
 
   const conflicts = fields.filter((field) => {
@@ -130,11 +133,20 @@ export function DataConflictResolver({
         case 'currency':
           resolved.currency = value as string | undefined;
           break;
+        case 'quantity':
+          resolved.quantity = value as number | undefined;
+          break;
         case 'meetingLocation':
           resolved.meetingLocation = value as string | undefined;
           break;
-        case 'meetingTime':
-          resolved.meetingTime = value as string | undefined;
+        case 'meetingSchedule':
+          resolved.meetingSchedule = value as string | undefined;
+          break;
+        case 'deliveryAddress':
+          resolved.deliveryAddress = value as string | undefined;
+          break;
+        case 'deliveryMethod':
+          resolved.deliveryMethod = value as string | undefined;
           break;
         case 'riskFlags':
           resolved.riskFlags = value as string[] | undefined;
@@ -193,8 +205,11 @@ export function DataConflictResolver({
       productCondition: 'Product Condition',
       proposedPrice: 'Proposed Price',
       currency: 'Currency',
+      quantity: 'Quantity',
       meetingLocation: 'Meeting Location',
-      meetingTime: 'Meeting Time',
+      meetingSchedule: 'Meeting Schedule',
+      deliveryAddress: 'Delivery Address',
+      deliveryMethod: 'Delivery Method',
       riskFlags: 'Risk Flags',
       confidence: 'Confidence',
       user_id: 'User ID',

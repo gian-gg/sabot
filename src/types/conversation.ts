@@ -9,8 +9,11 @@ export interface ConversationData {
   productCondition: string;
   proposedPrice?: number;
   currency?: string;
+  quantity?: number;
   meetingLocation?: string;
-  meetingTime?: string;
+  meetingSchedule?: string; // Renamed from meetingTime, format: YYYY-MM-DDTHH:mm for datetime-local input
+  deliveryAddress?: string;
+  deliveryMethod?: string;
   riskFlags: string[];
   confidence: number;
   extractedText: string;
