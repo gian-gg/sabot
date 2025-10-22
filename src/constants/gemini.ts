@@ -72,7 +72,7 @@ INSTRUCTIONS:
 7. Use null for missing fields.
 8. Confidence = 0–1, based on clarity.
 9. Return pure JSON only.
-
+`;
 
 export const VERIFY_LIVENESS_CHECK_PROMPT = `
 You are an advanced AI security and biometrics verification agent with a strict focus on image quality and compliance.
