@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/core/page-header';
 import { UserAvatar } from '@/components/user/user-avatar';
-import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
-import { RawScreenshots } from '@/components/transaction/id/raw-screenshots';
 import {
   Radio,
   MapPin,
@@ -263,12 +261,6 @@ export default function TransactionActive({
               )}
             </CardContent>
           </Card>
-
-          {/* Raw Screenshots Section */}
-          <RawScreenshots transactionId={transaction.id} />
-
-          {/* Screenshot Analysis Section */}
-          <ScreenshotAnalysis transactionId={transaction.id} />
 
           {/* Emergency Contact */}
           <Card className="border-red-500/30 bg-gradient-to-b from-red-900/20 to-red-950/20">
