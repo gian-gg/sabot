@@ -227,14 +227,14 @@ export function CreateTransactionForm({
       item_name: data.productModel || data.productType || 'Item',
       item_description: data.itemDescription || '',
       price: data.proposedPrice?.toString() || '',
-      quantity: '1', // Default to 1, user can edit
+      quantity: data.quantity?.toString() || '1',
       condition: mapConditionFromProductCondition(data.productCondition),
       category: mapCategoryFromProductType(data.productType),
       transaction_type: mapTransactionType(data.transactionType),
       meeting_location: data.meetingLocation || '',
-      meeting_time: data.meetingTime || '',
-      delivery_address: '',
-      delivery_method: '',
+      meeting_time: data.meetingSchedule || '',
+      delivery_address: data.deliveryAddress || '',
+      delivery_method: data.deliveryMethod || '',
     });
 
     setIsDataExtracted(true);
@@ -689,7 +689,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="space-y-3">
@@ -831,7 +831,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -929,7 +929,7 @@ export function CreateTransactionForm({
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <Card>

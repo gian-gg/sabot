@@ -62,8 +62,14 @@ export async function extractConversation(
           ? parsed.proposedPrice
           : parseFloat(parsed.proposedPrice) || undefined,
       currency: parsed.currency ?? undefined,
+      quantity:
+        typeof parsed.quantity === 'number'
+          ? parsed.quantity
+          : parseInt(parsed.quantity) || undefined,
       meetingLocation: parsed.meetingLocation ?? undefined,
-      meetingTime: parsed.meetingTime ?? undefined,
+      meetingSchedule: parsed.meetingSchedule ?? undefined,
+      deliveryAddress: parsed.deliveryAddress ?? undefined,
+      deliveryMethod: parsed.deliveryMethod ?? undefined,
       riskFlags: Array.isArray(parsed.riskFlags) ? parsed.riskFlags : [],
       confidence:
         typeof parsed.confidence === 'number'
