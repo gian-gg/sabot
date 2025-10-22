@@ -191,7 +191,7 @@ export default function TransactionPage({
       title: 'AI Analysis',
       icon: Scan,
       content: (
-        <div className="space-y-3">
+        <div className="space-y-3 bg-amber-300">
           <ScreenshotAnalysis transactionId={id} />
         </div>
       ),

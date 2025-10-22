@@ -82,7 +82,7 @@ export function TransactionCarousel({
             className="h-full overflow-y-auto py-4"
             style={{ width: `${100 / sections.length}%` }}
           >
-            <div className="mx-auto max-w-3xl">{section.content}</div>
+            <div className="mx-auto max-w-5xl">{section.content}</div>
           </div>
         ))}
       </div>

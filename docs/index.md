@@ -6,6 +6,7 @@ Contents
 
 - [Architecture](content/architecture.md)
 - [Tech Stack](content/tech-stack.md)
+- [Design System](content/design-system.md)
 - [Setup & Local Development](content/setup.md)
 - [Development Workflow](content/development.md)
 - [UI Components & Patterns](content/components.md)
