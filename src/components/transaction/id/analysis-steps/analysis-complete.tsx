@@ -4,11 +4,11 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
 import { User, AlertTriangle, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 import type { AnalysisData } from '@/types/analysis';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
@@ -97,12 +97,17 @@ export function AnalysisComplete({
                   <h4 className="text-muted-foreground text-sm font-medium">
                     Screenshot
                   </h4>
-                  <div className="bg-muted/50 overflow-hidden rounded-lg border">
-                    <img
-                      src={analysis.screenshot_url}
+                  <div
+                    className="bg-muted/50 relative overflow-hidden rounded-lg border"
+                    style={{ maxHeight: 400 }}
+                  >
+                    <Image
+                      src={analysis.screenshot_url || ''}
                       alt="Conversation screenshot"
                       className="h-auto w-full object-contain"
-                      style={{ maxHeight: '400px' }}
+                      fill
+                      style={{ objectFit: 'contain' }}
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 </div>

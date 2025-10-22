@@ -47,6 +47,7 @@ export function TransactionActivePage({
     id: string;
     status: string;
     deliverables: unknown[];
+    arbiter_required?: boolean;
   } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -221,7 +222,7 @@ export function TransactionActivePage({
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-sm">Price</p>
                   <p className="text-lg font-semibold">
-                    ₱{parseFloat(transaction.price || '0').toLocaleString()}
+                    ₱{Number(transaction.price ?? 0).toLocaleString()}
                   </p>
                 </div>
               </div>

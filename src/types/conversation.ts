@@ -3,7 +3,7 @@ export interface ConversationData {
   buyerName?: string;
   sellerName?: string;
   itemDescription?: string;
-  transactionType: 'meetup' | 'online';
+  transactionType: 'meetup' | 'online' | 'other';
   productType: string;
   productModel: string;
   productCondition: string;
