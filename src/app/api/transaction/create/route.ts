@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
       .from('transactions')
       .insert({
         creator_id: user.id,
+        creator_name:
+          user.user_metadata?.name ||
+          user.user_metadata?.full_name ||
+          user.email?.split('@')[0] ||
+          'User',
+        creator_email: user.email || '',
+        creator_avatar_url:
+          user.user_metadata?.avatar_url || user.user_metadata?.picture,
         status: 'waiting_for_participant',
         item_name: payload.item_name,
         item_description: payload.item_description,

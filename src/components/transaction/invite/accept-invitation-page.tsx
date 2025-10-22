@@ -60,6 +60,7 @@ export function AcceptTransactionPage({
         }
 
         const data = await response.json();
+        console.log('📊 Transaction data received:', data);
 
         // Check if current user is the creator (self-invite)
         if (user && user.id === data.creator_id) {
@@ -67,12 +68,20 @@ export function AcceptTransactionPage({
           return;
         }
 
-        // Set basic inviter data from transaction
+        // Set inviter data from stored transaction fields
         setInviter({
-          name: data.creator_email?.split('@')[0] || 'User',
+          name: data.creator_name || 'User',
           email: data.creator_email || '',
-          avatar: undefined,
+          avatar: data.creator_avatar_url,
           trustScore: 85, // Default for now
+          isVerified: true,
+          completedTransactions: 0,
+        });
+
+        console.log('✅ Inviter state set:', {
+          name: data.creator_name || 'User',
+          email: data.creator_email || '',
+          avatar: data.creator_avatar_url,
           isVerified: true,
           completedTransactions: 0,
         });

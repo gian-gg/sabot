@@ -19,7 +19,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get transaction
+    // Get transaction with creator information
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .select('*')
@@ -32,6 +32,12 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    console.log('📦 Transaction data:', {
+      creator_name: transaction.creator_name,
+      creator_email: transaction.creator_email,
+      creator_avatar: transaction.creator_avatar_url,
+    });
 
     return NextResponse.json(transaction);
   } catch (error) {
