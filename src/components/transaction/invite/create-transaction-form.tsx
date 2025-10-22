@@ -628,10 +628,11 @@ export function CreateTransactionForm({
                   value={formData.quantity}
                   onChange={(e) => updateFormData('quantity', e.target.value)}
                   required
+                  disabled={isDataExtracted}
                 />
                 {isDataExtracted && (
-                  <p className="text-xs text-green-600 dark:text-green-400">
-                    ✏️ You can edit this field
+                  <p className="text-muted-foreground text-xs">
+                    🔒 Extracted from screenshot
                   </p>
                 )}
               </div>
