@@ -11,7 +11,7 @@
 <div align="center">
   <br />
   <a href="https://github.com/gian-gg/sabot">
-    <img src="public/logo2-dark.svg" alt="Sabot logo" width="40%" height="35%">
+    <img src="public/logo-white.svg" alt="Sabot logo" width="40%" height="35%">
   </a>
   <br />
   <p align="center">

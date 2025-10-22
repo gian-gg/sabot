@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import HeaderAction from '@/components/core/header-action';
-import Logo2 from '@/components/core/logo2';
+import Logo from '@/components/core/logo';
 
 export function Header() {
   const [mouseX, setMouseX] = useState(0);
@@ -23,7 +23,7 @@ export function Header() {
         {/* Brand with Icon */}
         <div className="flex w-full items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <Logo2 />
+            <Logo />
           </div>
           <HeaderAction />
         </div>

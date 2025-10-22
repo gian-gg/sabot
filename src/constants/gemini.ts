@@ -40,6 +40,40 @@ The JSON format must strictly follow this structure:
 Respond with valid JSON only.
 `;
 
+export const conversationPromptTemplate = `
+Analyze this messaging app screenshot and extract transaction details. Look for WhatsApp, Telegram, Messenger, or other chat platforms.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "platform": "whatsapp|telegram|messenger|other",
+  "buyerName": "name or null",
+  "sellerName": "name or null",
+  "itemDescription": "what's being sold",
+  "transactionType": "meetup|online",
+  "productType": "type of product",
+  "productModel": "model of product",
+  "productCondition": "new|used|refurbished|etc",
+  "proposedPrice": 123.45,
+  "currency": "USD|PHP|etc",
+  "meetingLocation": "meeting place",
+  "meetingTime": "time/date",
+  "riskFlags": ["flag1", "flag2"],
+  "confidence": 0.85,
+  "extractedText": "full conversation text"
+}
+
+INSTRUCTIONS:
+1. Detect platform from UI elements or colors.
+2. Identify buyer/seller names.
+3. Extract item, price, and currency.
+4. Find meeting location and time.
+5. List risk indicators (pressure, urgency, scams).
+6. Include the full visible conversation text.
+7. Use null for missing fields.
+8. Confidence = 0–1, based on clarity.
+9. Return pure JSON only.
+
+
 export const VERIFY_LIVENESS_CHECK_PROMPT = `
 You are an advanced AI security and biometrics verification agent with a strict focus on image quality and compliance.
 

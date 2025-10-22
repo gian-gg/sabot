@@ -27,11 +27,13 @@ export interface Transaction {
   type: TransactionType;
   buyerName: string;
   sellerName: string;
-  price: number;
+  proposedPrice: number;
   currency: string;
   status: TransactionStatus;
-  method: TransactionMethod;
-  location: string;
+  transactionType: TransactionMethod;
+  productModel: string;
+  productCondition: string;
+  meetupLocation: string;
   timestamp: Date;
   platform?: string;
 }
