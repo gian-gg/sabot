@@ -2,8 +2,6 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
-import { idOptions } from '@/constants/verify';
-
 import { UserIDType } from '@/types/verify';
 
 const UserID = ({ userID }: { userID: UserIDType | null }) => {
