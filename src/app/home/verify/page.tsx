@@ -89,7 +89,15 @@ export default function VerifyPage() {
           />
         );
       case 'SUBMISSION_REVIEW':
-        return <SubmissionReview onNext={goToNextStep} onPrev={goToPrevStep} />;
+        return (
+          <SubmissionReview
+            userData={userData}
+            userID={userID}
+            livenessCheckCaptures={livenessCheckCaptures}
+            onNext={goToNextStep}
+            onPrev={goToPrevStep}
+          />
+        );
       case 'SUBMISSION_PENDING':
         return <SubmissionPending />;
       default:
