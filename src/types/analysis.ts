@@ -11,19 +11,21 @@ export interface AnalysisStepNavProps {
 }
 
 export interface AnalysisData {
-  id: string;
-  platform: string;
+  id?: string;
   buyerName?: string;
   sellerName?: string;
+  user_id: string;
+  platform: string;
+  screenshot_url: string;
   itemDescription?: string;
-  agreedPrice?: number;
+  proposedPrice?: number;
+  agreedPrice?: number; // Add this field
   currency?: string;
   meetingLocation?: string;
   meetingTime?: string;
-  riskFlags: string[];
-  confidence: number;
-  extractedText: string;
-  screenshot_url: string;
+  extractedText?: string;
+  riskFlags?: string[];
+  confidence?: number;
 }
 
 export interface AnalysisState {

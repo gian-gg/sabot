@@ -2,12 +2,28 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { AnalysisData } from '@/types/analysis';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
 interface AnalysisCompleteProps {
   analyses: AnalysisData[];
+  transactionId: string;
 }
 
-export function AnalysisComplete({ analyses }: AnalysisCompleteProps) {
+export function AnalysisComplete({
+  analyses,
+  transactionId,
+}: AnalysisCompleteProps) {
+  const { status } = useTransactionStatus(transactionId);
+
+  const getParticipantRole = (userId: string) => {
+    if (!status?.participants) return 'Party';
+
+    const participant = status.participants.find((p) => p.user_id === userId);
+    if (!participant) return 'Party';
+
+    // Creator is typically the seller, invitee is typically the buyer
+    return participant.role === 'creator' ? 'Seller' : 'Buyer';
+  };
   return (
     <div className="space-y-6">
       {analyses.map((analysis, index) => (
@@ -15,7 +31,7 @@ export function AnalysisComplete({ analyses }: AnalysisCompleteProps) {
           <div className="mb-4 flex items-center gap-3">
             <User className="text-muted-foreground h-5 w-5" />
             <span className="font-medium">
-              {analysis.buyerName || analysis.sellerName || 'Party'}
+              {getParticipantRole(analysis.user_id)}
               &apos;s Conversation
             </span>
             <Badge variant="outline" className="capitalize">
@@ -57,15 +73,26 @@ export function AnalysisComplete({ analyses }: AnalysisCompleteProps) {
                   </div>
                 )}
 
-                {analysis.agreedPrice && (
+                {(analysis.agreedPrice || analysis.proposedPrice) && (
                   <div className="bg-muted/50 rounded-md p-3">
                     <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                       Price
                     </span>
                     <p className="mt-1 text-lg font-bold text-green-600">
                       {analysis.currency || 'USD'}{' '}
-                      {analysis.agreedPrice.toLocaleString()}
+                      {(
+                        analysis.agreedPrice ||
+                        analysis.proposedPrice ||
+                        0
+                      ).toLocaleString()}
                     </p>
+                    {analysis.agreedPrice !== analysis.proposedPrice &&
+                      analysis.proposedPrice && (
+                        <p className="text-muted-foreground mt-0.5 text-xs">
+                          Initial proposal: {analysis.currency || 'USD'}{' '}
+                          {analysis.proposedPrice.toLocaleString()}
+                        </p>
+                      )}
                   </div>
                 )}
 
@@ -105,7 +132,7 @@ export function AnalysisComplete({ analyses }: AnalysisCompleteProps) {
             </div>
           </div>
 
-          {analysis.riskFlags?.length > 0 && (
+          {(analysis.riskFlags ?? []).length > 0 && (
             <Alert className="mt-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>

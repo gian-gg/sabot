@@ -14,6 +14,7 @@ interface AnalysisContainerProps {
   isAnalyzing: boolean;
   onStartAnalysis: () => void;
   onRetry: () => void;
+  transactionId: string;
 }
 
 export function AnalysisContainer({
@@ -23,6 +24,7 @@ export function AnalysisContainer({
   isAnalyzing,
   onStartAnalysis,
   onRetry,
+  transactionId,
 }: AnalysisContainerProps) {
   const renderStep = () => {
     switch (step) {
@@ -41,7 +43,9 @@ export function AnalysisContainer({
         return <AnalysisInProgress />;
 
       case 'ANALYSIS_COMPLETE':
-        return <AnalysisComplete analyses={analyses} />;
+        return (
+          <AnalysisComplete analyses={analyses} transactionId={transactionId} />
+        );
 
       case 'ANALYSIS_ERROR':
         return (

@@ -56,6 +56,7 @@ export async function GET(
 
         return {
           id: analysis.id,
+          user_id: analysis.transaction_screenshots.user_id,
           screenshot_url: signedUrlData?.signedUrl || '',
           ...analysis.analysis_data,
         };
