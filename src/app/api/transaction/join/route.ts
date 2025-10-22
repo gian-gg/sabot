@@ -59,25 +59,7 @@ export async function POST(request: NextRequest) {
     //   );
     // }
 
-    // Check if user is already a participant
-    const { data: existingParticipant } = await supabase
-      .from('transaction_participants')
-      .select('*')
-      .eq('transaction_id', payload.transaction_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingParticipant) {
-      // If already a participant, just return success (for testing with same user)
-      console.log('Join - User is already a participant, skipping for testing');
-      return NextResponse.json({
-        participant: existingParticipant,
-        transaction,
-        message: 'Already joined (test mode)',
-      });
-    }
-
-    // Check participant count
+    // Check participant count before attempting to add
     const { count } = await supabase
       .from('transaction_participants')
       .select('*', { count: 'exact', head: true })
@@ -90,15 +72,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add user as participant
+    // Add user as participant with upsert to handle duplicates gracefully
     console.log('Join - Adding user as participant...');
     const { data: participant, error: participantError } = await supabase
       .from('transaction_participants')
-      .insert({
-        transaction_id: payload.transaction_id,
-        user_id: user.id,
-        role: 'invitee',
-      })
+      .upsert(
+        {
+          transaction_id: payload.transaction_id,
+          user_id: user.id,
+          role: 'invitee',
+        },
+        {
+          onConflict: 'transaction_id,user_id',
+          ignoreDuplicates: false, // Update if exists
+        }
+      )
       .select()
       .single();
 
