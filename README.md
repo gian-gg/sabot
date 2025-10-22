@@ -1,23 +1,224 @@
-# <img src="public/logo-white.svg" alt="Sabot logo" width="128" />
+<h1 align="center">Sabot 🛡️</h1>
+<a id="readme-top"></a>
 
-!["tech stack"](https://skills.syvixor.com/api/icons?perline=15&i=googlegemini,nextjs,typescript,supabase,tailwindcss,shadcnui,zustand),ethers,ethereum,lisk
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![GitHub](https://img.shields.io/github/license/gian-gg/sabot?style=for-the-badge)](https://github.com/gian-gg/sabot/blob/main/LICENSE)
 
-## Project Overview
+<!-- PROJECT LOGO -->
+<div align="center">
+  <br />
+  <a href="https://github.com/gian-gg/sabot">
+    <img src="public/logo-white.svg" alt="Sabot logo" width="40%" height="35%">
+  </a>
+  <br />
+  <p align="center">
+    <br />
+    Let's make trust automatic!
+    <br />
+    <br />
+    <p align="center">
+      <a href="#"><img alt="Status" src="https://img.shields.io/badge/status-Beta-yellow?style=flat&color=yellow" /></a>
+<a href="https://nextjs.org/">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.4-2B2B2B?logo=nextdotjs&logoColor=white&style=flat" />
+</a>
+      <a href="https://github.com/gian-gg/sabot/commits/main"><img alt="Last commit" src="https://proxy.cyb3rko.de/shields/github/last-commit/gian-gg/sabot?color=coral&logo=git&logoColor=white"/</a>
+    </p>
+    <a href="https://github.com/gian-gg/sabot/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    &middot;
+    <a href="https://github.com/gian-gg/sabot/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
+</div>
 
-- This repository is a submission for Cebu Hacktoberfest.
-- Sabot is a focused, composable platform for peer-to-peer transaction verification: clear transaction lifecycles, invite/accept flows, and structured UI primitives that make the app easy to extend or re-implement.
-- Your third-party safety layer for verified, transparent, and scam-free online transactions.
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#%EF%B8%8F-project-overview">🗺️ Project Overview</a>
+      <ul>
+        <li><a href="#-built-with">📚 Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#-screenshots--features">📱 Screenshots</a></li>
+    <li>
+      <a href="#-getting-started">💻 Getting Started</a>
+      <ul>
+        <li><a href="#-prerequisites">🔧 Prerequisites</a></li>
+        <li><a href="#%EF%B8%8F-installation">🛠️ Installation</a></li>
+        <li><a href="#%EF%B8%8F-running-the-application">▶️ Running</a></li>
+      </ul>
+    </li>
+    <li><a href="#-notes">📝 Notes</a></li>
+    <li><a href="#-contributing">📬 Contributing</a></li>
+    <li><a href="#%EF%B8%8F-license">⚖️ License</a></li>
+  </ol>
+</details>
 
-## Highlights
+<!-- PROJECT OVERVIEW -->
 
-- Purpose-built for auditable P2P transactions and invitation workflows.
-- Status-driven transaction lifecycle (pending → active → completed + report states).
-- Modular UI primitives (cards, buttons, badges, dialogs) and page layout docs.
-- This is a concise overview — full developer docs and local setup are in /docs.
+## 🗺️ Project Overview
 
-## Contributing
+This repository, submitted for Cebu Hacktoberfest, features Sabot — a composable platform designed for **peer-to-peer transaction verification**, offering clear transaction lifecycles, invite-and-accept flows, and structured UI primitives that make it easy to extend or re-implement. Acting as a **third-party safety layer**, Sabot ensures verified, transparent, and scam-free online transactions.
 
-- This repo participates in Cebu Hacktoberfest — small, focused contributions are welcome.
-- Follow the structural docs in layout/ before changing page composition.
-- Keep changes small and componentized; update docs when structure changes.
-- Formatting and hooks are configured (Prettier, Husky, lint-staged).
+### 🆕 Latest Features
+
+- **🔗 Blockchain Escrow Integration**: Comprehensive smart contract integration for secure fund management
+- **🔮 Oracle Verification System**: Decentralized dispute resolution with oracle-based verification
+- **⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows
+- **📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking
+- **🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection
+- **📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality
+
+### 📚 Built With
+
+<p align="left">
+  <!-- Syvixor icons -->
+  <img src="https://skills.syvixor.com/api/icons?i=googlegemini,nextjs,typescript,supabase,tailwindcss,shadcnui,zustand" height="40" alt="Tech Stack" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Ethereum_logo.svg" height="40" width="40" alt="Ethereum" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" height="40" width="40" alt="Ethers.js" />
+  <img src="https://coin-images.coingecko.com/coins/images/385/large/Lisk_logo.png?1722338450" height="40" width="40" alt="Lisk" style="border-radius:8px;"  />
+</p>
+
+<!-- SCREENSHOTS -->
+
+## 📱 Screenshots & Features
+
+> _For more examples, please refer to the [Documentation](https://www.canva.com/design/DAG1XQBRczA/I1Ty55pcAZTr-qltGVJwlg/edit?utm_content=DAG1XQBRczA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)_
+
+<div align="center">
+
+</div>
+
+<!-- GETTING STARTED -->
+
+## 💻 Getting Started
+
+Follow these steps to get Sabot running on your local machine.
+
+### 🔧 Prerequisites
+
+### 🛠️ Installation
+
+#### 1. Clone the Repository
+
+```sh
+git clone https://github.com/gian-gg/sabot.git
+cd sabot
+```
+
+#### 2. Install Dependencies with Poetry
+
+```sh
+# Install project dependencies
+bun install
+```
+
+#### 3. Environment Setup
+
+```bash
+# Copy the environment template
+cp .env.example .env
+```
+
+Edit the `.env` file with your configuration (API keys, database URL, etc.)
+
+#### 4. Database Setup
+
+Apply database migrations:
+
+```sh
+# Run Supabase migrations
+npx supabase db push
+```
+
+#### 5. Blockchain Setup (Optional)
+
+For full escrow functionality, set up the smart contract:
+
+```sh
+# Navigate to blockchain directory
+cd ../SabotBlockchain/transaction-smart-contract
+
+# Install dependencies
+npm install
+
+# Deploy contracts (local development)
+npx hardhat run scripts/deploy-local.ts --network localhost
+```
+
+### ▶️ Running the Application
+
+```sh
+bun run dev
+```
+
+## 📝 Notes
+
+### 🔗 Blockchain Integration
+
+Sabot now includes comprehensive blockchain integration for secure escrow management:
+
+- **Smart Contract**: Deployed AgreementLedger contract with advanced escrow functionality
+- **Oracle System**: Decentralized verification for dispute resolution
+- **Token Economics**: ERC-20 token integration with fee distribution
+- **Security**: Multi-layer security with access controls and reentrancy protection
+
+### 📚 Documentation
+
+- [Blockchain Escrow Integration Guide](docs/BLOCKCHAIN_ESCROW_INTEGRATION.md)
+- [Oracle Verification Guide](docs/ORACLE_VERIFICATION_GUIDE.md)
+- [API Documentation](docs/)
+- [Component Documentation](docs/components.md)
+
+### 🧪 Testing
+
+The platform includes comprehensive testing for both frontend and smart contract functionality:
+
+```sh
+# Frontend tests
+bun test
+
+# Smart contract tests
+cd ../SabotBlockchain/transaction-smart-contract
+npx hardhat test
+```
+
+<!-- CONTRIBUTING -->
+
+## 📬 Contributing
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### 📢 Contributors
+
+<a href="https://github.com/gian-gg/sabot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=gian-gg/sabot" alt="contrib.rocks image" />
+</a>
+
+<!-- LICENSE -->
+
+## ⚖️ License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
+[contributors-shield]: https://img.shields.io/github/contributors/gian-gg/sabot.svg?style=for-the-badge
+[contributors-url]: https://github.com/gian-gg/sabot/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/gian-gg/sabot.svg?style=for-the-badge
+[forks-url]: https://github.com/gian-gg/sabot/network/members
+[stars-shield]: https://img.shields.io/github/stars/gian-gg/sabot.svg?style=for-the-badge
+[stars-url]: https://github.com/gian-gg/sabot/stargazers
+[issues-shield]: https://img.shields.io/github/issues/gian-gg/sabot.svg?style=for-the-badge
+[issues-url]: https://github.com/gian-gg/sabot/issues

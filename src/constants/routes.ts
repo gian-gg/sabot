@@ -31,6 +31,12 @@ export const ROUTES = {
     ACTIVE: (id: string) => `/agreement/${id}/active`,
     FINALIZE: (id: string) => `/agreement/${id}/finalize`,
   },
+  ESCROW: {
+    // Escrow is now part of agreements, not standalone
+    // Keep VIEW for existing escrows
+    VIEW: (id: string) => `/escrow/${id}`,
+    // Deprecated: NEW and LIST (use agreement finalization instead)
+  },
   SOCIALS: {
     GITHUB: 'https://github.com/gian-gg/sabot',
   },

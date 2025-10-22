@@ -5,14 +5,14 @@ import type { StepNavProps } from '@/types/verify';
 
 type NavigationButtonsProps = Omit<StepNavProps, 'onPrev'> & {
   onPrev?: StepNavProps['onPrev'];
-  isUploading: boolean;
+  isLoading: boolean;
   disableNext?: boolean;
 };
 
 const NavigationButtons = ({
   onNext,
   onPrev,
-  isUploading,
+  isLoading,
   disableNext = false,
 }: NavigationButtonsProps) => {
   return (
@@ -22,7 +22,7 @@ const NavigationButtons = ({
           variant="outline"
           onClick={onPrev}
           className="transition-all duration-150 active:scale-[0.98]"
-          disabled={isUploading}
+          disabled={isLoading}
         >
           Back
         </Button>
@@ -30,7 +30,7 @@ const NavigationButtons = ({
       <Button
         onClick={onNext}
         className="transition-all duration-150 active:scale-[0.98]"
-        disabled={isUploading || disableNext}
+        disabled={isLoading || disableNext}
       >
         Continue
       </Button>

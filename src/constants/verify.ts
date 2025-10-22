@@ -24,4 +24,5 @@ export const BIOMETRICS_INSTRUCTIONS = [
   'Remove glasses, hats, and masks',
   'Look straight at the camera',
   'Follow the on-screen prompts',
+  'Ensure face is inside the frame',
 ];

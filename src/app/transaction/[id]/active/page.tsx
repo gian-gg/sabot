@@ -21,14 +21,11 @@ import {
 } from 'lucide-react';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
-interface ActiveTransactionPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function ActiveTransactionPage({
+export default function TransactionActive({
   params,
-}: ActiveTransactionPageProps) {
-  const router = useRouter();
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   const [sellerConfirmed] = useState(false);

@@ -1,0 +1,324 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+    Search,
+    Shield,
+    Star,
+    CheckCircle2,
+    Clock,
+    Users,
+    Info,
+    AlertCircle,
+} from 'lucide-react';
+
+interface Arbiter {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    rating: number;
+    completedDisputes: number;
+    specialties: string[];
+    responseTime: string;
+    fee: string;
+    isRecommended: boolean;
+}
+
+interface ArbiterSelectionProps {
+    onArbiterSelect: (arbiter: Arbiter | null) => void;
+    selectedArbiter: Arbiter | null;
+    disabled?: boolean;
+}
+
+// Mock recommended arbiters
+const RECOMMENDED_ARBITERS: Arbiter[] = [
+    {
+        id: 'arb-1',
+        name: 'Maria Santos',
+        email: 'maria.santos@arbitration.com',
+        rating: 4.9,
+        completedDisputes: 127,
+        specialties: ['E-commerce', 'Digital Services', 'Freelance Work'],
+        responseTime: '< 24 hours',
+        fee: '₱2,500',
+        isRecommended: true,
+    },
+    {
+        id: 'arb-2',
+        name: 'John Rodriguez',
+        email: 'john.rodriguez@dispute-resolution.ph',
+        rating: 4.8,
+        completedDisputes: 89,
+        specialties: ['Real Estate', 'Business Contracts', 'Employment'],
+        responseTime: '< 12 hours',
+        fee: '₱3,000',
+        isRecommended: true,
+    },
+    {
+        id: 'arb-3',
+        name: 'Dr. Sarah Chen',
+        email: 'sarah.chen@tech-arbitration.com',
+        rating: 4.7,
+        completedDisputes: 156,
+        specialties: ['Technology', 'Software Development', 'IT Services'],
+        responseTime: '< 6 hours',
+        fee: '₱4,000',
+        isRecommended: true,
+    },
+];
+
+export function ArbiterSelection({
+    onArbiterSelect,
+    selectedArbiter,
+    disabled = false,
+}: ArbiterSelectionProps) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredArbiters, setFilteredArbiters] = useState<Arbiter[]>(RECOMMENDED_ARBITERS);
+    const [showCustomArbiter, setShowCustomArbiter] = useState(false);
+    const [customArbiterEmail, setCustomArbiterEmail] = useState('');
+
+    // Filter arbiters based on search
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredArbiters(RECOMMENDED_ARBITERS);
+        } else {
+            const filtered = RECOMMENDED_ARBITERS.filter(
+                (arbiter) =>
+                    arbiter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    arbiter.specialties.some((specialty) =>
+                        specialty.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+            );
+            setFilteredArbiters(filtered);
+        }
+    }, [searchTerm]);
+
+    const handleArbiterSelect = (arbiter: Arbiter) => {
+        onArbiterSelect(arbiter);
+    };
+
+    const handleCustomArbiterSubmit = () => {
+        if (customArbiterEmail.trim()) {
+            const customArbiter: Arbiter = {
+                id: `custom-${Date.now()}`,
+                name: 'Custom Arbiter',
+                email: customArbiterEmail,
+                rating: 0,
+                completedDisputes: 0,
+                specialties: ['Custom Selection'],
+                responseTime: 'TBD',
+                fee: 'TBD',
+                isRecommended: false,
+            };
+            onArbiterSelect(customArbiter);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900">
+                    <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-semibold">Arbiter Selection</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Choose a trusted third party to oversee your escrow
+                    </p>
+                </div>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="space-y-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search arbiters by name or specialty..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9"
+                        disabled={disabled}
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Select defaultValue="all">
+                        <SelectTrigger className="w-48">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Arbiters</SelectItem>
+                            <SelectItem value="recommended">Recommended</SelectItem>
+                            <SelectItem value="ecommerce">E-commerce</SelectItem>
+                            <SelectItem value="tech">Technology</SelectItem>
+                            <SelectItem value="realestate">Real Estate</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {/* Selected Arbiter */}
+            {selectedArbiter && (
+                <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                    <CardContent className="pt-4">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <div className="flex-1">
+                                <p className="font-medium text-green-900 dark:text-green-100">
+                                    Selected Arbiter
+                                </p>
+                                <div className="flex items-center gap-4 mt-1">
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-6 w-6">
+                                            <AvatarImage src={selectedArbiter.avatar} />
+                                            <AvatarFallback className="text-xs">
+                                                {selectedArbiter.name.split(' ').map(n => n[0]).join('')}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-medium">{selectedArbiter.name}</span>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                        {selectedArbiter.specialties[0]}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onArbiterSelect(null)}
+                                disabled={disabled}
+                            >
+                                Change
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Arbiter List */}
+            {!selectedArbiter && (
+                <div className="space-y-3">
+                    {filteredArbiters.map((arbiter) => (
+                        <Card
+                            key={arbiter.id}
+                            className={`cursor-pointer transition-colors hover:bg-muted/50 ${selectedArbiter?.id === arbiter.id ? 'ring-2 ring-orange-500' : ''
+                                }`}
+                            onClick={() => !disabled && handleArbiterSelect(arbiter)}
+                        >
+                            <CardContent className="pt-4">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarImage src={arbiter.avatar} />
+                                            <AvatarFallback>
+                                                {arbiter.name.split(' ').map(n => n[0]).join('')}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-medium">{arbiter.name}</h4>
+                                                {arbiter.isRecommended && (
+                                                    <Badge variant="secondary" className="text-xs">
+                                                        <Star className="h-3 w-3 mr-1" />
+                                                        Recommended
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">{arbiter.email}</p>
+                                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                    <span>{arbiter.rating}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Users className="h-3 w-3" />
+                                                    <span>{arbiter.completedDisputes} disputes</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span>{arbiter.responseTime}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-medium text-orange-600">{arbiter.fee}</p>
+                                        <p className="text-xs text-muted-foreground">Fee</p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-1">
+                                    {arbiter.specialties.map((specialty) => (
+                                        <Badge key={specialty} variant="outline" className="text-xs">
+                                            {specialty}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {/* Custom Arbiter Option */}
+            {!selectedArbiter && (
+                <Card className="border-dashed">
+                    <CardContent className="pt-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Info className="h-4 w-4 text-blue-600" />
+                                <p className="text-sm font-medium">Don't see your preferred arbiter?</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="Enter arbiter email address..."
+                                    value={customArbiterEmail}
+                                    onChange={(e) => setCustomArbiterEmail(e.target.value)}
+                                    disabled={disabled}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    onClick={handleCustomArbiterSubmit}
+                                    disabled={!customArbiterEmail.trim() || disabled}
+                                    size="sm"
+                                >
+                                    Add
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Agreement Notice */}
+            <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                    <strong>Both parties must agree:</strong> The selected arbiter will be proposed to the other party.
+                    Both parties must approve the arbiter before they can oversee the escrow.
+                </AlertDescription>
+            </Alert>
+        </div>
+    );
+}
