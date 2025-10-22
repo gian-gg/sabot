@@ -54,22 +54,30 @@ export async function POST(
         );
 
         // Extract conversation data
+        console.log(
+          `🔍 Calling extractConversation for screenshot ${screenshot.id}...`
+        );
         const conversationData = await extractConversation(file);
         console.log(
           `📊 Extracted data for screenshot ${screenshot.id}:`,
-          conversationData
+          JSON.stringify(conversationData, null, 2)
         );
 
         // Validate analysis data has required fields
-        if (
-          !conversationData ||
-          typeof conversationData.confidence !== 'number'
-        ) {
+        if (!conversationData) {
           console.error(
-            `❌ Invalid analysis data for screenshot ${screenshot.id}:`,
-            conversationData
+            `❌ No conversation data returned for screenshot ${screenshot.id}`
           );
           continue;
+        }
+
+        if (typeof conversationData.confidence !== 'number') {
+          console.error(
+            `❌ Invalid confidence value for screenshot ${screenshot.id}:`,
+            conversationData.confidence
+          );
+          // Set a default confidence if missing
+          conversationData.confidence = 0;
         }
 
         // Save analysis result
@@ -90,7 +98,14 @@ export async function POST(
           });
         }
       } catch (error) {
-        console.error(`Failed to analyze screenshot ${screenshot.id}:`, error);
+        console.error(
+          `❌ Failed to analyze screenshot ${screenshot.id}:`,
+          error
+        );
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
       }
     }
 
@@ -99,6 +114,11 @@ export async function POST(
       .from('transactions')
       .update({ status: 'analysis_complete' })
       .eq('id', transactionId);
+
+    console.log(
+      `✅ Analysis complete. Returning ${analysisResults.length} results`
+    );
+    console.log('Results:', JSON.stringify(analysisResults, null, 2));
 
     return NextResponse.json({ results: analysisResults });
   } catch (error) {

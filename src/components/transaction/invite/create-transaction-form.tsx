@@ -43,13 +43,17 @@ import {
 } from '@/components/agreement/finalize/escrow-protection-enhanced';
 import { ArbiterSelection } from '@/components/agreement/finalize/arbiter-selection';
 import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
+import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
+import { GitMerge } from 'lucide-react';
+import type { AnalysisData } from '@/types/analysis';
 
 const STEPS = [
   { id: 1, name: 'Screenshot Analysis', icon: Shield },
-  { id: 2, name: 'Item Details', icon: Package },
-  { id: 3, name: 'Exchange Info', icon: MapPin },
-  { id: 4, name: 'Safety Options', icon: Shield },
-  { id: 5, name: 'Review', icon: CheckCircle2 },
+  { id: 2, name: 'Resolve Conflicts', icon: GitMerge },
+  { id: 3, name: 'Item Details', icon: Package },
+  { id: 4, name: 'Exchange Info', icon: MapPin },
+  { id: 5, name: 'Safety Options', icon: Shield },
+  { id: 6, name: 'Review', icon: CheckCircle2 },
 ];
 
 interface TransactionFormData {
@@ -66,6 +70,11 @@ interface TransactionFormData {
   delivery_method?: string;
 }
 
+interface AnalysisWithSource extends AnalysisData {
+  source: string;
+  screenshotId: string;
+}
+
 export function CreateTransactionForm({
   transactionId,
   onTransactionCreated,
@@ -80,6 +89,12 @@ export function CreateTransactionForm({
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>('You');
   const [otherUserName, setOtherUserName] = useState<string>('Other Party');
+  const [extractedData, setExtractedData] = useState<AnalysisData | null>(null);
+  const [isDataExtracted, setIsDataExtracted] = useState(false);
+  const [multipleAnalyses, setMultipleAnalyses] = useState<
+    AnalysisWithSource[]
+  >([]);
+  const [hasConflicts, setHasConflicts] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState<TransactionFormData>({
@@ -158,6 +173,103 @@ export function CreateTransactionForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Transform extracted analysis data to form data
+  const transformExtractedData = (data: AnalysisData) => {
+    const mapCategoryFromProductType = (productType?: string): string => {
+      if (!productType) return 'other';
+      const type = productType.toLowerCase();
+      if (
+        type.includes('digital') ||
+        type.includes('mobile') ||
+        type.includes('credit')
+      )
+        return 'electronics';
+      if (
+        type.includes('fashion') ||
+        type.includes('apparel') ||
+        type.includes('clothing')
+      )
+        return 'fashion';
+      if (type.includes('home') || type.includes('living')) return 'home';
+      if (type.includes('sports') || type.includes('outdoor')) return 'sports';
+      if (type.includes('book') || type.includes('media')) return 'books';
+      if (type.includes('toy') || type.includes('game')) return 'toys';
+      if (type.includes('automotive') || type.includes('vehicle'))
+        return 'automotive';
+      return 'other';
+    };
+
+    const mapConditionFromProductCondition = (condition?: string): string => {
+      if (!condition) return 'brand-new';
+      const cond = condition.toLowerCase();
+      if (cond.includes('brand') && cond.includes('new')) return 'brand-new';
+      if (cond.includes('like') && cond.includes('new')) return 'like-new';
+      if (cond.includes('excellent')) return 'excellent';
+      if (cond.includes('good')) return 'good';
+      if (cond.includes('fair')) return 'fair';
+      if (cond.includes('poor') || cond.includes('parts')) return 'poor';
+      return 'brand-new'; // Default for digital goods
+    };
+
+    const mapTransactionType = (type?: string): 'meetup' | 'delivery' => {
+      if (!type) return 'meetup';
+      const t = type.toLowerCase();
+      if (
+        t.includes('online') ||
+        t.includes('delivery') ||
+        t.includes('shipping')
+      )
+        return 'delivery';
+      return 'meetup';
+    };
+
+    setFormData({
+      item_name: data.productModel || data.productType || 'Item',
+      item_description: data.itemDescription || '',
+      price: data.proposedPrice?.toString() || '',
+      quantity: '1', // Default to 1, user can edit
+      condition: mapConditionFromProductCondition(data.productCondition),
+      category: mapCategoryFromProductType(data.productType),
+      transaction_type: mapTransactionType(data.transactionType),
+      meeting_location: data.meetingLocation || '',
+      meeting_time: data.meetingTime || '',
+      delivery_address: '',
+      delivery_method: '',
+    });
+
+    setIsDataExtracted(true);
+  };
+
+  // Callback for when screenshot analysis completes (multiple analyses)
+  const handleAnalysisComplete = (
+    data: AnalysisData | AnalysisWithSource[]
+  ) => {
+    console.log('📊 Received analysis data:', data);
+
+    // Check if we received multiple analyses
+    if (Array.isArray(data)) {
+      console.log('📊 Multiple analyses detected:', data.length);
+      setMultipleAnalyses(data);
+      setHasConflicts(true);
+      // Don't auto-extract yet, wait for conflict resolution
+    } else {
+      // Single analysis
+      console.log('📊 Single analysis detected');
+      setExtractedData(data);
+      setMultipleAnalyses([]);
+      setHasConflicts(false);
+      transformExtractedData(data);
+    }
+  };
+
+  // Callback for when conflicts are resolved
+  const handleConflictsResolved = (resolvedData: AnalysisData) => {
+    console.log('✅ Conflicts resolved:', resolvedData);
+    setExtractedData(resolvedData);
+    setHasConflicts(false);
+    transformExtractedData(resolvedData);
+  };
+
   const canProceedToNext = () => {
     switch (currentStep) {
       case 1:
@@ -165,6 +277,12 @@ export function CreateTransactionForm({
         // This ensures the analysis can be performed
         return !!transactionId;
       case 2:
+        // Conflict resolution step - only proceed if conflicts are resolved or no conflicts exist
+        if (hasConflicts) {
+          return false; // Must resolve conflicts first
+        }
+        return true; // No conflicts or already resolved
+      case 3:
         return (
           formData.item_name &&
           formData.item_description &&
@@ -173,13 +291,13 @@ export function CreateTransactionForm({
           formData.condition &&
           formData.category
         );
-      case 2:
+      case 4:
         if (formData.transaction_type === 'meetup') {
           return formData.meeting_location && formData.meeting_time;
         } else {
           return formData.delivery_address && formData.delivery_method;
         }
-      case 3:
+      case 5:
         if (escrowEnabled) {
           // Must have at least one deliverable
           if (escrowData.deliverables.length === 0) {
@@ -207,7 +325,7 @@ export function CreateTransactionForm({
           return false;
         }
         return true;
-      case 5:
+      case 6:
         return true;
       default:
         return false;
@@ -342,10 +460,73 @@ export function CreateTransactionForm({
             </Alert>
           );
         }
-        return <ScreenshotAnalysis transactionId={transactionId} />;
+        return (
+          <ScreenshotAnalysis
+            transactionId={transactionId}
+            onAnalysisComplete={handleAnalysisComplete}
+          />
+        );
       case 2:
+        // Conflict resolution step
+        if (!transactionId) {
+          return (
+            <Alert>
+              <AlertDescription>
+                Please complete the screenshot analysis first.
+              </AlertDescription>
+            </Alert>
+          );
+        }
+
+        if (multipleAnalyses.length === 0 && !extractedData) {
+          return (
+            <Alert>
+              <AlertDescription>
+                Waiting for screenshot analysis to complete...
+              </AlertDescription>
+            </Alert>
+          );
+        }
+
+        // If we have extracted data and no conflicts, show success
+        if (extractedData && !hasConflicts) {
+          return (
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                ✅ Data extracted successfully with no conflicts. Click Next to
+                continue.
+              </AlertDescription>
+            </Alert>
+          );
+        }
+
+        // Show conflict resolver
+        return (
+          <DataConflictResolver
+            analyses={multipleAnalyses}
+            onResolve={handleConflictsResolved}
+          />
+        );
+      case 3:
         return (
           <div className="space-y-6">
+            {isDataExtracted && extractedData && (
+              <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  ✅ Data automatically extracted from screenshots (Confidence:{' '}
+                  {((extractedData.confidence || 0) * 100).toFixed(0)}%)
+                  {extractedData.riskFlags &&
+                    extractedData.riskFlags.length > 0 && (
+                      <span className="mt-1 block text-amber-600 dark:text-amber-400">
+                        ⚠️ Risk flags detected:{' '}
+                        {extractedData.riskFlags.join(', ')}
+                      </span>
+                    )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="item_name">
                 Item Name <span className="text-destructive">*</span>
@@ -355,8 +536,15 @@ export function CreateTransactionForm({
                 placeholder="e.g., iPhone 14 Pro Max 256GB"
                 value={formData.item_name}
                 onChange={(e) => updateFormData('item_name', e.target.value)}
+                disabled={isDataExtracted}
+                className={isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}
                 required
               />
+              {isDataExtracted && (
+                <p className="text-muted-foreground text-xs">
+                  🔒 Extracted from screenshot analysis
+                </p>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
@@ -367,8 +555,14 @@ export function CreateTransactionForm({
                 <Select
                   value={formData.category}
                   onValueChange={(value) => updateFormData('category', value)}
+                  disabled={isDataExtracted}
                 >
-                  <SelectTrigger id="category">
+                  <SelectTrigger
+                    id="category"
+                    className={
+                      isDataExtracted ? 'bg-muted cursor-not-allowed' : ''
+                    }
+                  >
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -382,6 +576,11 @@ export function CreateTransactionForm({
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {isDataExtracted && (
+                  <p className="text-muted-foreground text-xs">
+                    🔒 Extracted from screenshot
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -391,8 +590,14 @@ export function CreateTransactionForm({
                 <Select
                   value={formData.condition}
                   onValueChange={(value) => updateFormData('condition', value)}
+                  disabled={isDataExtracted}
                 >
-                  <SelectTrigger id="condition">
+                  <SelectTrigger
+                    id="condition"
+                    className={
+                      isDataExtracted ? 'bg-muted cursor-not-allowed' : ''
+                    }
+                  >
                     <SelectValue placeholder="Select condition..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -404,6 +609,11 @@ export function CreateTransactionForm({
                     <SelectItem value="poor">For Parts</SelectItem>
                   </SelectContent>
                 </Select>
+                {isDataExtracted && (
+                  <p className="text-muted-foreground text-xs">
+                    🔒 Extracted from screenshot
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -419,6 +629,11 @@ export function CreateTransactionForm({
                   onChange={(e) => updateFormData('quantity', e.target.value)}
                   required
                 />
+                {isDataExtracted && (
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    ✏️ You can edit this field
+                  </p>
+                )}
               </div>
             </div>
 
@@ -434,13 +649,21 @@ export function CreateTransactionForm({
                   updateFormData('item_description', e.target.value)
                 }
                 rows={4}
+                disabled={isDataExtracted}
+                className={isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}
                 required
               />
+              {isDataExtracted && (
+                <p className="text-muted-foreground text-xs">
+                  🔒 Extracted from screenshot analysis
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="price">
-                Price (PHP) <span className="text-destructive">*</span>
+                Price ({extractedData?.currency || 'PHP'}){' '}
+                <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <span className="text-muted-foreground absolute top-3 left-3 text-sm">
@@ -452,10 +675,16 @@ export function CreateTransactionForm({
                   placeholder="45000"
                   value={formData.price}
                   onChange={(e) => updateFormData('price', e.target.value)}
-                  className="pl-8"
+                  className={`pl-8 ${isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}`}
+                  disabled={isDataExtracted}
                   required
                 />
               </div>
+              {isDataExtracted && (
+                <p className="text-muted-foreground text-xs">
+                  🔒 Extracted from screenshot analysis
+                </p>
+              )}
             </div>
           </div>
         );
@@ -849,10 +1078,11 @@ export function CreateTransactionForm({
           <div className="mt-4 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
               {currentStep === 1 && '🔍 Analyze screenshots'}
-              {currentStep === 2 && '📦 Tell us about your item'}
-              {currentStep === 3 && '🚚 How will you exchange?'}
-              {currentStep === 4 && '🛡️ Add security features'}
-              {currentStep === 5 && '✅ Review and create'}
+              {currentStep === 2 && '🔀 Resolve any conflicts'}
+              {currentStep === 3 && '📦 Tell us about your item'}
+              {currentStep === 4 && '🚚 How will you exchange?'}
+              {currentStep === 5 && '🛡️ Add security features'}
+              {currentStep === 6 && '✅ Review and create'}
             </div>
             <span className="bg-primary text-primary-foreground rounded-full px-3 py-1 text-sm font-medium shadow-sm">
               Step {currentStep}/{STEPS.length}
@@ -865,24 +1095,27 @@ export function CreateTransactionForm({
           <CardHeader className="bg-muted/30 space-y-3 border-b">
             <CardTitle className="text-2xl">
               {currentStep === 1 && 'Screenshot Analysis'}
-              {currentStep === 2 && 'Item Details'}
-              {currentStep === 3 && 'Exchange Information'}
-              {currentStep === 4 && 'Safety & Protection'}
-              {currentStep === 5 &&
+              {currentStep === 2 && 'Resolve Data Conflicts'}
+              {currentStep === 3 && 'Item Details'}
+              {currentStep === 4 && 'Exchange Information'}
+              {currentStep === 5 && 'Safety & Protection'}
+              {currentStep === 6 &&
                 (transactionId ? 'Review & Confirm' : 'Create Transaction')}
             </CardTitle>
             <CardDescription className="text-base">
               {currentStep === 1 &&
                 'AI-powered analysis of your conversation screenshots to extract transaction details and detect fraud'}
               {currentStep === 2 &&
+                'Review and resolve any conflicts between the two screenshot analyses'}
+              {currentStep === 3 &&
                 (transactionId
                   ? 'Update transaction details'
                   : "Describe what you're buying or selling")}
-              {currentStep === 3 &&
-                "Choose how you'll exchange (meetup or delivery)"}
               {currentStep === 4 &&
-                'Add optional escrow protection and arbiter oversight'}
+                "Choose how you'll exchange (meetup or delivery)"}
               {currentStep === 5 &&
+                'Add optional escrow protection and arbiter oversight'}
+              {currentStep === 6 &&
                 'Review and confirm your transaction details'}
             </CardDescription>
           </CardHeader>

@@ -101,11 +101,10 @@ export function AnalysisComplete({
                     className="bg-muted/50 relative overflow-hidden rounded-lg border"
                     style={{ maxHeight: 400 }}
                   >
-                    <Image
+                    <img
                       src={analysis.screenshot_url || ''}
                       alt="Conversation screenshot"
                       className="h-auto w-full object-contain"
-                      fill
                       style={{ objectFit: 'contain' }}
                       sizes="(max-width: 768px) 100vw, 50vw"
                     />
