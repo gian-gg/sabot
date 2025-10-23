@@ -15,8 +15,11 @@ import type {
   UserIDType,
   CaptureData,
 } from '@/types/verify';
+import { useUserStore } from '@/store/user/userStore';
 
 export default function VerifyPage() {
+  const user = useUserStore();
+
   const [step, setStep] = useState<VerificationStep>('ID_SELECTION');
   const [userID, setUserID] = useState<UserIDType | null>(null); // step 1
   const [userData, setUserData] = useState<GovernmentIdInfo | null>(null); // step 2
@@ -50,6 +53,10 @@ export default function VerifyPage() {
       setStep(steps[currentIndex - 1]);
     }
   };
+
+  if (user.verificationStatus === 'pending') {
+    return <SubmissionPending />;
+  }
 
   const renderStep = () => {
     switch (step) {
