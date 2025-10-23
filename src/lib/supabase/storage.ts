@@ -68,3 +68,43 @@ export async function uploadToBucket(
     publicUrl: pub?.publicUrl ?? null,
   };
 }
+
+// Delete a file from a bucket by path
+export async function deleteFromBucket(
+  bucket: string,
+  path: string
+): Promise<boolean> {
+  const supabase = await createClient();
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  if (error) {
+    console.error('Failed to delete storage file:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Creates a signed URL for private storage files that expires after a set duration
+ * @param bucket - The storage bucket name
+ * @param path - The file path within the bucket
+ * @param expiresIn - Expiration time in seconds (default: 3600 = 1 hour)
+ * @returns Signed URL that can be used to access the private file
+ */
+export async function getSignedUrl(
+  bucket: string,
+  path: string,
+  expiresIn: number = 3600
+): Promise<string | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresIn);
+
+  if (error) {
+    console.error('Failed to create signed URL:', error.message);
+    return null;
+  }
+
+  return data?.signedUrl ?? null;
+}
