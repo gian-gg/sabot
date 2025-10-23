@@ -15,6 +15,7 @@ import { idOptions } from '@/constants/verify';
 import type { IdType, UserIDType } from '@/types/verify';
 
 export function IdSelection({
+  onPrev,
   onNext,
   selectedIDType,
   setSelectedIDType,
@@ -62,7 +63,11 @@ export function IdSelection({
             </Label>
           ))}
         </RadioGroup>
-        <NavigationButtons onNext={handleNext} isLoading={false} />
+        <NavigationButtons
+          onPrev={onPrev}
+          onNext={handleNext}
+          isLoading={false}
+        />
       </CardContent>
     </Card>
   );
