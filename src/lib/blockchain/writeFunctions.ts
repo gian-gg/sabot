@@ -15,30 +15,40 @@ export async function registerUser(): Promise<boolean> {
     } = await supabase.auth.getUser();
 
     if (error || !user) {
+      console.error('registerUser: Failed to get user:', error?.message);
       return false;
     }
+
+    console.log('registerUser: User authenticated:', user.id);
 
     const encryptedKey = await getEncryptedKey(user.id);
 
     if (!encryptedKey) {
-      console.log('No Key');
+      console.error('registerUser: No encrypted key found for user');
       return false;
     }
 
-    const privateKey = decryptPrivateKey(secretKey, encryptedKey);
+    console.log('registerUser: Encrypted key found');
+
+    const privateKey = decryptPrivateKey(encryptedKey, secretKey);
 
     const contract = await getWritableLedgerContract(privateKey);
 
     if (!contract) {
-      console.log('no contract');
+      console.error('registerUser: Failed to get writable contract');
       return false;
     }
 
+    console.log('registerUser: Contract obtained, attempting registration...');
     await contract.registerUser();
 
+    console.log('registerUser: Registration successful');
     return true;
   } catch (error) {
-    console.log('failed to register');
+    console.error(
+      'registerUser: Failed to register:',
+      error instanceof Error ? error.message : String(error)
+    );
     return false;
   }
 }
