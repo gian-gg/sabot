@@ -6,12 +6,15 @@ import type {
   GovernmentIdInfo,
   IdType,
 } from '@/types/verify';
-import type { VerificationStatus } from '@/types/user';
-import { uploadToBucket } from '../storage';
+import { uploadToBucket, deleteFromBucket } from '../storage';
+import {
+  getUserVerificationData,
+  updateUserVerificationStatus,
+  getUsersVerificationMap,
+} from './user';
 
 interface VerificationRequestRow {
   id: string;
-  status: VerificationStatus;
   user_id: string;
   user_name: string;
   user_email: string;
@@ -32,7 +35,6 @@ export async function getVerificationRequests(): Promise<
     .select(
       `
         id,
-        status,
         user_id,
         user_name,
         user_email,
@@ -54,11 +56,13 @@ export async function getVerificationRequests(): Promise<
     return [];
   }
 
-  const mappedData: VerificationRequests[] = (
-    data as VerificationRequestRow[]
-  ).map((item) => ({
+  const rows = data as VerificationRequestRow[];
+  const userIds = rows.map((r) => r.user_id);
+  const statusMap = await getUsersVerificationMap(userIds);
+
+  const mappedData: VerificationRequests[] = rows.map((item) => ({
     id: item.id,
-    status: item.status,
+    status: statusMap[item.user_id] ?? 'not-started',
     userID: item.user_id,
     userName: item.user_name,
     userEmail: item.user_email,
@@ -105,7 +109,6 @@ export async function submitVerificationRequest(
   const { data, error } = await supabase
     .from('verification_requests')
     .insert({
-      status: 'pending' as VerificationStatus,
       user_id: input.userID,
       user_name: input.userName,
       user_email: input.userEmail,
@@ -117,7 +120,6 @@ export async function submitVerificationRequest(
     .select(
       `
       id,
-      status,
       user_id,
       user_name,
       user_email,
@@ -134,11 +136,15 @@ export async function submitVerificationRequest(
     throw new Error(`Failed to create verification request: ${error.message}`);
   }
 
-  // 4) Map to domain type
+  // 4) Mark user status as pending (source of truth in user_data)
+  await updateUserVerificationStatus(input.userID, 'pending');
+
+  // 5) Map to domain type
   const row = data as VerificationRequestRow;
+  const userData = await getUserVerificationData(row.user_id);
   return {
     id: row.id,
-    status: row.status,
+    status: userData.verification_status,
     userID: row.user_id,
     userName: row.user_name,
     userEmail: row.user_email,
@@ -147,4 +153,48 @@ export async function submitVerificationRequest(
     faceMathchConfidence: row.face_match,
     createdAt: row.created_at,
   };
+}
+
+// Delete a verification request entry by id
+export async function deleteVerificationRequest(id: string): Promise<boolean> {
+  const supabase = await createClient();
+
+  // Fetch the row to get the storage path
+  const { data: row, error: fetchError } = await supabase
+    .from('verification_requests')
+    .select('user_govid_path')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !row) {
+    console.error(
+      'Error fetching verification request for delete:',
+      fetchError
+    );
+    return false;
+  }
+
+  // Try deleting the storage file first
+  const storageDeleted = await deleteFromBucket(
+    'verification-ids',
+    row.user_govid_path
+  );
+  if (!storageDeleted) {
+    // Proceed to delete DB row anyway, but report partial failure
+    console.warn(
+      'Proceeding to delete DB row despite storage deletion failure'
+    );
+  }
+
+  const { error: deleteError } = await supabase
+    .from('verification_requests')
+    .delete()
+    .eq('id', id);
+
+  if (deleteError) {
+    console.error('Error deleting verification request row:', deleteError);
+    return false;
+  }
+
+  return true;
 }

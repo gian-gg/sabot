@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useUserStore } from '@/store/user/userStore';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -9,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -19,29 +18,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Search,
-  Filter,
-  Eye,
-  Users,
-} from 'lucide-react';
-import { idOptions } from '@/constants/verify';
-import type { IdType } from '@/types/verify';
+import { Search, Filter } from 'lucide-react';
+
 import Denied from '@/components/admin/denied';
+import { toast } from 'sonner';
+import { updateUserVerificationStatus } from '@/lib/supabase/db/user';
+import { deleteVerificationRequest } from '@/lib/supabase/db/verify';
+import ReviewDialog from '@/components/admin/review-dialog';
+import VerificationTable from '@/components/admin/verification-table';
 
 import type { VerificationRequests } from '@/types/verify';
 
 const AdminClient = ({ requests }: { requests: VerificationRequests[] }) => {
+  const router = useRouter();
   const user = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedRequest, setSelectedRequest] =
+    useState<VerificationRequests | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (user.role !== 'admin') {
     return <Denied />;
   }
+
+  const handleOpenModal = (request: VerificationRequests) => {
+    setSelectedRequest(request);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRequest(null);
+  };
+
+  const handleApprove = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      setIsProcessing(true);
+      await updateUserVerificationStatus(selectedRequest.userID, 'complete');
+      toast.success(`${selectedRequest.userName}'s verification approved.`);
+      handleCloseModal();
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        'Failed to approve verification. Please try again.  Error:' + error
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      setIsProcessing(true);
+      await deleteVerificationRequest(selectedRequest.id);
+      await updateUserVerificationStatus(selectedRequest.userID, 'not-started');
+      toast.success(`${selectedRequest.userName}'s verification rejected.`);
+      handleCloseModal();
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        'Failed to reject verification. Please try again. Error:' + error
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Handle case when requests is undefined or null
   const safeRequests = requests || [];
@@ -54,61 +101,6 @@ const AdminClient = ({ requests }: { requests: VerificationRequests[] }) => {
     return matchesSearch && matchesStatus;
   });
 
-  const stats = {
-    total: safeRequests.length,
-    pending: safeRequests.filter((r) => r.status === 'pending').length,
-    approved: safeRequests.filter((r) => r.status === 'complete').length,
-    rejected: safeRequests.filter((r) => r.status === 'not-started').length,
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <Badge
-            variant="outline"
-            className="border-yellow-500/50 text-yellow-500"
-          >
-            <Clock className="mr-1 h-3 w-3" />
-            Pending
-          </Badge>
-        );
-      case 'complete':
-        return (
-          <Badge variant="outline" className="border-primary text-primary">
-            <CheckCircle2 className="mr-1 h-3 w-3" />
-            Approved
-          </Badge>
-        );
-      case 'not-started':
-        return (
-          <Badge
-            variant="outline"
-            className="border-destructive text-destructive"
-          >
-            <XCircle className="mr-1 h-3 w-3" />
-            Rejected
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getIdTypeLabel = (idType: IdType) => {
-    return idOptions.find((opt) => opt.id === idType)?.label || idType;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(dateString));
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -119,57 +111,6 @@ const AdminClient = ({ requests }: { requests: VerificationRequests[] }) => {
             Manage verification requests and user accounts
           </p>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Requests
-            </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-muted-foreground text-xs">
-              All verification submissions
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-muted-foreground text-xs">Awaiting review</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <CheckCircle2 className="text-primary h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.approved}</div>
-            <p className="text-muted-foreground text-xs">Verified users</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-            <XCircle className="text-destructive h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.rejected}</div>
-            <p className="text-muted-foreground text-xs">Failed verification</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters and Search */}
@@ -208,116 +149,24 @@ const AdminClient = ({ requests }: { requests: VerificationRequests[] }) => {
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden rounded-lg border">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      User
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      ID Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      Submitted
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      Face Match
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center">
-                        <p className="text-muted-foreground">
-                          No verification requests found
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredRequests.map((request) => (
-                      <tr
-                        key={request.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {request.userName}
-                            </span>
-                            <span className="text-muted-foreground text-xs">
-                              {request.userEmail}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant="secondary">
-                            {getIdTypeLabel(
-                              request.governmentIdInfo.idType || 'passport'
-                            )}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {formatDate(request.createdAt)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {request.faceMathchConfidence !== null ? (
-                            <div className="flex items-center gap-2">
-                              <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
-                                <div
-                                  className={`h-full ${
-                                    request.faceMathchConfidence >= 0.85
-                                      ? 'bg-primary'
-                                      : request.faceMathchConfidence >= 0.7
-                                        ? 'bg-yellow-500'
-                                        : 'bg-destructive'
-                                  }`}
-                                  style={{
-                                    width: `${request.faceMathchConfidence * 100}%`,
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs">
-                                {(request.faceMathchConfidence * 100).toFixed(
-                                  0
-                                )}
-                                %
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">
-                              N/A
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {getStatusBadge(request.status)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <Button size="sm" className="h-8 gap-1 text-xs">
-                              <Eye className="h-3 w-3" />
-                              Review
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <VerificationTable
+            requests={filteredRequests}
+            onReview={handleOpenModal}
+          />
         </CardContent>
       </Card>
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={isModalOpen}
+        onOpenChange={(open) =>
+          open ? setIsModalOpen(true) : handleCloseModal()
+        }
+        request={selectedRequest}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 };
