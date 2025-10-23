@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="bg-background min-h-screen">
+    <main className="bg-background min-h-screen pt-18 pb-12">
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="mb-12 space-y-4">
@@ -456,13 +456,6 @@ export default function PrivacyPolicyPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Footer */}
-        <div className="border-border mt-12 border-t pt-8 text-center">
-          <p className="text-muted-foreground text-sm">
-            © 2025 Sabot. All rights reserved.
-          </p>
         </div>
       </div>
     </main>

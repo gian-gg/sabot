@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronRight, ChevronDown, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   extractClausesFromHTML,
@@ -95,12 +94,12 @@ function OutlineNode({
       <button
         onClick={handleClick}
         className={cn(
-          'hover:bg-accent/50 group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
+          'hover:bg-accent/50 group flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors',
           'focus:ring-primary/50 focus:ring-1 focus:outline-none',
-          depth === 0 && 'text-foreground font-semibold',
-          depth === 1 && 'text-foreground/90 text-sm',
-          depth === 2 && 'text-muted-foreground text-sm',
-          depth > 2 && 'text-muted-foreground/80 text-xs'
+          depth === 0 && 'text-foreground text-sm',
+          depth === 1 && 'text-foreground/80 text-xs',
+          depth === 2 && 'text-muted-foreground text-xs',
+          depth > 2 && 'text-muted-foreground/70 text-xs'
         )}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
         title={item.title} // Show full title on hover
@@ -157,41 +156,22 @@ export function DocumentOutline({
   editorContent = '',
   onJumpToClause,
 }: DocumentOutlineProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
   // Memoize outline extraction to avoid recalculating on every render
   const outline = useMemo(() => {
     return extractOutlineFromHTML(editorContent);
   }, [editorContent]);
 
-  if (!isVisible) return null;
-
   // Show empty state if no clauses found
   const isEmpty = outline.length === 0;
 
   return (
-    <aside className="border-border/30 w-64 overflow-y-auto border-l bg-transparent">
+    <aside className="border-border/30 flex-1 overflow-y-auto border-l bg-transparent">
       <div className="p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
-            Document Outline
-          </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-accent h-6 w-6 p-0"
-            onClick={() => setIsVisible(false)}
-            title="Hide outline"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
         {isEmpty ? (
-          <div className="text-muted-foreground px-2 py-6 text-center text-xs">
-            <p className="mb-2">No clauses or headings found</p>
-            <p className="text-muted-foreground/60 text-xs">
-              Add clauses or sections to see the outline here
+          <div className="text-muted-foreground/60 space-y-1 px-2 py-6 text-center text-xs">
+            <p>No clauses found</p>
+            <p className="text-muted-foreground/40 text-xs">
+              Add sections to outline
             </p>
           </div>
         ) : (
@@ -206,17 +186,15 @@ export function DocumentOutline({
             ))}
 
             {/* Statistics footer */}
-            <div className="border-border/20 mt-6 border-t pt-4">
-              <div className="text-muted-foreground space-y-1 text-xs">
+            <div className="border-border/20 mt-4 border-t pt-3">
+              <div className="text-muted-foreground/70 space-y-0.5 text-xs">
                 <p>
-                  Total Clauses:{' '}
-                  <span className="text-foreground font-semibold">
-                    {outline.length}
-                  </span>
+                  Clauses:{' '}
+                  <span className="text-foreground/60">{outline.length}</span>
                 </p>
                 <p>
-                  Max Depth:{' '}
-                  <span className="text-foreground font-semibold">
+                  Depth:{' '}
+                  <span className="text-foreground/60">
                     {Math.max(0, ...outline.map(getMaxDepth))}
                   </span>
                 </p>
