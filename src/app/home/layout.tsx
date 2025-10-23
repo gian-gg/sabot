@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { ROUTES } from '@/constants/routes';
-import { isUserVerified } from '@/lib/supabase/db/user';
+import { getUserVerificationStatus } from '@/lib/supabase/db/user';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
+import { VerificationStatus } from '@/types/user';
 
 export default async function DashboardLayout({
   children,
@@ -19,14 +20,14 @@ export default async function DashboardLayout({
     redirect(ROUTES.ROOT);
   }
 
-  let isVerified = false;
+  let verificationStatus: VerificationStatus = 'not-started';
   if (user?.id) {
-    isVerified = await isUserVerified(user.id);
+    verificationStatus = await getUserVerificationStatus(user.id);
   }
 
   return (
     <>
-      <HydrateUser isVerified={isVerified} />
+      <HydrateUser verificationStatus={verificationStatus} />
       <div className="container mx-auto mt-20 h-full w-full px-4 py-8">
         {children}
       </div>
