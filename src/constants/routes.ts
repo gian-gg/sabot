@@ -16,8 +16,10 @@ export const ROUTES = {
   WALLET: '/wallet',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
-  PRIVACY: '/privacy',
-  TERMS: '/terms',
+  LEGAL: {
+    PRIVACY: 'legal/privacy',
+    TERMS: 'legal/terms',
+  },
   TUTORIAL: '/tutorial',
   TRANSACTION: {
     ACCEPT: '/transaction/accept',

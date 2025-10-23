@@ -2,10 +2,8 @@
 
 import { useRef, useState } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
-import { IdeaBlocksPanel } from '@/components/agreement/editor/idea-blocks-panel';
+import { MinimalRightSidebar } from '@/components/agreement/editor/minimal-right-sidebar';
 import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
-import { AiAssistant } from '@/components/agreement/editor/ai-assistant';
-import { DocumentOutline } from '@/components/agreement/editor/document-outline';
 import { SignatureModal } from '@/components/agreement/editor/signature-modal';
 import { CommandPalette } from '@/components/agreement/editor/command-palette';
 import { TemplateSelector } from '@/components/agreement/editor/template-selector';
@@ -30,9 +28,7 @@ export function EditorLayout({
   documentId,
   initialIdeaBlocks,
 }: EditorLayoutProps) {
-  const [rightPanel, setRightPanel] = useState<'ai' | 'outline' | null>('ai');
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
-  const [isReviewing, setIsReviewing] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const [editorContent, setEditorContent] = useState<string>('');
@@ -40,6 +36,7 @@ export function EditorLayout({
     'Partnership Agreement'
   );
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Combine legal blocks with any initial idea blocks
   const legalBlocks = [
@@ -77,11 +74,6 @@ export function EditorLayout({
 
   const isExportingRef = useRef(false);
   const editorRef = useRef<HTMLDivElement>(null);
-
-  const handleReview = () => {
-    setIsReviewing(true);
-    setTimeout(() => setIsReviewing(false), 3000);
-  };
 
   const handleTemplateSelect = (template: Template) => {
     // Update editor content with template HTML
@@ -135,10 +127,10 @@ export function EditorLayout({
 
     try {
       isExportingRef.current = true;
-      const fileName = generateFileName('Partnership Agreement');
+      const fileName = generateFileName(editorTitle);
 
       await exportAgreementToPDF(editorContent, {
-        title: 'Partnership Agreement',
+        title: editorTitle,
         fileName,
         includePageNumbers: true,
         includeTimestamp: true,
@@ -158,43 +150,36 @@ export function EditorLayout({
 
   return (
     <div className="bg-background flex h-screen flex-col">
+      {/* Simplified Header */}
       <EditorHeader
         documentId={documentId}
-        onToggleAI={() => setRightPanel(rightPanel === 'ai' ? null : 'ai')}
-        onToggleOutline={() =>
-          setRightPanel(rightPanel === 'outline' ? null : 'outline')
-        }
-        onReview={handleReview}
-        onOpenTemplateSelector={() => setTemplateSelectorOpen(true)}
-        aiActive={rightPanel === 'ai'}
-        outlineActive={rightPanel === 'outline'}
         editorTitle={editorTitle}
         editorContent={editorContent}
+        isConnected={isConnected}
       />
 
+      {/* Main Layout: Editor + Right Sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Idea Blocks Panel */}
-        <IdeaBlocksPanel ideaBlocks={[...legalBlocks, ...currentIdeaBlocks]} />
-
         {/* Center: TipTap Editor */}
         <TiptapEditor
           documentId={documentId}
-          onOpenSignature={() => setIsSignatureOpen(true)}
-          isReviewing={isReviewing}
+          isReviewing={false}
           onContentChange={setEditorContent}
+          onConnectionStatusChange={setIsConnected}
+          onOpenSignature={() => setIsSignatureOpen(true)}
           editorRef={editorRef}
         />
 
-        {/* Right: AI Assistant or Document Outline */}
-        {rightPanel === 'ai' && <AiAssistant />}
-        {rightPanel === 'outline' && (
-          <DocumentOutline
-            editorContent={editorContent}
-            onJumpToClause={handleJumpToClause}
-          />
-        )}
+        {/* Right: Minimal Sidebar with Icon Navigation */}
+        <MinimalRightSidebar
+          editorContent={editorContent}
+          onJumpToClause={handleJumpToClause}
+          onOpenTemplateSelector={() => setTemplateSelectorOpen(true)}
+          ideaBlocks={[...legalBlocks, ...currentIdeaBlocks]}
+        />
       </div>
 
+      {/* Modals */}
       <SignatureModal
         open={isSignatureOpen}
         onOpenChange={setIsSignatureOpen}
