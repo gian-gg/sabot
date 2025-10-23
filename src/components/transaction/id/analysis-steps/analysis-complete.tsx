@@ -101,11 +101,10 @@ export function AnalysisComplete({
                     className="bg-muted/50 relative overflow-hidden rounded-lg border"
                     style={{ maxHeight: 400 }}
                   >
-                    <Image
+                    <img
                       src={analysis.screenshot_url || ''}
                       alt="Conversation screenshot"
                       className="h-auto w-full object-contain"
-                      fill
                       style={{ objectFit: 'contain' }}
                       sizes="(max-width: 768px) 100vw, 50vw"
                     />
@@ -179,34 +178,89 @@ export function AnalysisComplete({
                       )}
                     </div>
 
-                    {(analysis.meetingLocation || analysis.meetingTime) && (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {analysis.meetingLocation && (
-                          <Card className="border-border/50 shadow-none">
-                            <CardContent className="px-4 py-3">
-                              <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                                Location
-                              </span>
-                              <p className="mt-1.5 text-sm font-medium">
-                                {analysis.meetingLocation}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        )}
+                    {analysis.quantity && (
+                      <Card className="border-border/50 shadow-none">
+                        <CardContent className="px-4 py-3">
+                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            Quantity
+                          </span>
+                          <p className="mt-1.5 text-sm font-semibold">
+                            {analysis.quantity}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                        {analysis.meetingTime && (
-                          <Card className="border-border/50 shadow-none">
-                            <CardContent className="px-4 py-3">
-                              <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                                Time
-                              </span>
-                              <p className="mt-1.5 text-sm font-medium">
-                                {analysis.meetingTime}
-                              </p>
-                            </CardContent>
-                          </Card>
+                    {analysis.transactionType === 'meetup' && (
+                      <>
+                        {(analysis.meetingLocation ||
+                          analysis.meetingSchedule) && (
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {analysis.meetingLocation && (
+                              <Card className="border-border/50 shadow-none">
+                                <CardContent className="px-4 py-3">
+                                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                                    Meeting Location
+                                  </span>
+                                  <p className="mt-1.5 text-sm font-medium">
+                                    {analysis.meetingLocation}
+                                  </p>
+                                </CardContent>
+                              </Card>
+                            )}
+
+                            {analysis.meetingSchedule && (
+                              <Card className="border-border/50 shadow-none">
+                                <CardContent className="px-4 py-3">
+                                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                                    Scheduled Time
+                                  </span>
+                                  <p className="mt-1.5 text-sm font-medium">
+                                    {new Date(
+                                      analysis.meetingSchedule
+                                    ).toLocaleString()}
+                                  </p>
+                                </CardContent>
+                              </Card>
+                            )}
+                          </div>
                         )}
-                      </div>
+                      </>
+                    )}
+
+                    {analysis.transactionType === 'online' && (
+                      <>
+                        {(analysis.deliveryAddress ||
+                          analysis.deliveryMethod) && (
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {analysis.deliveryAddress && (
+                              <Card className="border-border/50 shadow-none">
+                                <CardContent className="px-4 py-3">
+                                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                                    Delivery Address
+                                  </span>
+                                  <p className="mt-1.5 text-sm font-medium">
+                                    {analysis.deliveryAddress}
+                                  </p>
+                                </CardContent>
+                              </Card>
+                            )}
+
+                            {analysis.deliveryMethod && (
+                              <Card className="border-border/50 shadow-none">
+                                <CardContent className="px-4 py-3">
+                                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                                    Delivery Method
+                                  </span>
+                                  <p className="mt-1.5 text-sm font-medium">
+                                    {analysis.deliveryMethod}
+                                  </p>
+                                </CardContent>
+                              </Card>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {analysis.extractedText && (

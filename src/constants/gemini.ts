@@ -55,8 +55,11 @@ Return ONLY a valid JSON object with this exact structure:
   "productCondition": "new|used|refurbished|etc",
   "proposedPrice": 123.45,
   "currency": "USD|PHP|etc",
-  "meetingLocation": "meeting place",
-  "meetingTime": "time/date",
+  "quantity": 1,
+  "meetingLocation": "meeting place (for meetup transactions)",
+  "meetingSchedule": "YYYY-MM-DDTHH:mm format (e.g., 2024-12-25T14:30) for meetup date and time",
+  "deliveryAddress": "delivery address (for online/delivery transactions)",
+  "deliveryMethod": "shipping method or courier (for online/delivery transactions)",
   "riskFlags": ["flag1", "flag2"],
   "confidence": 0.85,
   "extractedText": "full conversation text"
@@ -65,13 +68,14 @@ Return ONLY a valid JSON object with this exact structure:
 INSTRUCTIONS:
 1. Detect platform from UI elements or colors.
 2. Identify buyer/seller names.
-3. Extract item, price, and currency.
-4. Find meeting location and time.
-5. List risk indicators (pressure, urgency, scams).
-6. Include the full visible conversation text.
-7. Use null for missing fields.
-8. Confidence = 0–1, based on clarity.
-9. Return pure JSON only.
+3. Extract item, price, quantity, and currency.
+4. For meetup transactions: Find meeting location and convert any mentioned date/time to YYYY-MM-DDTHH:mm format (e.g., "tomorrow at 2pm" → "2024-12-25T14:00").
+5. For online/delivery transactions: Extract delivery address and shipping/courier method.
+6. List risk indicators (pressure, urgency, scams).
+7. Include the full visible conversation text.
+8. Use null for missing fields.
+9. Confidence = 0–1, based on clarity.
+10. Return pure JSON only.
 `;
 
 export const VERIFY_LIVENESS_CHECK_PROMPT = `

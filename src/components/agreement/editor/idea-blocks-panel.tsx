@@ -9,6 +9,7 @@ interface IdeaBlock {
   id: string;
   title: string;
   content: string;
+  template?: string; // Optional template type (signature, party, clause, whereas, terms)
 }
 
 interface IdeaBlocksPanelProps {
@@ -19,6 +20,10 @@ export function IdeaBlocksPanel({ ideaBlocks }: IdeaBlocksPanelProps) {
   const handleDragStart = (e: React.DragEvent, block: IdeaBlock) => {
     e.dataTransfer.setData('application/json', JSON.stringify(block));
     e.dataTransfer.effectAllowed = 'copy';
+    // Include template type if it exists for special legal block handling
+    if (block.template) {
+      e.dataTransfer.setData('block-template', block.template);
+    }
   };
 
   return (

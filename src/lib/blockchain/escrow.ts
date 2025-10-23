@@ -396,7 +396,6 @@ export async function listenToEscrowEvents(
 
   // Wrap the user callback in a typed listener that accepts unknown[].
   // This avoids using `any` while remaining compatible with ethers' dynamic args.
-  /* eslint-disable no-console */
   const listener = (...args: unknown[]) => {
     try {
       callback(...args);
