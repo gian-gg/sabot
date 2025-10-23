@@ -16,7 +16,7 @@ export async function getWritableLedgerContract(
   const secretKey = process.env.PRIVATE_KEY_SECRET!;
   const provider = new ethers.JsonRpcProvider(RPC_URL);
 
-  const privateKey = decryptPrivateKey(secretKey, encrypted_private_key);
+  const privateKey = decryptPrivateKey(encrypted_private_key, secretKey);
   const signer = new ethers.Wallet(privateKey, provider);
 
   writableLedgerContract = new ethers.Contract(
@@ -32,6 +32,23 @@ export async function getReadOnlyLedgerContract(): Promise<ethers.Contract> {
   if (readOnlyLedgerContract) return readOnlyLedgerContract;
 
   const provider = new ethers.JsonRpcProvider(RPC_URL);
+
+  // Verify contract exists at address
+  try {
+    const code = await provider.getCode(CONTRACT_ADDRESS);
+    if (code === '0x') {
+      console.error(
+        `No contract found at address ${CONTRACT_ADDRESS}. Code: ${code}`
+      );
+    } else {
+      console.log(`Contract verified at ${CONTRACT_ADDRESS}`);
+    }
+  } catch (error) {
+    console.error(
+      'Error checking contract code:',
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 
   readOnlyLedgerContract = new ethers.Contract(
     CONTRACT_ADDRESS,

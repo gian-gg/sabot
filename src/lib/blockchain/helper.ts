@@ -22,9 +22,28 @@ export function encryptPrivateKey(privateKey: string, secret: string): string {
 
 export function decryptPrivateKey(encrypted: string, secret: string): string {
   const parts = encrypted.split(':');
+
+  // Handle backwards compatibility: if the key is not in encrypted format (no colons),
+  // it's likely a raw private key stored before encryption was implemented
+  if (parts.length === 1) {
+    console.warn(
+      'decryptPrivateKey: Found unencrypted private key in database. This is a security risk.'
+    );
+    console.warn('Consider re-encrypting this key.');
+    // Return the key as-is (already in hex format, possibly with 0x prefix)
+    return encrypted.startsWith('0x') ? encrypted.slice(2) : encrypted;
+  }
+
   if (parts.length !== 3) {
+    console.error(
+      `Encrypted key format error. Expected 3 parts separated by ':', got ${parts.length} parts`
+    );
+    console.error(`Encrypted key preview: ${encrypted.substring(0, 100)}...`);
+    console.error(`Total key length: ${encrypted.length} characters`);
+    console.error(`Part lengths: ${parts.map((p) => p.length).join(', ')}`);
     throw new Error('Invalid encrypted data format');
   }
+
   const [saltHex, ivHex, data] = parts;
 
   const salt = Buffer.from(saltHex, 'hex');
