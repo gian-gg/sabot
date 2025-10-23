@@ -15,6 +15,7 @@ export const useRegisterWallet = (shouldRun: boolean) => {
         try {
           const response = await fetch('/api/register-wallet', {
             method: 'POST',
+            credentials: 'include',
           });
 
           if (!response.ok) {

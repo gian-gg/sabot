@@ -56,7 +56,7 @@ const HeroAction = () => {
 
   return (
     <Button asChild>
-      <Link href={ROUTES.TRANSACTION.NEW} className="flex items-center">
+      <Link href={ROUTES.TRANSACTION.INVITE} className="flex items-center">
         <Plus className="mr-2 h-4 w-4" />
         <span>Create Transaction</span>
       </Link>
