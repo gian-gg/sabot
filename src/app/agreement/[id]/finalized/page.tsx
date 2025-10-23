@@ -13,7 +13,12 @@ import {
   Home,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useDocumentStore } from '@/store/document/documentStore';
+import {
+  exportAgreementToPDF,
+  generateFileName,
+} from '@/lib/pdf/export-agreement';
 
 interface Party {
   id: string;
@@ -71,12 +76,30 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      // TODO: Implement actual PDF download
-      console.log('Downloading agreement:', params.id);
-      // Simulate download
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Check if content exists
+      if (!storedContent) {
+        toast.error('Document content not found. Please try again.');
+        return;
+      }
+
+      // Generate filename
+      const fileName = generateFileName(storedTitle);
+
+      // Export to PDF with stored content
+      await exportAgreementToPDF(storedContent, {
+        title: storedTitle,
+        fileName,
+        includePageNumbers: true,
+        includeTimestamp: true,
+        documentId: params.id,
+      });
+
+      toast.success('Agreement downloaded successfully!');
     } catch (error) {
       console.error('Download error:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to download agreement'
+      );
     } finally {
       setIsDownloading(false);
     }
