@@ -1,6 +1,8 @@
 'use client';
 
-export const partnershipAgreementTemplate = {
+import type { Template } from './template-loader';
+
+export const partnershipAgreementTemplate: Template = {
   id: 'partnership-agreement',
   name: 'Partnership Agreement',
   description:
