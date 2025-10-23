@@ -132,11 +132,11 @@ import {
 
 // Create a crypto escrow
 const { escrowId, txHash } = await createBlockchainEscrow(
-  agreementId,           // On-chain agreement ID
+  agreementId, // On-chain agreement ID
   createValueHash('Laptop purchase - MacBook Pro 16"'),
   DeliverableType.Crypto,
-  30,                    // 30 days expiration
-  '1.0'                  // 1 ETH
+  30, // 30 days expiration
+  '1.0' // 1 ETH
 );
 
 // Join the escrow as participant
@@ -150,12 +150,12 @@ await confirmBlockchainEscrow(escrowId);
 
 ```typescript
 enum DeliverableType {
-  Crypto = 0,             // ETH/crypto funds
-  BankTransfer = 1,       // Digital bank transfer (proof hash)
-  FileDeliverable = 2,    // File delivery (IPFS CID)
-  PhysicalItem = 3,       // Physical item (tracking number)
-  Service = 4,            // Service delivery (completion proof)
-  Hybrid = 5,             // Multiple types combined
+  Crypto = 0, // ETH/crypto funds
+  BankTransfer = 1, // Digital bank transfer (proof hash)
+  FileDeliverable = 2, // File delivery (IPFS CID)
+  PhysicalItem = 3, // Physical item (tracking number)
+  Service = 4, // Service delivery (completion proof)
+  Hybrid = 5, // Multiple types combined
 }
 ```
 
@@ -166,15 +166,15 @@ import { createValueHash, createProofHash } from '@/lib/blockchain/escrow';
 import { ethers } from 'ethers';
 
 // For bank transfer escrow
-const transferDetails = "Transfer of $5000 to account ****1234";
+const transferDetails = 'Transfer of $5000 to account ****1234';
 const valueHash = createValueHash(transferDetails);
 
 // For file deliverable
-const fileCID = "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+const fileCID = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
 const valueHash = createValueHash(`File: ${fileCID}`);
 
 // Later, submit proof
-const bankReceipt = "Receipt ID: RCP-20251021-1234, Confirmed";
+const bankReceipt = 'Receipt ID: RCP-20251021-1234, Confirmed';
 const proofHash = createProofHash(bankReceipt);
 await submitBlockchainProof(escrowId, proofHash);
 ```
@@ -188,6 +188,7 @@ await submitBlockchainProof(escrowId, proofHash);
 The migration `009_add_blockchain_escrow_integration.sql` adds:
 
 **Fields added to `escrows` table:**
+
 - `blockchain_escrow_id` - Contract escrow ID
 - `blockchain_tx_hash` - Creation transaction hash
 - `blockchain_agreement_id` - On-chain agreement ID
@@ -199,6 +200,7 @@ The migration `009_add_blockchain_escrow_integration.sql` adds:
 - `blockchain_proof_hash` - Proof hash
 
 **New table: `blockchain_escrow_events`**
+
 - Tracks all blockchain events
 - Links to Supabase escrows
 - Stores transaction hashes and event data
@@ -214,13 +216,15 @@ const response = await fetch('/api/escrow/create', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     title: 'Laptop Purchase',
-    deliverables: [{
-      type: 'cash',
-      description: 'Payment for MacBook Pro',
-      value: 1.0,
-      currency: 'ETH',
-      party_responsible: 'participant'
-    }],
+    deliverables: [
+      {
+        type: 'cash',
+        description: 'Payment for MacBook Pro',
+        value: 1.0,
+        currency: 'ETH',
+        party_responsible: 'participant',
+      },
+    ],
     // Blockchain fields
     blockchain_escrow_id: escrowId,
     blockchain_tx_hash: txHash,
@@ -240,7 +244,7 @@ await fetch('/api/escrow/confirm', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     escrow_id: supabaseEscrowId,
-    blockchain_tx_hash: confirmTxHash,  // Transaction hash from blockchain
+    blockchain_tx_hash: confirmTxHash, // Transaction hash from blockchain
     confirmation_notes: 'Received as described',
   }),
 });
@@ -270,9 +274,9 @@ export default function CryptoEscrowExample() {
         30,
         '0.5'  // 0.5 ETH
       );
-      
+
       setEscrowId(escrowId);
-      
+
       // Create in Supabase
       await fetch('/api/escrow/create', {
         method: 'POST',
@@ -290,9 +294,9 @@ export default function CryptoEscrowExample() {
 
   const handleConfirm = async () => {
     if (!escrowId) return;
-    
+
     const txHash = await confirmBlockchainEscrow(escrowId);
-    
+
     // Update Supabase
     await fetch('/api/escrow/confirm', {
       method: 'POST',
@@ -315,25 +319,30 @@ export default function CryptoEscrowExample() {
 ### Example 2: Bank Transfer Escrow
 
 ```typescript
-import { DeliverableType, createValueHash, submitBlockchainProof, createProofHash } from '@/lib/blockchain/escrow';
+import {
+  DeliverableType,
+  createValueHash,
+  submitBlockchainProof,
+  createProofHash,
+} from '@/lib/blockchain/escrow';
 
 async function createBankTransferEscrow() {
   // Create without ETH
   const transferDescription = 'Wire transfer of $10,000 USD to account ***4567';
   const valueHash = createValueHash(transferDescription);
-  
+
   const { escrowId } = await createBlockchainEscrow(
     agreementId,
     valueHash,
     DeliverableType.BankTransfer,
-    7  // 7 days
+    7 // 7 days
     // No ETH amount
   );
 
   // Later, submit proof of transfer
   const bankReceipt = 'Swift: BOFAUS3N, Ref: TXN-20251021-9876, Confirmed';
   const proofHash = createProofHash(bankReceipt);
-  
+
   await submitBlockchainProof(escrowId, proofHash);
 }
 ```
@@ -344,18 +353,20 @@ async function createBankTransferEscrow() {
 async function createFileEscrow() {
   // Upload file to IPFS first, get CID
   const fileCID = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
-  
+
   const valueHash = createValueHash(`Design files: ${fileCID}`);
-  
+
   const { escrowId } = await createBlockchainEscrow(
     agreementId,
     valueHash,
     DeliverableType.FileDeliverable,
-    14  // 14 days
+    14 // 14 days
   );
 
   // Submit proof that files were delivered
-  const proofHash = createProofHash(`Delivered: ${fileCID}, Downloaded by participant`);
+  const proofHash = createProofHash(
+    `Delivered: ${fileCID}, Downloaded by participant`
+  );
   await submitBlockchainProof(escrowId, proofHash);
 }
 ```
@@ -370,17 +381,22 @@ async function createFileEscrow() {
 import { listenToEscrowEvents } from '@/lib/blockchain/escrow';
 
 // Listen for escrow completion
-await listenToEscrowEvents('EscrowReleased', (escrowId, recipient, amount, event) => {
-  console.log(`Escrow ${escrowId} completed! ${amount} wei sent to ${recipient}`);
-  
-  // Update UI or trigger notification
-  updateEscrowStatus(escrowId, 'completed');
-});
+await listenToEscrowEvents(
+  'EscrowReleased',
+  (escrowId, recipient, amount, event) => {
+    console.log(
+      `Escrow ${escrowId} completed! ${amount} wei sent to ${recipient}`
+    );
+
+    // Update UI or trigger notification
+    updateEscrowStatus(escrowId, 'completed');
+  }
+);
 
 // Listen for disputes
 await listenToEscrowEvents('EscrowDisputed', (escrowId, disputer, event) => {
   console.log(`Escrow ${escrowId} disputed by ${disputer}`);
-  
+
   // Notify arbiters
   notifyArbitersPool(escrowId);
 });
@@ -399,27 +415,31 @@ export async function startBlockchainSync() {
   const supabase = createClient();
 
   // Sync escrow confirmations
-  await listenToEscrowEvents('EscrowConfirmed', async (escrowId, confirmer, isInitiator) => {
-    await supabase
-      .from('blockchain_escrow_events')
-      .insert({
+  await listenToEscrowEvents(
+    'EscrowConfirmed',
+    async (escrowId, confirmer, isInitiator) => {
+      await supabase.from('blockchain_escrow_events').insert({
         blockchain_escrow_id: escrowId,
         event_type: 'EscrowConfirmed',
         event_data: { confirmer, isInitiator },
       });
-  });
+    }
+  );
 
   // Sync completions
-  await listenToEscrowEvents('EscrowReleased', async (escrowId, recipient, amount) => {
-    await supabase
-      .from('escrows')
-      .update({
-        status: 'completed',
-        blockchain_status: 'completed',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('blockchain_escrow_id', escrowId);
-  });
+  await listenToEscrowEvents(
+    'EscrowReleased',
+    async (escrowId, recipient, amount) => {
+      await supabase
+        .from('escrows')
+        .update({
+          status: 'completed',
+          blockchain_status: 'completed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('blockchain_escrow_id', escrowId);
+    }
+  );
 }
 ```
 
@@ -436,28 +456,28 @@ import { ethers } from 'hardhat';
 describe('Blockchain Escrow Integration', () => {
   it('should create and complete crypto escrow', async () => {
     const [initiator, participant] = await ethers.getSigners();
-    
+
     // Create escrow with 1 ETH
     const tx = await contract.createEscrow(
-      0,  // agreementId
+      0, // agreementId
       ethers.keccak256(ethers.toUtf8Bytes('Test deliverable')),
-      0,  // Crypto type
+      0, // Crypto type
       30,
       { value: ethers.parseEther('1.0') }
     );
-    
+
     await tx.wait();
-    
+
     // Participant joins
     await contract.connect(participant).joinEscrow(0);
-    
+
     // Both confirm
     await contract.connect(initiator).confirmCompletion(0);
     await contract.connect(participant).confirmCompletion(0);
-    
+
     // Check status
     const escrow = await contract.getEscrow(0);
-    expect(escrow.status).to.equal(2);  // Completed
+    expect(escrow.status).to.equal(2); // Completed
   });
 });
 ```
@@ -471,15 +491,15 @@ describe('Full Stack Escrow Flow', () => {
   it('should create escrow in both Supabase and blockchain', async () => {
     // 1. Create on blockchain
     const { escrowId, txHash } = await createBlockchainEscrow(...);
-    
+
     // 2. Create in Supabase
     const response = await fetch('/api/escrow/create', {
       method: 'POST',
       body: JSON.stringify({ blockchain_escrow_id: escrowId, ... }),
     });
-    
+
     const { escrow } = await response.json();
-    
+
     // 3. Verify both exist
     expect(escrow.blockchain_escrow_id).to.equal(escrowId);
     const blockchainEscrow = await getBlockchainEscrow(escrowId);
@@ -511,7 +531,8 @@ if (typeof window.ethereum === 'undefined') {
 
 ```typescript
 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-if (chainId !== '0x106a') {  // 4202 in hex
+if (chainId !== '0x106a') {
+  // 4202 in hex
   await window.ethereum.request({
     method: 'wallet_switchEthereumChain',
     params: [{ chainId: '0x106a' }],
@@ -577,6 +598,7 @@ try {
 ## Support
 
 For issues or questions:
+
 - Check the [main documentation](../README.md)
 - Review [smart contract tests](../../SabotBlockchain/transaction-smart-contract/test/AgreementLedger.ts)
 - Open an issue on GitHub
@@ -586,4 +608,3 @@ For issues or questions:
 
 **Last Updated:** October 21, 2025  
 **Version:** 1.0.0
-
