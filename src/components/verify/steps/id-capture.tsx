@@ -157,7 +157,7 @@ export function IdCapture({
       }
 
       if (!selectedIDType?.file) {
-        missing.push('Upload a clear photo or PDF of your ID.');
+        missing.push('Upload a clear photo of your ID.');
       }
 
       if (userData) {
