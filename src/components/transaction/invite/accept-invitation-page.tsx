@@ -131,7 +131,7 @@ export function AcceptTransactionPage({
         ) {
           toast.error('You cannot accept your own invitation link');
           setTimeout(() => {
-            router.push(ROUTES.TRANSACTION.NEW);
+            router.push(ROUTES.TUTORIAL);
           }, 1500);
           return;
         }

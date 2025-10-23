@@ -19,8 +19,10 @@ export const ROUTES = {
   WALLET: '/wallet',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
+  TUTORIAL: '/tutorial',
   TRANSACTION: {
-    NEW: '/transaction/new',
     ACCEPT: '/transaction/accept',
     UPLOAD: '/transaction/upload',
     INVITE: '/transaction/invite',
@@ -28,7 +30,6 @@ export const ROUTES = {
     ACTIVE: (id: string) => `/transaction/${id}/active`,
   },
   AGREEMENT: {
-    NEW: '/agreement/new',
     INVITE: '/agreement/invite',
     VIEW: (id: string) => `/agreement/${id}`,
     ACTIVE: (id: string) => `/agreement/${id}/active`,

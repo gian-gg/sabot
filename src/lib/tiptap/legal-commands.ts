@@ -1,6 +1,11 @@
 'use client';
 
 import type { Editor } from '@tiptap/react';
+import {
+  extractClausesFromHTML,
+  generateClauseNumber,
+  getLevelFromNumber,
+} from './clause-numbering';
 
 /**
  * Legal document block templates
@@ -96,4 +101,120 @@ export const insertWhereasClause = (editor: Editor) => {
  */
 export const insertTermsBlock = (editor: Editor) => {
   editor.chain().focus().insertContent(legalBlockTemplates.terms).run();
+};
+
+/**
+ * Get the next clause number based on current document content
+ * Parses existing clauses and returns appropriate next number
+ */
+export const getNextClauseNumber = (
+  editor: Editor,
+  level: number = 0
+): string => {
+  const html = editor.getHTML();
+  const clauses = extractClausesFromHTML(html);
+
+  // Filter clauses at the same level
+  const clausesAtLevel = clauses.filter((c) => c.level === level);
+
+  if (clausesAtLevel.length === 0) {
+    return '1';
+  }
+
+  // Get the last clause at this level
+  const lastClause = clausesAtLevel[clausesAtLevel.length - 1];
+  const lastNumber = lastClause.number;
+  const parts = lastNumber.split('.').map(Number);
+
+  // Increment the last number at this level
+  parts[level]++;
+
+  // Reset deeper levels
+  parts.splice(level + 1);
+
+  return parts.join('.');
+};
+
+/**
+ * Insert clause block with auto-numbering
+ * Automatically determines the correct clause number based on document content
+ */
+export const insertClauseBlockAutoNumbered = (
+  editor: Editor,
+  level: number = 0
+): void => {
+  const nextNumber = getNextClauseNumber(editor, level);
+  const indentStyle =
+    level > 0 ? `style="margin-left: ${level * 1.5}rem;"` : '';
+
+  const autoNumberedClause = `
+    <div class="clause-block" data-type="clause" data-level="${level}" data-number="${nextNumber}">
+      <h4 style="font-weight: 600; font-size: 1rem; margin-top: 1.5rem; margin-bottom: 0.75rem;" ${indentStyle}>${nextNumber}. [Clause Title]</h4>
+      <p style="margin-left: 1.5rem; margin-bottom: 1.5rem;">[Insert clause content here. Explain the terms, conditions, or obligations related to this clause.]</p>
+    </div>
+  `;
+
+  editor.chain().focus().insertContent(autoNumberedClause).run();
+};
+
+/**
+ * Renumber all clauses in the document
+ * Call this after deleting, moving, or reorganizing clauses
+ */
+export const renumberAllClauses = (editor: Editor): void => {
+  const html = editor.getHTML();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const numberStack: number[] = [0];
+
+  // Find all clause blocks
+  const clauseElements = doc.querySelectorAll(
+    '[data-type="clause"], .clause-block'
+  );
+
+  clauseElements.forEach((element) => {
+    // Get level from data attribute or infer from indentation
+    const level = parseInt(element.getAttribute('data-level') ?? '0');
+
+    // Generate new number
+    const newNumber = generateClauseNumber(level, [...numberStack]);
+
+    // Update the clause number in the heading
+    const heading = element.querySelector('h4');
+    if (heading) {
+      const text = heading.textContent || '';
+      // Replace old number with new one
+      const contentWithoutOldNumber = text.replace(/^\d+(?:\.\d+)*\.\s*/, '');
+      heading.textContent = `${newNumber}. ${contentWithoutOldNumber || '[Clause Title]'}`;
+    }
+
+    // Update data attributes
+    element.setAttribute('data-number', newNumber);
+    element.setAttribute('data-level', level.toString());
+  });
+
+  // Update editor content with renumbered clauses
+  const newHtml = doc.documentElement.innerHTML;
+  editor.commands.setContent(newHtml);
+};
+
+/**
+ * Create a numbered clause template with proper formatting
+ * Used by legal-commands toolbar and template system
+ */
+export const createNumberedClauseTemplate = (
+  number: string,
+  title: string = '[Clause Title]',
+  content: string = '[Insert clause content here...]'
+): string => {
+  const level = getLevelFromNumber(number);
+  const indentStyle = level > 0 ? `margin-left: ${level * 1.5}rem;` : '';
+
+  return `
+    <div class="clause-block" data-type="clause" data-level="${level}" data-number="${number}">
+      <h4 style="font-weight: 600; font-size: 1rem; margin-top: 1.5rem; margin-bottom: 0.75rem; ${indentStyle}">${number}. ${title}</h4>
+      <p style="margin-left: 1.5rem; margin-bottom: 1.5rem;">${content}</p>
+    </div>
+  `;
 };

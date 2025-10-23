@@ -34,6 +34,7 @@ interface TiptapEditorProps {
   onOpenSignature: () => void;
   isReviewing: boolean;
   onContentChange?: (content: string) => void;
+  editorRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function TiptapEditor({
@@ -41,6 +42,7 @@ export function TiptapEditor({
   onOpenSignature,
   isReviewing,
   onContentChange,
+  editorRef,
 }: TiptapEditorProps) {
   const { ydoc, provider, isConnected, activeUsers } = useCollaboration({
     documentId,
@@ -91,7 +93,7 @@ export function TiptapEditor({
       <p><strong>3.1 Scope of Agreement:</strong> This Agreement shall govern the partnership between the parties for [describe scope].</p>
       <p><strong>3.2 Obligations:</strong> Each party agrees to fulfill their respective obligations as outlined in this section.</p>
     `,
-    immediatelyRender: true,
+    immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     onCreate({ editor: editorInstance }) {
       // Notify parent when editor is ready
@@ -299,6 +301,7 @@ export function TiptapEditor({
         </div>
 
         <Card
+          ref={editorRef}
           className="border-border/50 bg-card relative min-h-[800px] p-12 shadow-lg"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -543,6 +546,26 @@ export function TiptapEditor({
           background: var(--muted);
           border-radius: 0.375rem;
           transition: background-color 100ms ease-out;
+        }
+
+        /* Highlight clause when jumping from outline */
+        :global(.highlight-clause) {
+          animation: highlight-pulse 0.5s ease-in-out;
+          background-color: rgba(59, 130, 246, 0.1) !important;
+          border-left-color: var(--primary) !important;
+          border-radius: 0.375rem;
+        }
+
+        @keyframes highlight-pulse {
+          0% {
+            background-color: rgba(59, 130, 246, 0.3);
+          }
+          50% {
+            background-color: rgba(59, 130, 246, 0.1);
+          }
+          100% {
+            background-color: transparent;
+          }
         }
 
         /* Print styles for legal documents */

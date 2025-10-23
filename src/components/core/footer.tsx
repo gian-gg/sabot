@@ -126,7 +126,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="#privacy"
+                  href={ROUTES.PRIVACY}
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Privacy Policy

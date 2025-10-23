@@ -76,6 +76,7 @@ export function EditorLayout({
   ];
 
   const isExportingRef = useRef(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const handleReview = () => {
     setIsReviewing(true);
@@ -95,6 +96,33 @@ export function EditorLayout({
     setTemplateSelectorOpen(false);
 
     toast.success(`Loaded template: ${template.name}`);
+  };
+
+  /**
+   * Jump to a specific clause in the editor
+   * Called when clicking a clause in the outline
+   */
+  const handleJumpToClause = (clauseNumber: string) => {
+    if (!editorRef.current) return;
+
+    // Find clause element with matching data-number attribute
+    const clauseElement = editorRef.current.querySelector(
+      `[data-number="${clauseNumber}"]`
+    );
+
+    if (clauseElement) {
+      // Scroll the clause into view
+      clauseElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+
+      // Highlight the clause briefly
+      clauseElement.classList.add('highlight-clause');
+      setTimeout(() => {
+        clauseElement.classList.remove('highlight-clause');
+      }, 2000);
+    }
   };
 
   const handleExportFromCommand = async () => {
@@ -154,11 +182,17 @@ export function EditorLayout({
           onOpenSignature={() => setIsSignatureOpen(true)}
           isReviewing={isReviewing}
           onContentChange={setEditorContent}
+          editorRef={editorRef}
         />
 
         {/* Right: AI Assistant or Document Outline */}
         {rightPanel === 'ai' && <AiAssistant />}
-        {rightPanel === 'outline' && <DocumentOutline />}
+        {rightPanel === 'outline' && (
+          <DocumentOutline
+            editorContent={editorContent}
+            onJumpToClause={handleJumpToClause}
+          />
+        )}
       </div>
 
       <SignatureModal
