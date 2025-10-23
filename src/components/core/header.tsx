@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import HeaderAction from '@/components/core/header-action';
 import Logo from '@/components/core/logo';
+import AdminButton from './admin-button';
 
 export function Header() {
   const [mouseX, setMouseX] = useState(0);
@@ -25,7 +26,10 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Logo />
           </div>
-          <HeaderAction />
+          <div className="flex gap-4">
+            <AdminButton />
+            <HeaderAction />
+          </div>
         </div>
       </div>
 

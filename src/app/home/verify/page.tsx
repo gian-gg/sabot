@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   BiometricCapture,
   IdCapture,
@@ -16,6 +16,9 @@ import type {
   CaptureData,
 } from '@/types/verify';
 import { useUserStore } from '@/store/user/userStore';
+import { submitVerificationRequest } from '@/lib/supabase/db/verify';
+import { updateUserVerificationStatus } from '@/lib/supabase/db/user';
+import { toast } from 'sonner';
 
 export default function VerifyPage() {
   const user = useUserStore();
@@ -26,6 +29,7 @@ export default function VerifyPage() {
   const [livenessCheckCaptures, setLivenessCheckCaptures] = useState<
     CaptureData[]
   >([]); // step 3
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const goToNextStep = () => {
     const steps: VerificationStep[] = [
@@ -51,6 +55,62 @@ export default function VerifyPage() {
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       setStep(steps[currentIndex - 1]);
+    }
+  };
+
+  const faceMatchConfidence = useMemo(() => {
+    if (!livenessCheckCaptures.length) return 0;
+    const vals = livenessCheckCaptures
+      .map((c) => c.faceMatchConfidence)
+      .filter((v): v is number => typeof v === 'number');
+    if (!vals.length) return 0;
+    // Use max confidence across captures
+    return Math.max(...vals);
+  }, [livenessCheckCaptures]);
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    // Basic validations
+    if (!user?.id || !user?.name || !user?.email) {
+      toast.error('Missing user information. Please sign in again.');
+      return;
+    }
+    if (!userID?.type || !userID?.file) {
+      toast.error('Please select an ID type and upload your ID.');
+      return;
+    }
+    if (!userData) {
+      toast.error('Please complete your ID details.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      // 1) Submit verification request (upload file + insert row)
+      await submitVerificationRequest({
+        userID: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        idType: userID.type,
+        govIdFile: userID.file,
+        governmentIdInfo: userData,
+        faceMatchConfidence,
+      });
+
+      // 2) Update user status to pending in DB and store
+      await updateUserVerificationStatus(user.id, 'pending');
+      user.setVerificationStatus('pending');
+
+      // 3) Navigate to pending screen
+      setStep('SUBMISSION_PENDING');
+      toast.success(
+        'Verification submitted. We will notify you once reviewed.'
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Submission failed';
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -95,7 +155,7 @@ export default function VerifyPage() {
             userData={userData}
             userID={userID}
             livenessCheckCaptures={livenessCheckCaptures}
-            onNext={goToNextStep}
+            onNext={handleSubmit}
             onPrev={goToPrevStep}
           />
         );
