@@ -62,39 +62,6 @@ export function HeroSection() {
         <div className="flex items-center gap-3">
           {/* existing verify/account actions */}
           <HeroAction />
-
-          {/* Create dropdown placed beside the verify/account area */}
-          <div ref={createRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setCreateOpen((v) => !v)}
-              className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white"
-            >
-              Create
-            </button>
-            {createOpen && (
-              <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                <button
-                  onClick={goToTransactionNew}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  Transaction
-                </button>
-                <button
-                  onClick={goToAgreementNew}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  Agreement
-                </button>
-                <button
-                  onClick={goToTutorial}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
-                >
-                  Tutorial
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
