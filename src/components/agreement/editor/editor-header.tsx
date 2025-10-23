@@ -1,14 +1,16 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Save, Download, Loader2, CheckCircle2, Check } from 'lucide-react';
+import { Save, Download, Loader2, CheckCircle2, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   exportAgreementToPDF,
   generateFileName,
 } from '@/lib/pdf/export-agreement';
+import { clearDocument } from '@/store/document/documentStore';
 
 interface EditorHeaderProps {
   documentId: string;
@@ -23,6 +25,7 @@ export function EditorHeader({
   editorContent = '',
   isConnected = true,
 }: EditorHeaderProps) {
+  const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
   const [mouseX, setMouseX] = useState(0);
 
@@ -69,6 +72,14 @@ export function EditorHeader({
     toast.success('Document saved successfully!');
   };
 
+  const handleCancel = () => {
+    // Clear the document store
+    clearDocument();
+    // Navigate back to home
+    router.push('/home');
+    toast.success('Agreement cancelled and changes discarded');
+  };
+
   return (
     <header className="glass fixed top-0 right-0 left-0 z-50 w-full border-none">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -86,6 +97,17 @@ export function EditorHeader({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCancel}
+            title="Cancel agreement and discard changes"
+            className="text-sm"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
