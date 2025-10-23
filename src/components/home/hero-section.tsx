@@ -36,7 +36,7 @@ export function HeroSection() {
 
   function goToTutorial() {
     setCreateOpen(false);
-    router.push(ROUTES.TRANSACTION.NEW);
+    router.push(ROUTES.TUTORIAL);
   }
 
   // Removed goToEscrowNew - escrow is now part of agreement finalization

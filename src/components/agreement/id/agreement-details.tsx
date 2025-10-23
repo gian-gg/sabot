@@ -1,50 +1,54 @@
 import { Calendar, Clock, FileType, Activity } from 'lucide-react';
 
-const details = [
-  {
-    label: 'Agreement Type',
-    value: 'Partnership Agreement',
-    icon: FileType,
-  },
-  {
-    label: 'Status',
-    value: 'Draft',
-    icon: Activity,
-  },
-  {
-    label: 'Created',
-    value: 'January 15, 2025',
-    icon: Calendar,
-  },
-  {
-    label: 'Last Updated',
-    value: '2 hours ago',
-    icon: Clock,
-  },
-  {
-    label: 'Duration',
-    value: '12 months',
-    icon: Calendar,
-  },
-  {
-    label: 'Auto-renewal',
-    value: 'Enabled',
-    icon: Activity,
-  },
-];
+interface Detail {
+  label: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
-export function AgreementDetails() {
+interface AgreementDetailsProps {
+  details?: Detail[];
+}
+
+export function AgreementDetails({ details = [] }: AgreementDetailsProps) {
+  const defaultDetails: Detail[] = [
+    {
+      label: 'Agreement Type',
+      value: 'Partnership Agreement',
+      icon: FileType,
+    },
+    {
+      label: 'Status',
+      value: 'Draft',
+      icon: Activity,
+    },
+    {
+      label: 'Created',
+      value: 'January 15, 2025',
+      icon: Calendar,
+    },
+    {
+      label: 'Last Updated',
+      value: '2 hours ago',
+      icon: Clock,
+    },
+    {
+      label: 'Duration',
+      value: '12 months',
+      icon: Calendar,
+    },
+    {
+      label: 'Auto-renewal',
+      value: 'Enabled',
+      icon: Activity,
+    },
+  ];
+
+  const displayDetails = details.length > 0 ? details : defaultDetails;
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="mb-2 text-2xl font-bold">Agreement Details</h2>
-        <p className="text-muted-foreground">
-          Key metadata and information about this agreement
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {details.map((detail) => {
+        {displayDetails.map((detail) => {
           const Icon = detail.icon;
           return (
             <div
