@@ -10,6 +10,9 @@ export const ROUTES = {
     ROOT: '/home',
     VERIFY: '/home/verify',
   },
+  ADMIN: {
+    ROOT: '/home/admin',
+  },
   PROFILE: {
     VIEW: (id: string) => `/profile/${id}`,
   },
@@ -30,6 +33,10 @@ export const ROUTES = {
     VIEW: (id: string) => `/agreement/${id}`,
     ACTIVE: (id: string) => `/agreement/${id}/active`,
     FINALIZE: (id: string) => `/agreement/${id}/finalize`,
+  },
+  ESCROW: {
+    NEW: '/escrow/new',
+    VIEW: (id: string) => `/escrow/${id}`,
   },
   SOCIALS: {
     GITHUB: 'https://github.com/gian-gg/sabot',

@@ -6,7 +6,7 @@ import Footer from '@/components/core/footer';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
 import React from 'react';
-import SonnerToaster from '@/components/sonner-toaster';
+import SonnerToaster from '@/components/shared/sonner-toaster';
 
 export const metadata: Metadata = {
   title: 'sabot',

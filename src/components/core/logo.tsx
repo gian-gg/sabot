@@ -3,11 +3,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
-const Logo2 = () => {
+const Logo = () => {
   return (
     <Link draggable={false} href={ROUTES.ROOT}>
       <Image
-        src="/logo2-dark.svg"
+        src="/logo-white.svg"
         alt="Sabot"
         width={64}
         height={64}
@@ -19,4 +19,4 @@ const Logo2 = () => {
   );
 };
 
-export default Logo2;
+export default Logo;

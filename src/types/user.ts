@@ -1,3 +1,12 @@
+export type VerificationStatus = 'not-started' | 'pending' | 'complete';
+
+export type UserRole = 'user' | 'admin';
+
+export interface UserVerificationData {
+  verification_status: VerificationStatus;
+  role: UserRole;
+}
+
 export interface SessionType {
   session: {
     user: {
@@ -14,7 +23,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  isVerified: boolean;
+  verificationStatus: VerificationStatus;
   rating: number;
   joinDate: Date;
   transactionCount: number;
@@ -27,5 +36,3 @@ export interface EmergencyContact {
   phone: string;
   relationship: string;
 }
-
-export type UserRole = 'buyer' | 'seller' | 'both';

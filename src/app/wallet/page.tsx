@@ -110,7 +110,7 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p className="text-base leading-relaxed">
+            <p className="text-xs leading-relaxed">
               A blockchain wallet is a digital wallet that functions like a bank
               account but operates without central control. It is{' '}
               <span className="text-primary font-medium">decentralized</span>,
@@ -135,7 +135,7 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p className="text-base leading-relaxed">
+            <p className="text-xs leading-relaxed">
               Sabot uses blockchain technology to provide trust and safety for
               peer-to-peer transactions. It ensures{' '}
               <span className="text-primary font-medium">

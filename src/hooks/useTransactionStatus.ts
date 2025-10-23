@@ -31,11 +31,11 @@ export function useTransactionStatus(transactionId: string | null) {
           throw new Error('Failed to fetch transaction status');
         }
         const data = await response.json();
-        console.log('Hook - Status fetched:', {
-          status: data.transaction?.status,
-          participantCount: data.participants?.length,
-          isReady: data.is_ready_for_next_step,
-        });
+        // console.log('Hook - Status fetched:', {
+        //   status: data.transaction?.status,
+        //   participantCount: data.participants?.length,
+        //   isReady: data.is_ready_for_next_step,
+        // });
         setStatus(data);
         setError(null);
       } catch (err) {
@@ -51,13 +51,13 @@ export function useTransactionStatus(transactionId: string | null) {
     const channel = supabase
       .channel(`transaction:${transactionId}`)
       .on('broadcast', { event: 'transaction_update' }, (payload) => {
-        console.log('Received broadcast:', payload);
+        // console.log('Received broadcast:', payload);
         // Refetch status when broadcast received
         fetchStatus();
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to transaction updates');
+          // console.log('Subscribed to transaction updates');
         }
       });
 

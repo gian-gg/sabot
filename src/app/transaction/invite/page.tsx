@@ -4,12 +4,6 @@ import { Suspense } from 'react';
 import { CreateTransactionPage } from '@/components/transaction/invite/create-invitation-page';
 import { Loader2 } from 'lucide-react';
 
-function InvitePageContent() {
-  // This page is for CREATING transactions and sharing invite links
-  // The invite link will point to /transaction/accept?id=xxx
-  return <CreateTransactionPage />;
-}
-
 export default function TransactionInvitePage() {
   return (
     <Suspense
@@ -19,7 +13,7 @@ export default function TransactionInvitePage() {
         </div>
       }
     >
-      <InvitePageContent />
+      <CreateTransactionPage />
     </Suspense>
   );
 }

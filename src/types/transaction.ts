@@ -18,7 +18,7 @@ export type TransactionType =
   | 'collectibles'
   | 'other';
 
-export type TransactionMethod = 'meetup' | 'online';
+export type TransactionMethod = 'meetup' | 'online' | 'other';
 
 export type ParticipantRole = 'creator' | 'invitee';
 
@@ -27,11 +27,13 @@ export interface Transaction {
   type: TransactionType;
   buyerName: string;
   sellerName: string;
-  price: number;
+  proposedPrice: number;
   currency: string;
   status: TransactionStatus;
-  method: TransactionMethod;
-  location: string;
+  transactionType: TransactionMethod;
+  productModel: string;
+  productCondition: string;
+  meetupLocation: string;
   timestamp: Date;
   platform?: string;
 }
@@ -58,6 +60,10 @@ export interface TransactionParticipant {
   screenshot_uploaded: boolean;
   screenshot_url?: string;
   joined_at: string;
+  // Enriched profile fields (added by API)
+  name?: string;
+  email?: string;
+  avatar?: string;
 }
 
 export interface TransactionScreenshot {

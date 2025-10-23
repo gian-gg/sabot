@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 import type { CaptureData } from '@/types/verify';
 
@@ -41,14 +41,14 @@ const Summary = ({ capturedFrames }: { capturedFrames: CaptureData[] }) => {
         </div>
       </div>
 
-      <Alert className="border-primary/30 from-primary/10 mt-2 border-2 border-dashed bg-gradient-to-br to-transparent p-4">
-        <CheckCircle2 className="h-5 w-5" />
-        <AlertTitle>Liveness Check Complete</AlertTitle>
-        <AlertDescription>
-          All {capturedFrames.length} verification steps completed successfully.
-          You may now continue.
-        </AlertDescription>
-      </Alert>
+      <Disclaimer
+        variant="success"
+        className="mb-4"
+        title="Liveness Check Complete"
+      >
+        All {capturedFrames.length} verification steps completed successfully.
+        You may now continue.
+      </Disclaimer>
     </>
   );
 };

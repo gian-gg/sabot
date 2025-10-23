@@ -1,14 +1,13 @@
 import React from 'react';
-import { mockTransactions } from '@/lib/mock-data/transactions';
 import { PublicLedger } from '@/components/root/public-ledger';
 import { MarketplaceCarousel } from '@/components/root/marketplace-carousel';
 import GetStartedButton from '@/components/user/get-started-button';
 
 export default async function Home() {
   // Sort transactions by timestamp (newest first)
-  const transactions = [...mockTransactions].sort(
-    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-  );
+  // const transactions = [...mockTransactions].sort(
+  //   (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+  // );
 
   return (
     <>
@@ -45,7 +44,7 @@ export default async function Home() {
         {/* Transaction Ledger Preview */}
         <section className="px-4 pb-16 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1100px]">
-            <PublicLedger transactions={transactions} />
+            {/* <PublicLedger transactions={transactions} /> */}
           </div>
         </section>
 

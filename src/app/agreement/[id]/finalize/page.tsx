@@ -12,6 +12,10 @@ import { PartiesInfo } from '@/components/agreement/id/parties-info';
 import { AgreementDetails } from '@/components/agreement/id/agreement-details';
 import { DocumentStructure } from '@/components/agreement/id/document-structure';
 import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
+import {
+  EscrowProtectionEnhanced,
+  type EnhancedEscrowData,
+} from '@/components/agreement/finalize/escrow-protection-enhanced';
 import { mockUser, mockInviter } from '@/lib/mock-data/agreements';
 
 interface Party {
@@ -44,9 +48,18 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [parties, setParties] = useState<Party[]>(mockParties);
   const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
+  const [escrowEnabled, setEscrowEnabled] = useState(false);
+  const [escrowData, setEscrowData] = useState<EnhancedEscrowData | null>(null);
   const currentUserId = '1'; // Mock current user
+  const participantId = '2'; // Mock participant
 
   const handleConfirm = () => {
+    // TODO: If escrow is enabled, create escrow linked to agreement
+    if (escrowEnabled && escrowData) {
+      console.log('Creating escrow with data:', escrowData);
+      // API call to create escrow will be added
+    }
+
     setCurrentUserConfirmed(true);
     setParties(
       parties.map((party) =>
@@ -61,6 +74,15 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
 
   const allConfirmed = parties.every((party) => party.hasConfirmed);
   const waitingForOthers = currentUserConfirmed && !allConfirmed;
+
+  // Validation for escrow
+  const isEscrowValid =
+    !escrowEnabled ||
+    (escrowData?.deliverables &&
+      escrowData.deliverables.length > 0 &&
+      escrowData.deliverables.every((d) => d.description.trim().length > 0));
+
+  const canConfirm = isEscrowValid;
 
   return (
     <div className="bg-background min-h-screen">
@@ -217,7 +239,13 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
                   <Button
                     size="lg"
                     onClick={handleConfirm}
+                    disabled={!canConfirm}
                     className="min-w-32"
+                    title={
+                      !isEscrowValid
+                        ? 'Complete escrow details to continue'
+                        : ''
+                    }
                   >
                     <Check className="mr-2 h-4 w-4" />
                     Confirm Agreement
@@ -225,6 +253,21 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
                 </div>
               )}
             </Card>
+
+            {/* Escrow Protection (Optional) - Enhanced */}
+            <EscrowProtectionEnhanced
+              enabled={escrowEnabled}
+              onEnabledChange={setEscrowEnabled}
+              onEscrowDataChange={setEscrowData}
+              agreementTitle="Service Agreement"
+              agreementTerms="The service provider agrees to deliver a complete web application with user authentication, payment processing, and admin dashboard. The client agrees to provide all necessary content and branding assets. Payment of $5,000 via bank transfer will be made upon successful completion and deployment."
+              initiatorId={currentUserId}
+              participantId={participantId}
+              initiatorName={parties.find((p) => p.id === currentUserId)?.name}
+              participantName={
+                parties.find((p) => p.id === participantId)?.name
+              }
+            />
 
             {/* Parties Info */}
             <PartiesInfo />

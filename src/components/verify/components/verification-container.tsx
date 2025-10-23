@@ -1,24 +1,18 @@
 import React from 'react';
-import { StepIndicator } from '../components/step-indicator';
-import type { VerificationStep } from '../../../types/verify';
+import { StepIndicator } from './step-indicator';
+import type { VerificationStep } from '@/types/verify';
+import { VERIFY_STEPS } from '@/constants/verify';
 
 interface VerificationContainerProps {
   children: React.ReactNode;
   currentStep: VerificationStep;
 }
 
-const steps = [
-  { id: 'ID_SELECTION', title: 'Select ID' },
-  { id: 'ID_CAPTURE', title: 'Upload ID' },
-  { id: 'BIOMETRIC_CAPTURE', title: 'Biometrics' },
-  { id: 'SUBMISSION_REVIEW', title: 'Review' },
-];
-
 export function VerificationContainer({
   children,
   currentStep,
 }: VerificationContainerProps) {
-  const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
+  const currentStepIndex = VERIFY_STEPS.findIndex((s) => s.id === currentStep);
 
   return (
     <div className="animate-in fade-in-0 slide-in-from-bottom-2 container mx-auto max-w-2xl py-8 duration-200">
@@ -27,7 +21,7 @@ export function VerificationContainer({
       </h1>
       {currentStep !== 'SUBMISSION_PENDING' && (
         <StepIndicator
-          steps={steps.map((s) => s.title)}
+          steps={VERIFY_STEPS.map((s) => s.title)}
           currentStep={currentStepIndex}
         />
       )}

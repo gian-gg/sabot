@@ -20,8 +20,7 @@ import type {
 } from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 export function IdCapture({
   onNext,
@@ -57,11 +56,10 @@ export function IdCapture({
 
       const f = files[0];
 
-      // Validate type
+      // Validate type - only images allowed
       const isImage = f.type.startsWith('image/');
-      const isPdf = f.type === 'application/pdf';
-      if (!isImage && !isPdf) {
-        toast.error('Only images or PDF files are allowed.');
+      if (!isImage) {
+        toast.error('Only image files are allowed.');
         return;
       }
 
@@ -83,6 +81,14 @@ export function IdCapture({
       try {
         const data = await verifyUserId(selectedIDType.type, f);
         setUserData(data as GovernmentIdInfo);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify ID. Please try again.';
+        toast.error(errorMessage);
+        // Clear the selected file on error so user can try again
+        setSelectedIDType({ type: selectedIDType.type, file: null });
       } finally {
         // small delay to show spinner for perceived responsiveness
         setTimeout(() => setIsUploading(false), 400);
@@ -183,6 +189,7 @@ export function IdCapture({
           requiredFields.push('expiryDate');
         }
 
+        // Check for required fields
         for (const field of requiredFields) {
           const val = userData[field];
           const empty =
@@ -190,12 +197,155 @@ export function IdCapture({
           if (empty) missing.push(`${labelMap[field]} is required.`);
         }
 
-        // expiry date required unless UMID
+        // Validate ID Number (alphanumeric, at least 4 characters)
+        if (userData.idNumber) {
+          const idNumber = userData.idNumber.trim();
+          if (idNumber.length < 4) {
+            missing.push('ID number must be at least 4 characters long.');
+          }
+          if (!/^[a-zA-Z0-9-]+$/.test(idNumber)) {
+            missing.push(
+              'ID number can only contain letters, numbers, and hyphens.'
+            );
+          }
+        }
+
+        // Validate First Name (letters only, at least 2 characters)
+        if (userData.firstName) {
+          const firstName = userData.firstName.trim();
+          if (firstName.length < 2) {
+            missing.push('First name must be at least 2 characters long.');
+          }
+          if (!/^[a-zA-Z\s'-]+$/.test(firstName)) {
+            missing.push(
+              'First name can only contain letters, spaces, hyphens, and apostrophes.'
+            );
+          }
+        }
+
+        // Validate Last Name (letters only, at least 2 characters)
+        if (userData.lastName) {
+          const lastName = userData.lastName.trim();
+          if (lastName.length < 2) {
+            missing.push('Last name must be at least 2 characters long.');
+          }
+          if (!/^[a-zA-Z\s'-]+$/.test(lastName)) {
+            missing.push(
+              'Last name can only contain letters, spaces, hyphens, and apostrophes.'
+            );
+          }
+        }
+
+        // Validate Middle Name (letters only if provided)
+        if (userData.middleName && userData.middleName.trim()) {
+          const middleName = userData.middleName.trim();
+          if (!/^[a-zA-Z\s'-]+$/.test(middleName)) {
+            missing.push(
+              'Middle name can only contain letters, spaces, hyphens, and apostrophes.'
+            );
+          }
+        }
+
+        // Validate Sex
+        if (userData.sex) {
+          const sex = userData.sex.trim().toUpperCase();
+          if (!['M', 'F', 'MALE', 'FEMALE'].includes(sex)) {
+            missing.push('Sex must be Male (M) or Female (F).');
+          }
+        }
+
+        // Validate Date of Birth (minimum age 18 years)
+        if (userData.dateOfBirth) {
+          const dob = new Date(userData.dateOfBirth);
+          const today = new Date();
+          const age = today.getFullYear() - dob.getFullYear();
+          const monthDiff = today.getMonth() - dob.getMonth();
+          const dayDiff = today.getDate() - dob.getDate();
+
+          // Check if date is valid
+          if (isNaN(dob.getTime())) {
+            missing.push('Date of birth is not a valid date.');
+          } else {
+            // Check if date is not in the future
+            if (dob > today) {
+              missing.push('Date of birth cannot be in the future.');
+            }
+
+            // Calculate exact age
+            const exactAge =
+              age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+
+            if (exactAge < 18) {
+              missing.push('You must be at least 18 years old to verify.');
+            }
+
+            // Check if age is reasonable (not older than 120 years)
+            if (exactAge > 120) {
+              missing.push('Date of birth seems invalid (age over 120 years).');
+            }
+          }
+        }
+
+        // Validate Issue Date
+        if (userData.issueDate) {
+          const issueDate = new Date(userData.issueDate);
+          const today = new Date();
+
+          if (isNaN(issueDate.getTime())) {
+            missing.push('Issue date is not a valid date.');
+          } else {
+            if (issueDate > today) {
+              missing.push('Issue date cannot be in the future.');
+            }
+
+            // Issue date should be after date of birth
+            if (userData.dateOfBirth) {
+              const dob = new Date(userData.dateOfBirth);
+              if (!isNaN(dob.getTime()) && issueDate < dob) {
+                missing.push('Issue date cannot be before date of birth.');
+              }
+            }
+          }
+        }
+
+        // Validate Expiry Date (required unless UMID)
         if (selectedIDType?.type !== 'umid') {
-          const val = userData.expiryDate;
-          const empty =
-            val === null || val === undefined || String(val).trim() === '';
-          if (empty) missing.push('Expiry date is required.');
+          if (userData.expiryDate) {
+            const expiryDate = new Date(userData.expiryDate);
+            const today = new Date();
+
+            if (isNaN(expiryDate.getTime())) {
+              missing.push('Expiry date is not a valid date.');
+            } else {
+              // Expiry date should be in the future
+              if (expiryDate < today) {
+                missing.push(
+                  'ID has expired. Please use a valid, non-expired ID.'
+                );
+              }
+
+              // Expiry date should be after issue date
+              if (userData.issueDate) {
+                const issueDate = new Date(userData.issueDate);
+                if (!isNaN(issueDate.getTime()) && expiryDate <= issueDate) {
+                  missing.push('Expiry date must be after issue date.');
+                }
+              }
+            }
+          } else {
+            missing.push('Expiry date is required.');
+          }
+        }
+
+        // Validate Address (minimum length)
+        if (userData.address) {
+          const address = userData.address.trim();
+          if (address.length < 10) {
+            missing.push('Address must be at least 10 characters long.');
+          }
+          if (address.length > 500) {
+            missing.push('Address is too long (maximum 500 characters).');
+          }
         }
       }
     }
@@ -213,8 +363,7 @@ export function IdCapture({
       <CardHeader>
         <CardTitle>Photograph your ID</CardTitle>
         <CardDescription>
-          Please take a clear photo of the front of your ID. You can upload an
-          image or a PDF.
+          Please take a clear photo of the front of your ID.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -242,7 +391,7 @@ export function IdCapture({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,application/pdf"
+          accept="image/*"
           capture="environment"
           className="hidden"
           disabled={isUploading}
@@ -256,20 +405,17 @@ export function IdCapture({
 
         {/* Guidance alert for missing requirements */}
         {!isUploading && handleDisableNext() && (
-          <Alert
-            variant="destructive"
-            className="border-destructive bg-destructive/5 mt-2 mb-6"
+          <Disclaimer
+            variant="error"
+            className="mb-4"
+            title="Complete these items to continue"
           >
-            <AlertTriangle className="mt-0.5 size-4" />
-            <AlertTitle>Complete these items to continue</AlertTitle>
-            <AlertDescription>
-              <ul className="list-inside list-disc space-y-1">
-                {missingRequirements.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
+            <ul className="list-inside list-disc space-y-1">
+              {missingRequirements.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </Disclaimer>
         )}
 
         {/* Navigation buttons */}

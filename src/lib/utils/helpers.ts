@@ -15,3 +15,15 @@ export const getFormValueOrNull = (
   const trimmed = v.trim();
   return trimmed === '' ? null : trimmed;
 };
+
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return dateString; // Return original string if invalid date
+  }
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};

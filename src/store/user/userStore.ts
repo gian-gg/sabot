@@ -1,16 +1,13 @@
 import { create } from 'zustand';
+import type { VerificationStatus, UserRole } from '@/types/user';
 
-interface UserState {
-  id: string;
-  email: string;
-  image: string;
-  name: string;
-  isVerified: boolean;
+interface UserState extends User {
   setId: (id: string) => void;
   setEmail: (email: string) => void;
   setImage: (image: string) => void;
   setName: (name: string) => void;
-  setIsVerified: (isVerified: boolean) => void;
+  setVerificationStatus: (status: VerificationStatus) => void;
+  setUserRole: (role: UserRole) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -18,12 +15,14 @@ export const useUserStore = create<UserState>((set) => ({
   email: '',
   image: '',
   name: '',
-  isVerified: false,
+  verificationStatus: 'not-started',
+  role: 'user',
   setId: (id) => set({ id }),
   setEmail: (email) => set({ email }),
   setImage: (image) => set({ image }),
   setName: (name) => set({ name }),
-  setIsVerified: (isVerified) => set({ isVerified }),
+  setVerificationStatus: (status) => set({ verificationStatus: status }),
+  setUserRole: (role) => set({ role }),
 }));
 
 export const clearUser = () => {
@@ -32,6 +31,7 @@ export const clearUser = () => {
     email: '',
     image: '',
     name: '',
-    isVerified: false,
+    verificationStatus: 'not-started',
+    role: 'user',
   });
 };

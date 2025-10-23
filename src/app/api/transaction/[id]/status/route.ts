@@ -77,7 +77,7 @@ export async function GET(
       is_ready_for_next_step = true;
     }
 
-    console.log(`Status API [${id}]:`, {
+    console.log(`📊 Status API [${id.slice(0, 8)}]:`, {
       status: transaction.status,
       participantCount,
       bothJoined,
