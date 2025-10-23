@@ -1,11 +1,28 @@
-import { getWritableLedgerContract } from './contract';
+import { getReadOnlyLedgerContract } from '@/lib/blockchain/contract';
+import { getPublicAddress } from '@/lib/supabase/db/user';
 import { createClient } from '@/lib/supabase/server';
-import { getEncryptedKey } from '@/lib/supabase/db/user';
-import { decryptPrivateKey } from './helper';
 
-export async function registerUser(): Promise<boolean> {
-  const secretKey = process.env.PRIVATE_KEY_SECRET!;
+export async function getAgreements() {
+  try {
+    const contract = await getReadOnlyLedgerContract();
 
+    if (!contract) {
+      return [];
+    }
+
+    const agreements = await contract.getAgreements();
+
+    if (!Array.isArray(agreements)) {
+      return [];
+    }
+
+    return agreements;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function isRegistered(): Promise<boolean | null> {
   try {
     const supabase = await createClient();
 
@@ -15,30 +32,26 @@ export async function registerUser(): Promise<boolean> {
     } = await supabase.auth.getUser();
 
     if (error || !user) {
-      return false;
+      return null;
     }
 
-    const encryptedKey = await getEncryptedKey(user.id);
-
-    if (!encryptedKey) {
-      console.log('No Key');
-      return false;
-    }
-
-    const privateKey = decryptPrivateKey(secretKey, encryptedKey);
-
-    const contract = await getWritableLedgerContract(privateKey);
+    const [contract, publicAddress] = await Promise.all([
+      getReadOnlyLedgerContract(),
+      getPublicAddress(user?.id || ''),
+    ]);
 
     if (!contract) {
-      console.log('no contract');
-      return false;
+      return null;
     }
 
-    await contract.registerUser();
+    if (!publicAddress) {
+      return null;
+    }
 
-    return true;
+    const regis = await contract.registered(publicAddress);
+
+    return !!regis;
   } catch (error) {
-    console.log('failed to register');
-    return false;
+    return null;
   }
 }
