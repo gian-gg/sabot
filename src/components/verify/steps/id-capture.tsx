@@ -20,8 +20,7 @@ import type {
 } from '@/types/verify';
 import Upload from '../components/upload-id/upload';
 import PreviewUpload from '../components/upload-id/preview-upload';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 export function IdCapture({
   onNext,
@@ -400,20 +399,17 @@ export function IdCapture({
 
         {/* Guidance alert for missing requirements */}
         {!isUploading && handleDisableNext() && (
-          <Alert
-            variant="destructive"
-            className="border-destructive bg-destructive/5 mt-2 mb-6"
+          <Disclaimer
+            variant="error"
+            className="mb-4"
+            title="Complete these items to continue"
           >
-            <AlertTriangle className="mt-0.5 size-4" />
-            <AlertTitle>Complete these items to continue</AlertTitle>
-            <AlertDescription>
-              <ul className="list-inside list-disc space-y-1">
-                {missingRequirements.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
+            <ul className="list-inside list-disc space-y-1">
+              {missingRequirements.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </Disclaimer>
         )}
 
         {/* Navigation buttons */}

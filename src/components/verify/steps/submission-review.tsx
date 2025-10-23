@@ -17,8 +17,7 @@ import type {
 import NavigationButtons from '@/components/verify/components/navigation-buttons';
 import UserID from '../components/preview/userID';
 import UserInfo from '../components/preview/user-info';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 type SubmissionReviewProps = StepNavProps & {
   userData: GovernmentIdInfo | null;
@@ -46,14 +45,15 @@ export function SubmissionReview({
         <Separator />
         {/* Extracted Information Section */}
         <UserInfo userData={userData} />
-        <Alert className="border-primary bg-primary/5 mt-2">
-          <AlertTriangle className="mt-0.5 size-4" />
-          <AlertTitle>Review Submission</AlertTitle>
-          <AlertDescription>
-            Please ensure all information is correct before submitting. Once
-            submitted, changes cannot be made.
-          </AlertDescription>
-        </Alert>
+
+        <Disclaimer
+          variant="success"
+          className="mb-4"
+          title="Review Submission"
+        >
+          Please ensure all information is correct before submitting. Once
+          submitted, changes cannot be made.
+        </Disclaimer>
         <NavigationButtons isLoading={false} onNext={onNext} onPrev={onPrev} />
       </CardContent>
     </Card>
