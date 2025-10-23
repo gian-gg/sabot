@@ -157,6 +157,7 @@ export default function VerifyPage() {
             livenessCheckCaptures={livenessCheckCaptures}
             onNext={handleSubmit}
             onPrev={goToPrevStep}
+            loading={isSubmitting}
           />
         );
       case 'SUBMISSION_PENDING':
