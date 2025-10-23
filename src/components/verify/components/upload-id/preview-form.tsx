@@ -68,7 +68,7 @@ const PreviewForm = ({
         lastSentSnapshotRef.current = snapshot;
       }
     }, 300);
-  }, [setUserData]);
+  }, [setUserData, sexValue]);
 
   useEffect(
     () => () => {
