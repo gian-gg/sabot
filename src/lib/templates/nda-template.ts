@@ -1,6 +1,8 @@
 'use client';
 
-export const ndaTemplate = {
+import type { Template } from './template-loader';
+
+export const ndaTemplate: Template = {
   id: 'nda-agreement',
   name: 'Non-Disclosure Agreement (NDA)',
   description:
