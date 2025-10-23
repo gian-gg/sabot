@@ -50,34 +50,19 @@ export async function POST(request: NextRequest) {
 
     console.log('Join - Transaction found:', transaction.id);
 
-    // TODO: Re-enable creator check in production
-    // Temporarily disabled for testing purposes
-    // if (transaction.creator_id === user.id) {
-    //   return NextResponse.json(
-    //     { error: 'Cannot join your own transaction' },
-    //     { status: 400 }
-    //   );
-    // }
-
-    // Check if user is already a participant
-    const { data: existingParticipant } = await supabase
-      .from('transaction_participants')
-      .select('*')
-      .eq('transaction_id', payload.transaction_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingParticipant) {
-      // If already a participant, just return success (for testing with same user)
-      console.log('Join - User is already a participant, skipping for testing');
-      return NextResponse.json({
-        participant: existingParticipant,
-        transaction,
-        message: 'Already joined (test mode)',
-      });
+    // Check if user is trying to join their own transaction
+    if (transaction.creator_id === user.id) {
+      console.log('Join - User attempting to join their own transaction');
+      return NextResponse.json(
+        {
+          error:
+            'You cannot accept your own invitation link. Please share this link with someone else.',
+        },
+        { status: 400 }
+      );
     }
 
-    // Check participant count
+    // Check participant count before attempting to add
     const { count } = await supabase
       .from('transaction_participants')
       .select('*', { count: 'exact', head: true })
@@ -109,6 +94,7 @@ export async function POST(request: NextRequest) {
         details: participantError.details,
         hint: participantError.hint,
       });
+
       return NextResponse.json(
         { error: participantError.message || 'Failed to join transaction' },
         { status: 500 }

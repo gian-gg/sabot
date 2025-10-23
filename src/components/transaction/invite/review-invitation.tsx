@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckCircle2, Shield, Info } from 'lucide-react';
+import { CheckCircle2, Shield, Info, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,12 +26,14 @@ interface ReviewTransactionInvitationProps {
   inviter: Inviter;
   onAccept: () => void;
   onDecline: () => void;
+  accepting?: boolean;
 }
 
 export function ReviewTransactionInvitation({
   inviter,
   onAccept,
   onDecline,
+  accepting = false,
 }: ReviewTransactionInvitationProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -92,11 +94,19 @@ export function ReviewTransactionInvitation({
               variant="outline"
               onClick={onDecline}
               className="flex-1 bg-transparent"
+              disabled={accepting}
             >
               Decline
             </Button>
-            <Button onClick={onAccept} className="flex-1">
-              Accept Invitation
+            <Button onClick={onAccept} className="flex-1" disabled={accepting}>
+              {accepting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Accepting...
+                </>
+              ) : (
+                'Accept Invitation'
+              )}
             </Button>
           </div>
         </CardContent>

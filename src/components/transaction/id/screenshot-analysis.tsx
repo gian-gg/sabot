@@ -4,11 +4,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { AnalysisContainer } from './analysis-container';
 import type { AnalysisStep, AnalysisData } from '@/types/analysis';
 
-interface ScreenshotAnalysisProps {
-  transactionId: string;
+interface ApiAnalysisResponse {
+  id?: string;
+  screenshot_id?: string;
+  extracted_data: AnalysisData;
 }
 
-export function ScreenshotAnalysis({ transactionId }: ScreenshotAnalysisProps) {
+interface AnalysisWithSource extends AnalysisData {
+  source: string;
+  screenshotId: string;
+}
+
+interface ScreenshotAnalysisProps {
+  transactionId: string;
+  onAnalysisComplete?: (data: AnalysisData | AnalysisWithSource[]) => void;
+}
+
+export function ScreenshotAnalysis({
+  transactionId,
+  onAnalysisComplete,
+}: ScreenshotAnalysisProps) {
   const [step, setStep] = useState<AnalysisStep>('FETCHING_ANALYSES');
   const [analyses, setAnalyses] = useState<AnalysisData[]>([]);
   const [error, setError] = useState<string>();
@@ -32,6 +47,27 @@ export function ScreenshotAnalysis({ transactionId }: ScreenshotAnalysisProps) {
           setStep('NO_ANALYSES');
         } else {
           setStep('ANALYSIS_COMPLETE');
+
+          // Call the callback with analysis data
+          if (onAnalysisComplete && fetchedAnalyses.length > 0) {
+            if (fetchedAnalyses.length === 1) {
+              // Single analysis - pass the extracted data directly
+              const analysis = fetchedAnalyses[0];
+              if (analysis.extracted_data) {
+                onAnalysisComplete(analysis.extracted_data);
+              }
+            } else {
+              // Multiple analyses - pass all with source information
+              const analysesWithSource = fetchedAnalyses.map(
+                (analysis: ApiAnalysisResponse, idx: number) => ({
+                  ...analysis.extracted_data,
+                  source: idx === 0 ? 'screenshot1' : 'screenshot2',
+                  screenshotId: analysis.screenshot_id || analysis.id,
+                })
+              );
+              onAnalysisComplete(analysesWithSource);
+            }
+          }
         }
       } else {
         throw new Error(`Failed to fetch analyses: ${response.status}`);
@@ -64,7 +100,7 @@ export function ScreenshotAnalysis({ transactionId }: ScreenshotAnalysisProps) {
 
       if (response.ok) {
         console.log('✅ Analysis completed successfully');
-        await fetchAnalyses(); // Refresh data
+        await fetchAnalyses(); // Refresh data (which will trigger the callback)
       } else {
         const errorText = await response.text().catch(() => 'Unknown error');
         throw new Error(`Analysis failed: ${response.status} - ${errorText}`);

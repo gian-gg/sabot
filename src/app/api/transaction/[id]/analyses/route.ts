@@ -58,7 +58,7 @@ export async function GET(
           id: analysis.id,
           user_id: analysis.transaction_screenshots.user_id,
           screenshot_url: signedUrlData?.signedUrl || '',
-          ...analysis.analysis_data,
+          extracted_data: analysis.analysis_data, // Keep it as extracted_data for consistency
         };
       }) || []
     );
