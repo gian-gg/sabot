@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-
 import {
   Card,
   CardContent,
@@ -74,6 +71,13 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
   const isParticipantConfirmed =
     escrow.participant_confirmation === 'confirmed';
 
+  // Extract deliverable info from deliverables array
+  const primaryDeliverable = escrow.deliverables[0];
+  const totalAmount = escrow.deliverables
+    .filter((d) => d.value)
+    .reduce((sum, d) => sum + (d.value || 0), 0);
+  const currency = primaryDeliverable?.currency || 'USD';
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -94,14 +98,14 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
             Transaction Details
           </h3>
           <div className="bg-muted/50 grid gap-3 rounded-lg p-4">
-            {escrow.amount && (
+            {totalAmount > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4" />
                   Amount
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(escrow.amount, escrow.currency)}
+                  {formatCurrency(totalAmount, currency)}
                 </span>
               </div>
             )}
@@ -111,7 +115,7 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
                 Deliverable
               </span>
               <span className="max-w-xs text-right text-sm font-medium">
-                {escrow.deliverable_description}
+                {primaryDeliverable?.description || escrow.description}
               </span>
             </div>
             {escrow.expected_completion_date && (
@@ -287,15 +291,45 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
           </div>
         </div>
 
-        {/* Verification Required Notice */}
-        {escrow.verification_required && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <Shield className="mr-2 inline-block h-4 w-4" />
-              This escrow requires identity verification for both parties
-            </p>
+        {/* Deliverables List */}
+        {escrow.deliverables.length > 1 && (
+          <div className="space-y-3">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Package className="h-4 w-4" />
+              All Deliverables
+            </h3>
+            <div className="space-y-2">
+              {escrow.deliverables.map((deliverable, index) => (
+                <div
+                  key={deliverable.id}
+                  className="bg-muted/50 rounded-lg p-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {index + 1}. {deliverable.description}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        Type: {deliverable.type} • Responsible:{' '}
+                        {deliverable.party_responsible}
+                      </p>
+                    </div>
+                    {deliverable.value && (
+                      <span className="text-sm font-medium">
+                        {formatCurrency(
+                          deliverable.value,
+                          deliverable.currency
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Verification Required Notice - Removed as this field doesn't exist */}
       </CardContent>
     </Card>
   );

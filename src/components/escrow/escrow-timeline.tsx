@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-
 import type { EscrowEvent } from '@/types/escrow';
 import {
   CheckCircle2,
@@ -165,27 +162,41 @@ export function EscrowTimeline({ events }: EscrowTimelineProps) {
                 </div>
 
                 {/* Event details if available */}
-                {event.details && Object.keys(event.details).length > 0 && (
-                  <div className="bg-muted/50 mt-2 rounded-md p-2">
-                    {event.details.notes && (
-                      <p className="text-muted-foreground text-xs">
-                        {String(event.details.notes)}
-                      </p>
-                    )}
-                    {event.details.reason && (
-                      <p className="text-xs">
-                        <span className="font-medium">Reason:</span>{' '}
-                        {String(event.details.reason)}
-                      </p>
-                    )}
-                    {event.details.decision && (
-                      <p className="text-xs">
-                        <span className="font-medium">Decision:</span>{' '}
-                        {String(event.details.decision)}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {event.details &&
+                  Object.keys(event.details).length > 0 &&
+                  (() => {
+                    const notes = event.details.notes
+                      ? String(event.details.notes)
+                      : null;
+                    const reason = event.details.reason
+                      ? String(event.details.reason)
+                      : null;
+                    const decision = event.details.decision
+                      ? String(event.details.decision)
+                      : null;
+
+                    return (
+                      <div className="bg-muted/50 mt-2 rounded-md p-2">
+                        {notes && (
+                          <p className="text-muted-foreground text-xs">
+                            {notes}
+                          </p>
+                        )}
+                        {reason && (
+                          <p className="text-xs">
+                            <span className="font-medium">Reason:</span>{' '}
+                            {reason}
+                          </p>
+                        )}
+                        {decision && (
+                          <p className="text-xs">
+                            <span className="font-medium">Decision:</span>{' '}
+                            {decision}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
               </div>
             </div>
           );

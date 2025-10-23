@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -17,11 +14,9 @@ import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle2,
   Clock,
-  AlertCircle,
   Shield,
   Bot,
   FileText,
-  DollarSign,
   Package,
   User,
   Calendar,
@@ -33,7 +28,11 @@ import {
 import { EscrowStatusBadge } from './escrow-status-badge';
 import { EscrowTimeline } from './escrow-timeline';
 import { useRouter } from 'next/navigation';
-import type { EscrowWithParticipants, EscrowEvent } from '@/types/escrow';
+import type {
+  EscrowWithParticipants,
+  EscrowEvent,
+  EscrowStatus,
+} from '@/types/escrow';
 
 interface EscrowDemoProps {
   escrow: EscrowWithParticipants;
@@ -65,7 +64,6 @@ export function EscrowDemo({
   onStartDemo,
   onPauseDemo,
   onResetDemo,
-  isDemoActive = false,
   compact = false,
 }: EscrowDemoProps) {
   const router = useRouter();
@@ -141,9 +139,14 @@ export function EscrowDemo({
   };
 
   const currentDemoStep = demoSteps[currentStep];
-  const isOracleApplicable = ['FileDeliverable', 'Service'].includes(
-    escrow.type
-  );
+  const isOracleApplicable = ['digital', 'service'].includes(escrow.type);
+
+  // Extract primary deliverable info
+  const primaryDeliverable = escrow.deliverables[0];
+  const totalAmount = escrow.deliverables
+    .filter((d) => d.value)
+    .reduce((sum, d) => sum + (d.value || 0), 0);
+  const currency = primaryDeliverable?.currency || 'PHP';
 
   // Generate demo events for timeline
   const demoEvents: EscrowEvent[] = [
@@ -151,69 +154,67 @@ export function EscrowDemo({
       id: '1',
       escrow_id: escrow.id,
       event_type: 'created',
-      description: 'Escrow protection activated',
-      created_at: new Date().toISOString(),
-      metadata: {
+      actor_id: escrow.initiator_id,
+      details: {
         initiator: escrow.initiator.name,
-        amount: escrow.amount,
-        currency: escrow.currency,
       },
+      timestamp: new Date().toISOString(),
     },
     {
       id: '2',
       escrow_id: escrow.id,
       event_type: 'participant_joined',
-      description: `${escrow.participant?.name || 'Participant'} joined the escrow`,
-      created_at: new Date(Date.now() - 300000).toISOString(),
-      metadata: {
+      actor_id: escrow.participant_id || '',
+      details: {
         participant: escrow.participant?.name,
       },
+      timestamp: new Date(Date.now() - 300000).toISOString(),
     },
     ...(currentStep >= 2
-      ? [
+      ? ([
           {
             id: '3',
             escrow_id: escrow.id,
-            event_type: 'proof_submitted',
-            description: 'Proof of completion submitted',
-            created_at: new Date(Date.now() - 180000).toISOString(),
-            metadata: {
+            event_type: 'status_changed' as const,
+            actor_id: escrow.participant_id || '',
+            details: {
               proof_type: 'document',
               proof_hash: '0x123...abc',
             },
+            timestamp: new Date(Date.now() - 180000).toISOString(),
           },
-        ]
+        ] as EscrowEvent[])
       : []),
     ...(currentStep >= 3 && isOracleApplicable
-      ? [
+      ? ([
           {
             id: '4',
             escrow_id: escrow.id,
-            event_type: 'oracle_verified',
-            description: 'Oracle verification completed',
-            created_at: new Date(Date.now() - 120000).toISOString(),
-            metadata: {
-              oracle_type: escrow.type === 'FileDeliverable' ? 'ipfs' : 'ai',
+            event_type: 'status_changed' as const,
+            actor_id: 'oracle',
+            details: {
+              oracle_type: escrow.type === 'digital' ? 'ipfs' : 'ai',
               confidence_score: 95,
               verified: true,
             },
+            timestamp: new Date(Date.now() - 120000).toISOString(),
           },
-        ]
+        ] as EscrowEvent[])
       : []),
     ...(currentStep >= 4
-      ? [
+      ? ([
           {
             id: '5',
             escrow_id: escrow.id,
-            event_type: 'completed',
-            description: 'Escrow completed successfully',
-            created_at: new Date().toISOString(),
-            metadata: {
+            event_type: 'completed' as const,
+            actor_id: 'system',
+            details: {
               final_status: 'completed',
               funds_released: true,
             },
+            timestamp: new Date().toISOString(),
           },
-        ]
+        ] as EscrowEvent[])
       : []),
   ];
 
@@ -280,15 +281,15 @@ export function EscrowDemo({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Status</span>
                   <EscrowStatusBadge
-                    status={currentDemoStep.status as any}
+                    status={currentDemoStep.status as EscrowStatus}
                     size="sm"
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Amount</span>
                   <span className="text-sm font-medium">
-                    {escrow.amount
-                      ? `₱${escrow.amount.toLocaleString()}`
+                    {totalAmount > 0
+                      ? `${currency === 'PHP' ? '₱' : '$'}${totalAmount.toLocaleString()}`
                       : 'N/A'}
                   </span>
                 </div>
@@ -414,7 +415,9 @@ export function EscrowDemo({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Status</span>
-                <EscrowStatusBadge status={currentDemoStep.status as any} />
+                <EscrowStatusBadge
+                  status={currentDemoStep.status as EscrowStatus}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Progress</span>
@@ -433,7 +436,9 @@ export function EscrowDemo({
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Amount</span>
                 <span className="text-sm font-medium">
-                  {escrow.amount ? `₱${escrow.amount.toLocaleString()}` : 'N/A'}
+                  {totalAmount > 0
+                    ? `${currency === 'PHP' ? '₱' : '$'}${totalAmount.toLocaleString()}`
+                    : 'N/A'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -472,7 +477,7 @@ export function EscrowDemo({
                 <div>
                   <p className="font-medium">Primary Deliverable</p>
                   <p className="text-muted-foreground text-sm">
-                    {escrow.deliverable_description}
+                    {primaryDeliverable?.description || escrow.description}
                   </p>
                 </div>
               </div>
@@ -497,7 +502,7 @@ export function EscrowDemo({
                   <div>
                     <p className="font-medium">Oracle Verification</p>
                     <p className="text-muted-foreground text-sm">
-                      {escrow.type === 'FileDeliverable'
+                      {escrow.type === 'digital'
                         ? 'IPFS file accessibility check'
                         : 'AI-powered service completion verification'}
                     </p>
@@ -653,7 +658,7 @@ export function EscrowDemo({
           <CardContent>
             <div className="space-y-4">
               <p className="text-green-700">
-                You've successfully completed the escrow protection
+                You&apos;ve successfully completed the escrow protection
                 demonstration. The funds have been released and both parties are
                 satisfied with the transaction.
               </p>
