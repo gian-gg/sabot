@@ -114,10 +114,38 @@ export function AcceptTransactionPage({
         const errorData = await response
           .json()
           .catch(() => ({ error: 'Unknown error' }));
+
+        // Handle specific errors
+        if (errorData.error?.includes('already joined')) {
+          toast.info('You have already joined this transaction');
+          // Still redirect them to the transaction
+          setTimeout(() => {
+            router.push(`${ROUTES.TRANSACTION.UPLOAD}?id=${transactionId}`);
+          }, 800);
+          return;
+        }
+
+        if (
+          errorData.error?.includes('cannot accept your own') ||
+          errorData.error?.includes('own invitation')
+        ) {
+          toast.error('You cannot accept your own invitation link');
+          setTimeout(() => {
+            router.push(ROUTES.TRANSACTION.NEW);
+          }, 1500);
+          return;
+        }
+
         throw new Error(errorData.error || 'Failed to join transaction');
       }
 
-      toast.success('Successfully joined transaction!');
+      const data = await response.json();
+
+      if (data.already_joined) {
+        toast.info('You have already joined this transaction');
+      } else {
+        toast.success('Successfully joined transaction!');
+      }
 
       // Redirect to upload screenshot page
       setTimeout(() => {

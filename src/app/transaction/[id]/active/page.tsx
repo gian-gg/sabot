@@ -27,10 +27,14 @@ export default function TransactionActive({
   const { id } = use(params);
   const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   const [sellerConfirmed] = useState(false);
-  const router = useRouter(); // ✅ Initialize router here
+  const router = useRouter();
 
   // Use real data instead of mock data
   const { status, loading, error } = useTransactionStatus(id);
+
+  // Get participant profiles from status
+  const buyer = status?.participants.find((p) => p.role === 'invitee');
+  const seller = status?.participants.find((p) => p.role === 'creator');
 
   // Handle loading state
   if (loading) {
@@ -98,18 +102,6 @@ export default function TransactionActive({
     status: transaction.status,
     location: transaction.meeting_location || 'Location not set',
   };
-
-  // Get participants from real data
-  const creator = status.participants.find((p) => p.role === 'creator');
-  const invitee = status.participants.find((p) => p.role === 'invitee');
-
-  // Mock user data - replace with real user fetching
-  const buyer = invitee
-    ? { id: invitee.user_id, name: 'Buyer Name', avatar: undefined }
-    : null; // Fetch real user data
-  const seller = creator
-    ? { id: creator.user_id, name: 'Seller Name', avatar: undefined }
-    : null; // Fetch real user data
 
   const handleConfirmCompletion = () => {
     // Simulate current user confirming (in this case, buyer)

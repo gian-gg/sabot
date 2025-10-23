@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, AlertTriangle, Users } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import type { AnalysisData } from '@/types/analysis';
 
 interface AnalysisWithSource extends AnalysisData {
@@ -42,12 +42,13 @@ export function DataConflictResolver({
 
   // If only one analysis, auto-resolve
   if (analyses.length === 1) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { source, screenshotId, ...data } = analyses[0];
     return (
       <div className="space-y-4">
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800 dark:text-green-200">
+        <Alert className="border-border">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
             Only one screenshot analyzed. No conflicts to resolve.
           </AlertDescription>
         </Alert>
@@ -59,30 +60,77 @@ export function DataConflictResolver({
     );
   }
 
-  // Find fields with conflicts
-  const fields: FieldKey[] = [
-    'platform',
-    'transactionType',
-    'itemDescription',
+  // Define all fields in the specified order
+  const allFields: FieldKey[] = [
     'productType',
     'productModel',
     'productCondition',
-    'proposedPrice',
-    'currency',
     'quantity',
+    'itemDescription',
+    'proposedPrice',
+    'transactionType',
     'meetingLocation',
     'meetingSchedule',
     'deliveryAddress',
     'deliveryMethod',
   ];
 
-  const conflicts = fields.filter((field) => {
+  // Determine transaction type to show relevant fields
+  const transactionTypes = analyses
+    .map((a) => a.transactionType)
+    .filter((v) => v !== undefined && v !== null);
+  const primaryTransactionType = transactionTypes[0] || 'meetup';
+
+  // Filter fields based on transaction type
+  const relevantFields = allFields.filter((field) => {
+    // Always show these fields
+    if (
+      ![
+        'meetingLocation',
+        'meetingSchedule',
+        'deliveryAddress',
+        'deliveryMethod',
+      ].includes(field)
+    ) {
+      return true;
+    }
+
+    // Show meeting fields for meetup transactions
+    if (
+      primaryTransactionType === 'meetup' &&
+      (field === 'meetingLocation' || field === 'meetingSchedule')
+    ) {
+      return true;
+    }
+
+    // Show delivery fields for online transactions
+    if (
+      primaryTransactionType === 'online' &&
+      (field === 'deliveryAddress' || field === 'deliveryMethod')
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+
+  // Categorize fields into conflicts, no data, and resolved
+  const fieldCategories = relevantFields.map((field) => {
     const values = analyses
       .map((a) => a[field])
       .filter((v) => v !== undefined && v !== null && v !== '');
     const uniqueValues = [...new Set(values.map((v) => JSON.stringify(v)))];
-    return uniqueValues.length > 1;
+
+    return {
+      field,
+      hasConflict: uniqueValues.length > 1,
+      hasNoData: values.length === 0,
+      hasData: values.length > 0,
+      values,
+    };
   });
+
+  const conflicts = fieldCategories.filter((fc) => fc.hasConflict);
 
   const allRiskFlags = [...new Set(analyses.flatMap((a) => a.riskFlags || []))];
 
@@ -161,7 +209,7 @@ export function DataConflictResolver({
     };
 
     // Merge data: use selected values, fall back to first non-empty value
-    fields.forEach((field) => {
+    allFields.forEach((field) => {
       if (selectedValues[field] !== undefined) {
         setField(field, selectedValues[field]);
       } else {
@@ -192,22 +240,22 @@ export function DataConflictResolver({
   };
 
   const canResolve = conflicts.every(
-    (field) => selectedValues[field] !== undefined
+    (fc) => selectedValues[fc.field] !== undefined
   );
 
   const getFieldLabel = (field: FieldKey): string => {
     const labels: Partial<Record<FieldKey, string>> = {
       platform: 'Platform',
       transactionType: 'Transaction Type',
-      itemDescription: 'Item Description',
-      productType: 'Product Type',
+      itemDescription: 'Description',
+      productType: 'Item Name',
       productModel: 'Product Model',
-      productCondition: 'Product Condition',
-      proposedPrice: 'Proposed Price',
+      productCondition: 'Condition',
+      proposedPrice: 'Price',
       currency: 'Currency',
       quantity: 'Quantity',
       meetingLocation: 'Meeting Location',
-      meetingSchedule: 'Meeting Schedule',
+      meetingSchedule: 'Scheduled Date & Time',
       deliveryAddress: 'Delivery Address',
       deliveryMethod: 'Delivery Method',
       riskFlags: 'Risk Flags',
@@ -232,9 +280,9 @@ export function DataConflictResolver({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-        <AlertTriangle className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-amber-800 dark:text-amber-200">
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
           {conflicts.length > 0 ? (
             <>
               Found {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''}{' '}
@@ -252,10 +300,8 @@ export function DataConflictResolver({
 
       {/* Combined Risk Flags */}
       {allRiskFlags.length > 0 && (
-        <Card className="border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
-          <h3 className="mb-2 text-sm font-semibold text-red-900 dark:text-red-100">
-            ⚠️ Combined Risk Flags
-          </h3>
+        <Card className="border-border p-4">
+          <h3 className="mb-2 text-sm font-semibold">⚠️ Combined Risk Flags</h3>
           <div className="flex flex-wrap gap-2">
             {allRiskFlags.map((flag, idx) => (
               <Badge key={idx} variant="destructive" className="text-xs">
@@ -266,40 +312,50 @@ export function DataConflictResolver({
         </Card>
       )}
 
-      {/* Confidence Scores */}
-      <div className="grid grid-cols-2 gap-4">
-        {analyses.map((analysis, idx) => (
-          <Card key={idx} className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Screenshot {idx + 1}</span>
-              <Badge variant="outline">
-                {((analysis.confidence || 0) * 100).toFixed(0)}% confidence
-              </Badge>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* All Fields - Ordered Display */}
+      <div className="space-y-4">
+        {fieldCategories.map(({ field, hasConflict, hasNoData }) => {
+          const values = analyses.map((a, idx) => ({
+            value: a[field],
+            source: `Screenshot ${idx + 1}`,
+            confidence: a.confidence,
+          }));
 
-      {/* Conflict Fields */}
-      {conflicts.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Users className="h-5 w-5" />
-            Resolve Conflicts
-          </h3>
-
-          {conflicts.map((field) => {
-            const values = analyses.map((a, idx) => ({
-              value: a[field],
-              source: `Screenshot ${idx + 1}`,
-              confidence: a.confidence,
-            }));
-
-            return (
-              <Card key={field} className="p-4">
-                <Label className="mb-3 block text-base font-semibold">
+          return (
+            <Card key={field} className="space-y-3 p-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">
                   {getFieldLabel(field)}
                 </Label>
+                {hasConflict && (
+                  <Badge variant="outline">
+                    <AlertTriangle className="mr-1 h-3 w-3" />
+                    Conflict
+                  </Badge>
+                )}
+                {hasNoData && (
+                  <Badge variant="outline">
+                    <XCircle className="mr-1 h-3 w-3" />
+                    No Data
+                  </Badge>
+                )}
+                {!hasConflict && !hasNoData && (
+                  <Badge variant="outline">
+                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                    Matched
+                  </Badge>
+                )}
+              </div>
+
+              {hasNoData ? (
+                <Alert>
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No data was extracted for this field. You&apos;ll need to
+                    fill this manually in the next step.
+                  </AlertDescription>
+                </Alert>
+              ) : hasConflict ? (
                 <RadioGroup
                   value={
                     selectedValues[field] !== undefined
@@ -366,11 +422,20 @@ export function DataConflictResolver({
                     );
                   })}
                 </RadioGroup>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+              ) : (
+                <div className="border-border bg-secondary/50 rounded-lg border p-3">
+                  <p className="font-medium">
+                    {formatValue(values.find((v) => v.value)?.value)}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Matched across all screenshots
+                  </p>
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4">

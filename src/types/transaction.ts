@@ -60,6 +60,10 @@ export interface TransactionParticipant {
   screenshot_uploaded: boolean;
   screenshot_url?: string;
   joined_at: string;
+  // Enriched profile fields (added by API)
+  name?: string;
+  email?: string;
+  avatar?: string;
 }
 
 export interface TransactionScreenshot {
