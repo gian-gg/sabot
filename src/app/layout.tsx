@@ -2,7 +2,7 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { Header } from '@/components/core/header';
-import Footer from '@/components/core/footer';
+import { FooterWrapper } from '@/components/core/footer-wrapper';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
 import React from 'react';
@@ -34,7 +34,7 @@ export default async function RootLayout({
           {children}
         </main>
 
-        <Footer />
+        <FooterWrapper />
 
         <Toaster richColors theme="dark" />
         <SonnerToaster />

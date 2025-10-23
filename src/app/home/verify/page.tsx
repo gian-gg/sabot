@@ -20,8 +20,11 @@ import { useUserStore } from '@/store/user/userStore';
 import { submitVerificationRequest } from '@/lib/supabase/db/verify';
 import { updateUserVerificationStatus } from '@/lib/supabase/db/user';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 
 export default function VerifyPage() {
+  const router = useRouter();
   const user = useUserStore();
 
   const [step, setStep] = useState<VerificationStep>('PERMISSION_CONSENT');
@@ -119,6 +122,8 @@ export default function VerifyPage() {
 
   if (user.verificationStatus === 'pending') {
     return <SubmissionPending />;
+  } else if (user.verificationStatus === 'complete') {
+    router.push(ROUTES.HOME.ROOT);
   }
 
   const renderStep = () => {

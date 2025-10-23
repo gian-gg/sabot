@@ -48,7 +48,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="#features"
+                  href="/product#features"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Features
@@ -56,7 +56,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#how-it-works"
+                  href="/product#how-it-works"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   How It Works
@@ -64,7 +64,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href={ROUTES.REPORTS}
+                  href="/product#reports"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Reports
@@ -72,10 +72,10 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#pricing"
+                  href="/tokens"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
-                  Pricing
+                  Tokens
                 </Link>
               </li>
             </ul>
@@ -87,7 +87,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="#about"
+                  href="/company#about"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   About Us
@@ -95,7 +95,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#blog"
+                  href="/company#blog"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Blog
@@ -103,15 +103,15 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#careers"
+                  href="/company#arbiter"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
-                  Careers
+                  Arbiter
                 </Link>
               </li>
               <li>
                 <Link
-                  href="#contact"
+                  href="/company#contact"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Contact
@@ -126,7 +126,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="#privacy"
+                  href="/legal#privacy"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Privacy Policy
@@ -134,7 +134,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#terms"
+                  href="/legal#terms"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Terms of Service
@@ -142,7 +142,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#security"
+                  href="/legal#security"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Security
@@ -150,7 +150,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#compliance"
+                  href="/legal"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Compliance
@@ -167,7 +167,7 @@ const Footer = () => {
               © {new Date().getFullYear()} Sabot. All rights reserved.
             </p>
             <p className="text-sm text-neutral-500">
-              Built with ♥ for safer transactions
+              Built for safer transactions
             </p>
           </div>
         </div>
