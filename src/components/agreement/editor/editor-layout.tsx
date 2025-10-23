@@ -8,10 +8,12 @@ import { AiAssistant } from '@/components/agreement/editor/ai-assistant';
 import { DocumentOutline } from '@/components/agreement/editor/document-outline';
 import { SignatureModal } from '@/components/agreement/editor/signature-modal';
 import { CommandPalette } from '@/components/agreement/editor/command-palette';
+import { TemplateSelector } from '@/components/agreement/editor/template-selector';
 import {
   exportAgreementToPDF,
   generateFileName,
 } from '@/lib/pdf/export-agreement';
+import { type Template } from '@/lib/templates/template-loader';
 import { toast } from 'sonner';
 
 interface EditorLayoutProps {
@@ -32,7 +34,12 @@ export function EditorLayout({
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const [editorContent, setEditorContent] = useState<string>('');
+  const [editorTitle, setEditorTitle] = useState<string>(
+    'Partnership Agreement'
+  );
+  const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
 
   // Combine legal blocks with any initial idea blocks
   const legalBlocks = [
@@ -68,13 +75,26 @@ export function EditorLayout({
     },
   ];
 
-  const allIdeaBlocks = [...legalBlocks, ...initialIdeaBlocks];
-
   const isExportingRef = useRef(false);
 
   const handleReview = () => {
     setIsReviewing(true);
     setTimeout(() => setIsReviewing(false), 3000);
+  };
+
+  const handleTemplateSelect = (template: Template) => {
+    // Update editor content with template HTML
+    setEditorContent(template.content);
+    setEditorTitle(template.name);
+
+    // Combine legal blocks with template-specific blocks
+    const templateBlocks = template.ideaBlocks || [];
+    setCurrentIdeaBlocks(templateBlocks);
+
+    // Close the template selector
+    setTemplateSelectorOpen(false);
+
+    toast.success(`Loaded template: ${template.name}`);
   };
 
   const handleExportFromCommand = async () => {
@@ -117,15 +137,16 @@ export function EditorLayout({
           setRightPanel(rightPanel === 'outline' ? null : 'outline')
         }
         onReview={handleReview}
+        onOpenTemplateSelector={() => setTemplateSelectorOpen(true)}
         aiActive={rightPanel === 'ai'}
         outlineActive={rightPanel === 'outline'}
-        editorTitle="Partnership Agreement"
+        editorTitle={editorTitle}
         editorContent={editorContent}
       />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Idea Blocks Panel */}
-        <IdeaBlocksPanel ideaBlocks={allIdeaBlocks} />
+        <IdeaBlocksPanel ideaBlocks={[...legalBlocks, ...currentIdeaBlocks]} />
 
         {/* Center: TipTap Editor */}
         <TiptapEditor
@@ -148,6 +169,11 @@ export function EditorLayout({
         open={commandOpen}
         onOpenChange={setCommandOpen}
         onExport={handleExportFromCommand}
+      />
+      <TemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelectTemplate={handleTemplateSelect}
       />
     </div>
   );

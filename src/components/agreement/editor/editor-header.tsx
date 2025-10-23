@@ -9,6 +9,7 @@ import {
   Download,
   CheckCircle2,
   Loader2,
+  FileJson,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ interface EditorHeaderProps {
   onToggleAI: () => void;
   onToggleOutline: () => void;
   onReview: () => void;
+  onOpenTemplateSelector: () => void;
   aiActive: boolean;
   outlineActive: boolean;
   editorTitle?: string;
@@ -34,6 +36,7 @@ export function EditorHeader({
   onToggleAI,
   onToggleOutline,
   onReview,
+  onOpenTemplateSelector,
   aiActive,
   outlineActive,
   editorTitle = 'Agreement',
@@ -85,6 +88,17 @@ export function EditorHeader({
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenTemplateSelector}
+            className="bg-transparent"
+            title="Choose a template or start from scratch"
+          >
+            <FileJson className="mr-2 h-4 w-4" />
+            Templates
+          </Button>
+
           <Button
             variant={aiActive ? 'default' : 'outline'}
             size="sm"
