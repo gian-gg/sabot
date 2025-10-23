@@ -51,7 +51,7 @@ export async function exportAgreementToPDF(
       pdf.setFont('Helvetica', 'bold');
       pdf.setFontSize(16);
       const titleWidth =
-        (pdf.getStringUnitWidth(title) * pdf.internal.getFontSize()) /
+        (pdf.getStringUnitWidth(title) * pdf.getFontSize()) /
         pdf.internal.scaleFactor;
       const titleX = (pageWidth - titleWidth) / 2;
       pdf.text(title, titleX, currentY);
@@ -68,7 +68,7 @@ export async function exportAgreementToPDF(
         });
         const timestampText = `Generated: ${timestamp}`;
         const timestampWidth =
-          (pdf.getStringUnitWidth(timestampText) * pdf.internal.getFontSize()) /
+          (pdf.getStringUnitWidth(timestampText) * pdf.getFontSize()) /
           pdf.internal.scaleFactor;
         const timestampX = (pageWidth - timestampWidth) / 2;
         pdf.text(timestampText, timestampX, currentY);
@@ -90,7 +90,8 @@ export async function exportAgreementToPDF(
     // Add content to PDF
     for (const line of contentLines) {
       // Check if we need a new page
-      if (currentY + line.height > pageHeight - margin) {
+      const lineHeight = line.height || 10; // Default height if not specified
+      if (currentY + lineHeight > pageHeight - margin) {
         // Add footer before page break
         if (includePageNumbers) {
           addPageFooter(pdf, pageWidth, pageHeight, margin);
@@ -112,19 +113,19 @@ export async function exportAgreementToPDF(
         }
 
         const splitText = pdf.splitTextToSize(
-          line.text,
+          line.text || '',
           contentWidth - (line.indent || 0)
         );
         pdf.text(splitText, margin + (line.indent || 0), currentY);
-        currentY += line.height;
+        currentY += line.height ?? 0;
       } else if (line.type === 'signature-block') {
         addSignatureBlock(pdf, margin, currentY, contentWidth);
-        currentY += line.height;
+        currentY += line.height ?? 0;
       } else if (line.type === 'box') {
         addBoxBlock(pdf, margin, currentY, contentWidth, line);
-        currentY += line.height;
+        currentY += line.height ?? 0;
       } else if (line.type === 'spacing') {
-        currentY += line.height;
+        currentY += line.height ?? 0;
       }
     }
 
@@ -154,7 +155,7 @@ export async function exportAgreementToPDF(
 }
 
 interface PDFLine {
-  text: string;
+  text?: string;
   fontSize?: number;
   fontStyle?: string;
   align?: string;
@@ -164,6 +165,11 @@ interface PDFLine {
   bgColor?: string;
   borderColor?: string;
   indent?: number;
+  height?: number;
+  font?: string;
+  title?: string;
+  content?: string;
+  color?: string;
 }
 
 /**
@@ -198,8 +204,8 @@ function parseHTMLToPDFContent(
  */
 function parseElement(
   element: HTMLElement,
-  pdf: jsPDF,
-  contentWidth: number
+  _pdf: jsPDF,
+  _contentWidth: number
 ): PDFLine[] {
   const lines: PDFLine[] = [];
   const tagName = element.tagName.toLowerCase();
@@ -210,8 +216,9 @@ function parseElement(
     lines.push({
       type: 'signature-block',
       height: 40,
+      text: '',
     });
-    lines.push({ type: 'spacing', height: 10 });
+    lines.push({ type: 'spacing', height: 10, text: '' });
     return lines;
   }
 
@@ -223,8 +230,9 @@ function parseElement(
       bgColor: '#f0f9ff', // Light blue background
       borderColor: '#01d06c', // Primary green
       height: 60,
+      text: '',
     });
-    lines.push({ type: 'spacing', height: 10 });
+    lines.push({ type: 'spacing', height: 10, text: '' });
     return lines;
   }
 
@@ -247,7 +255,7 @@ function parseElement(
       indent: 5,
       height: 12,
     });
-    lines.push({ type: 'spacing', height: 8 });
+    lines.push({ type: 'spacing', height: 8, text: '' });
     return lines;
   }
 
@@ -262,7 +270,7 @@ function parseElement(
       height: 10,
       color: '#666666',
     });
-    lines.push({ type: 'spacing', height: 6 });
+    lines.push({ type: 'spacing', height: 6, text: '' });
     return lines;
   }
 
@@ -286,7 +294,7 @@ function parseElement(
       });
     });
 
-    lines.push({ type: 'spacing', height: 8 });
+    lines.push({ type: 'spacing', height: 8, text: '' });
     return lines;
   }
 
@@ -300,7 +308,7 @@ function parseElement(
         fontStyle: 'bold',
         height: 12,
       });
-      lines.push({ type: 'spacing', height: 5 });
+      lines.push({ type: 'spacing', height: 5, text: '' });
       break;
 
     case 'h2':
@@ -311,7 +319,7 @@ function parseElement(
         fontStyle: 'bold',
         height: 10,
       });
-      lines.push({ type: 'spacing', height: 5 });
+      lines.push({ type: 'spacing', height: 5, text: '' });
       break;
 
     case 'h3':
@@ -322,7 +330,7 @@ function parseElement(
         fontStyle: 'bold',
         height: 9,
       });
-      lines.push({ type: 'spacing', height: 4 });
+      lines.push({ type: 'spacing', height: 4, text: '' });
       break;
 
     case 'p':
@@ -334,7 +342,7 @@ function parseElement(
           fontSize: 11,
           height: 9,
         });
-        lines.push({ type: 'spacing', height: 3 });
+        lines.push({ type: 'spacing', height: 3, text: '' });
       }
       break;
 
@@ -352,7 +360,7 @@ function parseElement(
           height: 9,
         });
       });
-      lines.push({ type: 'spacing', height: 5 });
+      lines.push({ type: 'spacing', height: 5, text: '' });
       break;
     }
 
@@ -366,7 +374,7 @@ function parseElement(
         height: 9,
         color: '#666666',
       });
-      lines.push({ type: 'spacing', height: 5 });
+      lines.push({ type: 'spacing', height: 5, text: '' });
       break;
 
     default:
@@ -379,7 +387,7 @@ function parseElement(
           fontSize: 11,
           height: 9,
         });
-        lines.push({ type: 'spacing', height: 3 });
+        lines.push({ type: 'spacing', height: 3, text: '' });
       }
   }
 
@@ -389,7 +397,7 @@ function parseElement(
 /**
  * Add signature block to PDF
  */
-function addSignatureBlock(pdf: jsPDF, x: number, y: number, width: number) {
+function addSignatureBlock(pdf: jsPDF, x: number, y: number, _width: number) {
   const lineWidth = 50;
   const lineY = y + 5;
 
@@ -431,26 +439,27 @@ function addBoxBlock(
 
   // Draw background
   pdf.setFillColor(bgRgb.r, bgRgb.g, bgRgb.b);
-  pdf.rect(x, y, width, block.height, 'F');
+  pdf.rect(x, y, width, block.height ?? 0, 'F');
 
   // Draw border
   pdf.setDrawColor(borderRgb.r, borderRgb.g, borderRgb.b);
   pdf.setLineWidth(1);
-  pdf.rect(x, y, width, block.height);
+  pdf.rect(x, y, width, block.height ?? 0);
 
   // Add title
   pdf.setFont('Helvetica', 'bold');
   pdf.setFontSize(12);
   pdf.setTextColor(0, 0, 0);
-  pdf.text(block.title, x + padding, y + padding + 5);
+  pdf.text(block.title || '', x + padding, y + padding + 5);
 
   // Add content
   pdf.setFont('Helvetica', 'normal');
   pdf.setFontSize(10);
   let contentY = y + padding + 12;
   const lines = pdf.splitTextToSize(block.content || '', width - 2 * padding);
+  const blockHeight = block.height ?? 0;
   lines.forEach((line: string) => {
-    if (contentY < y + block.height) {
+    if (contentY < y + blockHeight) {
       pdf.text(line, x + padding, contentY);
       contentY += 4;
     }
@@ -474,7 +483,7 @@ function addPageFooter(
   // Page number at bottom right
   const pageNum = `Page ${pageCount}`;
   const pageNumWidth =
-    (pdf.getStringUnitWidth(pageNum) * pdf.internal.getFontSize()) /
+    (pdf.getStringUnitWidth(pageNum) * pdf.getFontSize()) /
     pdf.internal.scaleFactor;
   pdf.text(pageNum, pageWidth - margin - pageNumWidth, pageHeight - margin + 5);
 }

@@ -12,15 +12,8 @@ import Image from 'next/image';
 import type { AnalysisData } from '@/types/analysis';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 
-interface ApiAnalysisResponse {
-  id?: string;
-  user_id: string;
-  screenshot_url: string;
-  extracted_data: AnalysisData;
-}
-
 interface AnalysisCompleteProps {
-  analyses: ApiAnalysisResponse[];
+  analyses: AnalysisData[];
   transactionId: string;
 }
 
@@ -79,18 +72,17 @@ export function AnalysisComplete({
   };
   return (
     <div className="w-full space-y-6">
-      {analyses.map((apiAnalysis, index) => {
-        const analysis = apiAnalysis.extracted_data;
+      {analyses.map((analysis, index) => {
         const conditionBadge = getConditionBadgeVariant(
           analysis.productCondition
         );
         return (
-          <Card key={apiAnalysis.id || index}>
+          <Card key={analysis.id || index}>
             <CardHeader>
               <div className="flex items-center gap-3">
                 <User className="text-muted-foreground h-5 w-5" />
                 <CardTitle>
-                  {getParticipantRole(apiAnalysis.user_id)}&apos;s Conversation
+                  {getParticipantRole(analysis.user_id)}&apos;s Conversation
                 </CardTitle>
                 <Badge variant="outline" className="capitalize">
                   {analysis.platform}
@@ -110,7 +102,7 @@ export function AnalysisComplete({
                     style={{ maxHeight: 400 }}
                   >
                     <img
-                      src={apiAnalysis.screenshot_url || ''}
+                      src={analysis.screenshot_url || ''}
                       alt="Conversation screenshot"
                       className="h-auto w-full object-contain"
                       style={{ objectFit: 'contain' }}
