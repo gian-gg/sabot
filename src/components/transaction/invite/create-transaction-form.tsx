@@ -34,6 +34,8 @@ import {
   Truck,
   ChevronLeft,
   ChevronRight,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -58,6 +60,7 @@ const STEPS = [
 
 interface TransactionFormData {
   item_name: string;
+  product_model: string;
   item_description: string;
   price: string;
   quantity: string;
@@ -96,9 +99,26 @@ export function CreateTransactionForm({
   >([]);
   const [hasConflicts, setHasConflicts] = useState(false);
 
+  // Track which fields are locked individually
+  const [fieldLocks, setFieldLocks] = useState({
+    item_name: false,
+    product_model: false,
+    item_description: false,
+    price: false,
+    quantity: false,
+    condition: false,
+    category: false,
+    transaction_type: false,
+    meeting_location: false,
+    meeting_time: false,
+    delivery_address: false,
+    delivery_method: false,
+  });
+
   // Form data
   const [formData, setFormData] = useState<TransactionFormData>({
     item_name: '',
+    product_model: '',
     item_description: '',
     price: '',
     quantity: '1',
@@ -161,6 +181,11 @@ export function CreateTransactionForm({
     fetchUserData();
   }, [transactionId]);
 
+  // Helper to toggle individual field lock
+  const toggleFieldLock = (field: keyof typeof fieldLocks) => {
+    setFieldLocks((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
   // Escrow data
   const [escrowEnabled, setEscrowEnabled] = useState(false);
   const [arbiterEnabled, setArbiterEnabled] = useState(false);
@@ -200,7 +225,7 @@ export function CreateTransactionForm({
     };
 
     const mapConditionFromProductCondition = (condition?: string): string => {
-      if (!condition) return 'brand-new';
+      if (!condition) return '';
       const cond = condition.toLowerCase();
       if (cond.includes('brand') && cond.includes('new')) return 'brand-new';
       if (cond.includes('like') && cond.includes('new')) return 'like-new';
@@ -208,7 +233,7 @@ export function CreateTransactionForm({
       if (cond.includes('good')) return 'good';
       if (cond.includes('fair')) return 'fair';
       if (cond.includes('poor') || cond.includes('parts')) return 'poor';
-      return 'brand-new'; // Default for digital goods
+      return '';
     };
 
     const mapTransactionType = (type?: string): 'meetup' | 'delivery' => {
@@ -223,21 +248,70 @@ export function CreateTransactionForm({
       return 'meetup';
     };
 
-    setFormData({
-      item_name: data.productModel || data.productType || 'Item',
+    // Strict validation: only mark as extracted if ALL required fields are present
+    const hasAllRequiredFields =
+      (data.productModel || data.productType) &&
+      data.itemDescription &&
+      data.proposedPrice &&
+      data.quantity &&
+      data.productCondition &&
+      data.productType;
+
+    const transactionType = mapTransactionType(data.transactionType);
+    const hasRequiredLocationFields =
+      transactionType === 'meetup'
+        ? data.meetingLocation && data.meetingSchedule
+        : data.deliveryAddress && data.deliveryMethod;
+
+    // Only mark as extracted if we have all required data
+    const shouldMarkAsExtracted = Boolean(
+      hasAllRequiredFields && hasRequiredLocationFields
+    );
+
+    const newFormData = {
+      item_name: data.productModel || data.productType || '',
+      product_model: data.productModel || '',
       item_description: data.itemDescription || '',
       price: data.proposedPrice?.toString() || '',
-      quantity: data.quantity?.toString() || '1',
+      quantity: data.quantity?.toString() || '',
       condition: mapConditionFromProductCondition(data.productCondition),
       category: mapCategoryFromProductType(data.productType),
-      transaction_type: mapTransactionType(data.transactionType),
+      transaction_type: transactionType,
       meeting_location: data.meetingLocation || '',
       meeting_time: data.meetingSchedule || '',
       delivery_address: data.deliveryAddress || '',
       delivery_method: data.deliveryMethod || '',
+    };
+
+    setFormData(newFormData);
+
+    // Lock individual fields that have extracted data
+    setFieldLocks({
+      item_name: !!(data.productModel || data.productType),
+      product_model: !!data.productModel,
+      item_description: !!data.itemDescription,
+      price: !!data.proposedPrice,
+      quantity: !!data.quantity,
+      condition: !!data.productCondition,
+      category: !!data.productType,
+      transaction_type: !!data.transactionType,
+      meeting_location: !!data.meetingLocation,
+      meeting_time: !!data.meetingSchedule,
+      delivery_address: !!data.deliveryAddress,
+      delivery_method: !!data.deliveryMethod,
     });
 
-    setIsDataExtracted(true);
+    setIsDataExtracted(shouldMarkAsExtracted);
+
+    // If not all fields are present, show a warning
+    if (!shouldMarkAsExtracted) {
+      console.warn(
+        '⚠️ Incomplete data extracted. Fields will be unlocked for manual entry.'
+      );
+      toast.warning(
+        'Some fields could not be extracted from screenshots. Please fill them manually.'
+      );
+    }
   };
 
   // Callback for when screenshot analysis completes (multiple analyses)
@@ -268,6 +342,18 @@ export function CreateTransactionForm({
     setExtractedData(resolvedData);
     setHasConflicts(false);
     transformExtractedData(resolvedData);
+  };
+
+  // Helper to get missing fields for step 3
+  const getMissingFields = () => {
+    const missing: string[] = [];
+    if (!formData.item_name) missing.push('item_name');
+    if (!formData.item_description) missing.push('item_description');
+    if (!formData.price) missing.push('price');
+    if (!formData.quantity) missing.push('quantity');
+    if (!formData.condition) missing.push('condition');
+    if (!formData.category) missing.push('category');
+    return missing;
   };
 
   const canProceedToNext = () => {
@@ -527,24 +613,128 @@ export function CreateTransactionForm({
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="item_name">
-                Item Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="item_name"
-                placeholder="e.g., iPhone 14 Pro Max 256GB"
-                value={formData.item_name}
-                onChange={(e) => updateFormData('item_name', e.target.value)}
-                disabled={isDataExtracted}
-                className={isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}
-                required
-              />
-              {isDataExtracted && (
-                <p className="text-muted-foreground text-xs">
-                  🔒 Extracted from screenshot analysis
-                </p>
+            {/* Extraction Status Banner */}
+            {isDataExtracted &&
+              Object.values(fieldLocks).some((locked) => locked) && (
+                <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+                  <AlertDescription className="text-green-800 dark:text-green-200">
+                    ✓ Some fields were extracted from screenshot analysis
+                  </AlertDescription>
+                </Alert>
               )}
+
+            {/* Missing Fields Alert */}
+            {getMissingFields().length > 0 && (
+              <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+                <AlertDescription className="text-amber-800 dark:text-amber-200">
+                  ⚠️{' '}
+                  {getMissingFields()
+                    .map((field) => {
+                      const fieldNames: Record<string, string> = {
+                        item_name: 'Item Name',
+                        item_description: 'Description',
+                        price: 'Price',
+                        quantity: 'Quantity',
+                        condition: 'Condition',
+                        category: 'Category',
+                      };
+                      return fieldNames[field];
+                    })
+                    .join(', ')}{' '}
+                  {getMissingFields().length === 1 ? 'is' : 'are'} currently
+                  missing
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="item_name">
+                  Item Name <span className="text-destructive">*</span>
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="item_name"
+                    placeholder="e.g., iPhone 14 Pro Max 256GB"
+                    value={formData.item_name}
+                    onChange={(e) =>
+                      updateFormData('item_name', e.target.value)
+                    }
+                    disabled={fieldLocks.item_name}
+                    className={`flex-1 ${fieldLocks.item_name ? 'bg-muted cursor-not-allowed' : ''} ${!formData.item_name ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                    required
+                  />
+                  {fieldLocks.item_name && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('item_name')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.item_name && formData.item_name && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('item_name')}
+                      className="shrink-0"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="product_model">
+                  Model{' '}
+                  <span className="text-muted-foreground text-xs">
+                    (Optional)
+                  </span>
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="product_model"
+                    placeholder={
+                      fieldLocks.product_model && !formData.product_model
+                        ? "Doesn't apply"
+                        : 'e.g., A2484, MQ8E3'
+                    }
+                    value={formData.product_model}
+                    onChange={(e) =>
+                      updateFormData('product_model', e.target.value)
+                    }
+                    disabled={fieldLocks.product_model}
+                    className={`flex-1 ${fieldLocks.product_model ? 'bg-muted cursor-not-allowed' : ''}`}
+                  />
+                  {fieldLocks.product_model && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('product_model')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.product_model && formData.product_model && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('product_model')}
+                      className="shrink-0"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
@@ -552,89 +742,145 @@ export function CreateTransactionForm({
                 <Label htmlFor="category">
                   Category <span className="text-destructive">*</span>
                 </Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => updateFormData('category', value)}
-                  disabled={isDataExtracted}
-                >
-                  <SelectTrigger
-                    id="category"
-                    className={
-                      isDataExtracted ? 'bg-muted cursor-not-allowed' : ''
-                    }
+                <div className="flex gap-2">
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => updateFormData('category', value)}
+                    disabled={fieldLocks.category}
                   >
-                    <SelectValue placeholder="Select category..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="electronics">Electronics</SelectItem>
-                    <SelectItem value="fashion">Fashion & Apparel</SelectItem>
-                    <SelectItem value="home">Home & Living</SelectItem>
-                    <SelectItem value="sports">Sports & Outdoors</SelectItem>
-                    <SelectItem value="books">Books & Media</SelectItem>
-                    <SelectItem value="toys">Toys & Games</SelectItem>
-                    <SelectItem value="automotive">Automotive</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                {isDataExtracted && (
-                  <p className="text-muted-foreground text-xs">
-                    🔒 Extracted from screenshot
-                  </p>
-                )}
+                    <SelectTrigger
+                      id="category"
+                      className={`flex-1 ${fieldLocks.category ? 'bg-muted cursor-not-allowed' : ''} ${!formData.category ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    >
+                      <SelectValue placeholder="Select category..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="electronics">Electronics</SelectItem>
+                      <SelectItem value="fashion">Fashion & Apparel</SelectItem>
+                      <SelectItem value="home">Home & Living</SelectItem>
+                      <SelectItem value="sports">Sports & Outdoors</SelectItem>
+                      <SelectItem value="books">Books & Media</SelectItem>
+                      <SelectItem value="toys">Toys & Games</SelectItem>
+                      <SelectItem value="automotive">Automotive</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {fieldLocks.category && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('category')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.category && formData.category && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('category')}
+                      className="shrink-0"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="condition">
                   Condition <span className="text-destructive">*</span>
                 </Label>
-                <Select
-                  value={formData.condition}
-                  onValueChange={(value) => updateFormData('condition', value)}
-                  disabled={isDataExtracted}
-                >
-                  <SelectTrigger
-                    id="condition"
-                    className={
-                      isDataExtracted ? 'bg-muted cursor-not-allowed' : ''
+                <div className="flex gap-2">
+                  <Select
+                    value={formData.condition}
+                    onValueChange={(value) =>
+                      updateFormData('condition', value)
                     }
+                    disabled={fieldLocks.condition}
                   >
-                    <SelectValue placeholder="Select condition..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="brand-new">Brand New</SelectItem>
-                    <SelectItem value="like-new">Like New</SelectItem>
-                    <SelectItem value="excellent">Excellent</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="fair">Fair</SelectItem>
-                    <SelectItem value="poor">For Parts</SelectItem>
-                  </SelectContent>
-                </Select>
-                {isDataExtracted && (
-                  <p className="text-muted-foreground text-xs">
-                    🔒 Extracted from screenshot
-                  </p>
-                )}
+                    <SelectTrigger
+                      id="condition"
+                      className={`flex-1 ${fieldLocks.condition ? 'bg-muted cursor-not-allowed' : ''} ${!formData.condition ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    >
+                      <SelectValue placeholder="Select condition..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="brand-new">Brand New</SelectItem>
+                      <SelectItem value="like-new">Like New</SelectItem>
+                      <SelectItem value="excellent">Excellent</SelectItem>
+                      <SelectItem value="good">Good</SelectItem>
+                      <SelectItem value="fair">Fair</SelectItem>
+                      <SelectItem value="poor">For Parts</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {fieldLocks.condition && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('condition')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.condition && formData.condition && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('condition')}
+                      className="shrink-0"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="quantity">
                   Quantity <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  placeholder="1"
-                  value={formData.quantity}
-                  onChange={(e) => updateFormData('quantity', e.target.value)}
-                  required
-                  disabled={isDataExtracted}
-                />
-                {isDataExtracted && (
-                  <p className="text-muted-foreground text-xs">
-                    🔒 Extracted from screenshot
-                  </p>
-                )}
+                <div className="flex gap-2">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                    value={formData.quantity}
+                    onChange={(e) => updateFormData('quantity', e.target.value)}
+                    required
+                    disabled={fieldLocks.quantity}
+                    className={`flex-1 ${fieldLocks.quantity ? 'bg-muted cursor-not-allowed' : ''} ${!formData.quantity ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  />
+                  {fieldLocks.quantity && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('quantity')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.quantity && formData.quantity && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('quantity')}
+                      className="shrink-0"
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -642,23 +888,45 @@ export function CreateTransactionForm({
               <Label htmlFor="item_description">
                 Description <span className="text-destructive">*</span>
               </Label>
-              <Textarea
-                id="item_description"
-                placeholder="Describe the item condition, included accessories, warranty, etc."
-                value={formData.item_description}
-                onChange={(e) =>
-                  updateFormData('item_description', e.target.value)
-                }
-                rows={4}
-                disabled={isDataExtracted}
-                className={isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}
-                required
-              />
-              {isDataExtracted && (
-                <p className="text-muted-foreground text-xs">
-                  🔒 Extracted from screenshot analysis
-                </p>
-              )}
+              <div className="flex gap-2">
+                <Textarea
+                  id="item_description"
+                  placeholder="Describe the item condition, included accessories, warranty, etc."
+                  value={formData.item_description}
+                  onChange={(e) =>
+                    updateFormData('item_description', e.target.value)
+                  }
+                  rows={4}
+                  disabled={fieldLocks.item_description}
+                  className={`flex-1 ${fieldLocks.item_description ? 'bg-muted cursor-not-allowed' : ''} ${!formData.item_description ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  required
+                />
+                <div className="flex flex-col gap-2">
+                  {fieldLocks.item_description && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleFieldLock('item_description')}
+                      className="shrink-0"
+                    >
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!fieldLocks.item_description &&
+                    formData.item_description && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('item_description')}
+                        className="shrink-0"
+                      >
+                        <Unlock className="h-4 w-4" />
+                      </Button>
+                    )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -666,26 +934,42 @@ export function CreateTransactionForm({
                 Price ({extractedData?.currency || 'PHP'}){' '}
                 <span className="text-destructive">*</span>
               </Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-3 left-3 text-sm">
-                  ₱
-                </span>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="45000"
-                  value={formData.price}
-                  onChange={(e) => updateFormData('price', e.target.value)}
-                  className={`pl-8 ${isDataExtracted ? 'bg-muted cursor-not-allowed' : ''}`}
-                  disabled={isDataExtracted}
-                  required
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder="45000"
+                    value={formData.price}
+                    onChange={(e) => updateFormData('price', e.target.value)}
+                    className={`pl-8 ${fieldLocks.price ? 'bg-muted cursor-not-allowed' : ''} ${!formData.price ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                    disabled={fieldLocks.price}
+                    required
+                  />
+                </div>
+                {fieldLocks.price && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => toggleFieldLock('price')}
+                    className="shrink-0"
+                  >
+                    <Lock className="h-4 w-4" />
+                  </Button>
+                )}
+                {!fieldLocks.price && formData.price && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => toggleFieldLock('price')}
+                    className="shrink-0"
+                  >
+                    <Unlock className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              {isDataExtracted && (
-                <p className="text-muted-foreground text-xs">
-                  🔒 Extracted from screenshot analysis
-                </p>
-              )}
             </div>
           </div>
         );
@@ -693,25 +977,65 @@ export function CreateTransactionForm({
       case 4:
         return (
           <div className="space-y-6">
+            {/* Extraction Status Banner */}
+            {isDataExtracted &&
+              (fieldLocks.transaction_type ||
+                fieldLocks.meeting_location ||
+                fieldLocks.meeting_time ||
+                fieldLocks.delivery_address ||
+                fieldLocks.delivery_method) && (
+                <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+                  <AlertDescription className="text-green-800 dark:text-green-200">
+                    ✓ Some fields were extracted from screenshot analysis
+                  </AlertDescription>
+                </Alert>
+              )}
+
             <div className="space-y-3">
-              <Label>
-                Transaction Type <span className="text-destructive">*</span>
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label>
+                  Transaction Type <span className="text-destructive">*</span>
+                </Label>
+                {fieldLocks.transaction_type && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleFieldLock('transaction_type')}
+                  >
+                    <Lock className="mr-2 h-4 w-4" />
+                    Unlock
+                  </Button>
+                )}
+                {!fieldLocks.transaction_type && formData.transaction_type && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleFieldLock('transaction_type')}
+                  >
+                    <Unlock className="mr-2 h-4 w-4" />
+                    Lock
+                  </Button>
+                )}
+              </div>
               <RadioGroup
                 value={formData.transaction_type}
                 onValueChange={(value: 'meetup' | 'delivery') =>
                   updateFormData('transaction_type', value)
                 }
                 className="grid grid-cols-2 gap-4"
+                disabled={fieldLocks.transaction_type}
               >
                 <Label
                   htmlFor="meetup"
-                  className="border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4"
+                  className={`border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4 ${fieldLocks.transaction_type ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
                   <RadioGroupItem
                     value="meetup"
                     id="meetup"
                     className="sr-only"
+                    disabled={fieldLocks.transaction_type}
                   />
                   <MapPin className="mb-3 h-6 w-6" />
                   <span className="font-medium">Meet Up</span>
@@ -721,12 +1045,13 @@ export function CreateTransactionForm({
                 </Label>
                 <Label
                   htmlFor="delivery"
-                  className="border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4"
+                  className={`border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4 ${fieldLocks.transaction_type ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
                   <RadioGroupItem
                     value="delivery"
                     id="delivery"
                     className="sr-only"
+                    disabled={fieldLocks.transaction_type}
                   />
                   <Truck className="mb-3 h-6 w-6" />
                   <span className="font-medium">Delivery</span>
@@ -743,18 +1068,44 @@ export function CreateTransactionForm({
                   <Label htmlFor="meeting_location">
                     Meeting Location <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <MapPin className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
-                    <Input
-                      id="meeting_location"
-                      placeholder="e.g., SM Mall of Asia, Food Court"
-                      value={formData.meeting_location}
-                      onChange={(e) =>
-                        updateFormData('meeting_location', e.target.value)
-                      }
-                      className="pl-9"
-                      required
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <MapPin className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+                      <Input
+                        id="meeting_location"
+                        placeholder="e.g., SM Mall of Asia, Food Court"
+                        value={formData.meeting_location}
+                        onChange={(e) =>
+                          updateFormData('meeting_location', e.target.value)
+                        }
+                        className={`pl-9 ${fieldLocks.meeting_location ? 'bg-muted cursor-not-allowed' : ''}`}
+                        disabled={fieldLocks.meeting_location}
+                        required
+                      />
+                    </div>
+                    {fieldLocks.meeting_location && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('meeting_location')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.meeting_location &&
+                      formData.meeting_location && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => toggleFieldLock('meeting_location')}
+                          className="shrink-0"
+                        >
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                      )}
                   </div>
                 </div>
 
@@ -763,19 +1114,44 @@ export function CreateTransactionForm({
                     Scheduled Date & Time{' '}
                     <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <Calendar className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
-                    <Input
-                      id="meeting_time"
-                      type="datetime-local"
-                      value={formData.meeting_time}
-                      onChange={(e) =>
-                        updateFormData('meeting_time', e.target.value)
-                      }
-                      className="pl-9"
-                      min={new Date().toISOString().slice(0, 16)}
-                      required
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Calendar className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+                      <Input
+                        id="meeting_time"
+                        type="datetime-local"
+                        value={formData.meeting_time}
+                        onChange={(e) =>
+                          updateFormData('meeting_time', e.target.value)
+                        }
+                        className={`pl-9 ${fieldLocks.meeting_time ? 'bg-muted cursor-not-allowed' : ''}`}
+                        min={new Date().toISOString().slice(0, 16)}
+                        disabled={fieldLocks.meeting_time}
+                        required
+                      />
+                    </div>
+                    {fieldLocks.meeting_time && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('meeting_time')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.meeting_time && formData.meeting_time && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('meeting_time')}
+                        className="shrink-0"
+                      >
+                        <Unlock className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -793,31 +1169,87 @@ export function CreateTransactionForm({
                   <Label htmlFor="delivery_address">
                     Delivery Address <span className="text-destructive">*</span>
                   </Label>
-                  <Textarea
-                    id="delivery_address"
-                    placeholder="Enter complete delivery address"
-                    value={formData.delivery_address}
-                    onChange={(e) =>
-                      updateFormData('delivery_address', e.target.value)
-                    }
-                    rows={3}
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="delivery_address"
+                      placeholder="Enter complete delivery address"
+                      value={formData.delivery_address}
+                      onChange={(e) =>
+                        updateFormData('delivery_address', e.target.value)
+                      }
+                      rows={3}
+                      className={`flex-1 ${fieldLocks.delivery_address ? 'bg-muted cursor-not-allowed' : ''}`}
+                      disabled={fieldLocks.delivery_address}
+                      required
+                    />
+                    <div className="flex flex-col gap-2">
+                      {fieldLocks.delivery_address && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => toggleFieldLock('delivery_address')}
+                          className="shrink-0"
+                        >
+                          <Lock className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {!fieldLocks.delivery_address &&
+                        formData.delivery_address && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => toggleFieldLock('delivery_address')}
+                            className="shrink-0"
+                          >
+                            <Unlock className="h-4 w-4" />
+                          </Button>
+                        )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="delivery_method">
                     Delivery Method <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="delivery_method"
-                    placeholder="e.g., LBC, J&T Express, Lalamove, Personal Courier"
-                    value={formData.delivery_method}
-                    onChange={(e) =>
-                      updateFormData('delivery_method', e.target.value)
-                    }
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="delivery_method"
+                      placeholder="e.g., LBC, J&T Express, Lalamove, Personal Courier"
+                      value={formData.delivery_method}
+                      onChange={(e) =>
+                        updateFormData('delivery_method', e.target.value)
+                      }
+                      className={`flex-1 ${fieldLocks.delivery_method ? 'bg-muted cursor-not-allowed' : ''}`}
+                      disabled={fieldLocks.delivery_method}
+                      required
+                    />
+                    {fieldLocks.delivery_method && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('delivery_method')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.delivery_method &&
+                      formData.delivery_method && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => toggleFieldLock('delivery_method')}
+                          className="shrink-0"
+                        >
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
                 </div>
 
                 <Alert>
@@ -962,7 +1394,7 @@ export function CreateTransactionForm({
                   <div>
                     <p className="text-muted-foreground text-sm">Price</p>
                     <p className="font-medium">
-                      ₱{parseFloat(formData.price || '0').toLocaleString()}
+                      {parseFloat(formData.price || '0').toLocaleString()}
                     </p>
                   </div>
                   <div>
