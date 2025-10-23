@@ -56,11 +56,10 @@ export function IdCapture({
 
       const f = files[0];
 
-      // Validate type
+      // Validate type - only images allowed
       const isImage = f.type.startsWith('image/');
-      const isPdf = f.type === 'application/pdf';
-      if (!isImage && !isPdf) {
-        toast.error('Only images or PDF files are allowed.');
+      if (!isImage) {
+        toast.error('Only image files are allowed.');
         return;
       }
 
@@ -82,6 +81,14 @@ export function IdCapture({
       try {
         const data = await verifyUserId(selectedIDType.type, f);
         setUserData(data as GovernmentIdInfo);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify ID. Please try again.';
+        toast.error(errorMessage);
+        // Clear the selected file on error so user can try again
+        setSelectedIDType({ type: selectedIDType.type, file: null });
       } finally {
         // small delay to show spinner for perceived responsiveness
         setTimeout(() => setIsUploading(false), 400);
@@ -356,8 +363,7 @@ export function IdCapture({
       <CardHeader>
         <CardTitle>Photograph your ID</CardTitle>
         <CardDescription>
-          Please take a clear photo of the front of your ID. You can upload an
-          image or a PDF.
+          Please take a clear photo of the front of your ID.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -385,7 +391,7 @@ export function IdCapture({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,application/pdf"
+          accept="image/*"
           capture="environment"
           className="hidden"
           disabled={isUploading}

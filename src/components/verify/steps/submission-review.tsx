@@ -23,6 +23,7 @@ type SubmissionReviewProps = StepNavProps & {
   userData: GovernmentIdInfo | null;
   userID: UserIDType | null;
   livenessCheckCaptures: CaptureData[];
+  loading: boolean;
 };
 
 export function SubmissionReview({
@@ -30,6 +31,7 @@ export function SubmissionReview({
   userID,
   onNext,
   onPrev,
+  loading,
 }: SubmissionReviewProps) {
   return (
     <Card>
@@ -54,7 +56,11 @@ export function SubmissionReview({
           Please ensure all information is correct before submitting. Once
           submitted, changes cannot be made.
         </Disclaimer>
-        <NavigationButtons isLoading={false} onNext={onNext} onPrev={onPrev} />
+        <NavigationButtons
+          isLoading={loading}
+          onNext={onNext}
+          onPrev={onPrev}
+        />
       </CardContent>
     </Card>
   );
