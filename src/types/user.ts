@@ -23,7 +23,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  verificationStatus: VerificationStatus;
+  isVerified: boolean;
   rating: number;
   joinDate: Date;
   transactionCount: number;
