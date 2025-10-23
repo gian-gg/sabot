@@ -4,7 +4,17 @@ import { ChevronRight, FileText, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const mockStructure = [
+interface Section {
+  id: string;
+  title: string;
+  children?: Section[];
+}
+
+interface DocumentStructureProps {
+  structure?: Section[];
+}
+
+const defaultStructure: Section[] = [
   {
     id: '1',
     title: 'Introduction',
@@ -48,7 +58,8 @@ const mockStructure = [
   },
 ];
 
-export function DocumentStructure() {
+export function DocumentStructure({ structure = [] }: DocumentStructureProps) {
+  const displayStructure = structure.length > 0 ? structure : defaultStructure;
   const [expandedSections, setExpandedSections] = useState<string[]>([
     '1',
     '2',
@@ -71,7 +82,7 @@ export function DocumentStructure() {
       </div>
 
       <div className="space-y-2">
-        {mockStructure.map((section) => (
+        {displayStructure.map((section) => (
           <div key={section.id}>
             <button
               onClick={() => section.children && toggleSection(section.id)}

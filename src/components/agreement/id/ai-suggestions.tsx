@@ -3,7 +3,20 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle, Info, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const mockSuggestions = [
+interface Suggestion {
+  id: string;
+  type: 'risk' | 'grammar' | 'clause' | 'structure' | string;
+  severity: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  suggestion: string;
+}
+
+interface AISuggestionsProps {
+  suggestions?: Suggestion[];
+}
+
+const defaultSuggestions: Suggestion[] = [
   {
     id: '1',
     type: 'risk',
@@ -47,39 +60,29 @@ const severityConfig = {
     icon: AlertCircle,
     color: 'text-destructive',
     bg: 'bg-destructive/10',
-    badge: 'destructive',
+    badge: 'destructive' as const,
   },
   medium: {
     icon: Info,
     color: 'text-amber-500',
     bg: 'bg-amber-500/10',
-    badge: 'secondary',
+    badge: 'secondary' as const,
   },
   low: {
     icon: CheckCircle,
     color: 'text-primary',
     bg: 'bg-primary/10',
-    badge: 'outline',
+    badge: 'outline' as const,
   },
 };
 
-export function AISuggestions() {
+export function AISuggestions({ suggestions = [] }: AISuggestionsProps) {
+  const displaySuggestions =
+    suggestions.length > 0 ? suggestions : defaultSuggestions;
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-3">
-        <div className="bg-primary/10 rounded-lg p-2">
-          <Sparkles className="text-primary h-6 w-6" />
-        </div>
-        <div>
-          <h2 className="mb-2 text-2xl font-bold">AI Suggestions</h2>
-          <p className="text-muted-foreground">
-            Review AI-generated recommendations to improve your agreement
-          </p>
-        </div>
-      </div>
-
       <div className="space-y-4">
-        {mockSuggestions.map((suggestion) => {
+        {displaySuggestions.map((suggestion) => {
           const config =
             severityConfig[suggestion.severity as keyof typeof severityConfig];
           const Icon = config.icon;
@@ -101,17 +104,7 @@ export function AISuggestions() {
                         {suggestion.description}
                       </p>
                     </div>
-                    <Badge
-                      variant={
-                        config.badge as
-                          | 'default'
-                          | 'destructive'
-                          | 'outline'
-                          | 'secondary'
-                      }
-                    >
-                      {suggestion.severity}
-                    </Badge>
+                    <Badge variant={config.badge}>{suggestion.severity}</Badge>
                   </div>
                   <div className="bg-muted/50 border-border rounded-lg border p-3">
                     <p className="text-sm">{suggestion.suggestion}</p>
