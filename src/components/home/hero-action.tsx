@@ -13,44 +13,54 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+import { useRegisterWallet } from '@/hooks/useRegisterWallet';
+
 const HeroAction = () => {
   const user = useUserStore();
 
+  const isVerified =
+    user.verificationStatus !== 'not-started' &&
+    user.verificationStatus !== 'pending';
+  useRegisterWallet(isVerified);
   if (user.verificationStatus === 'not-started') {
     return (
       <Button asChild>
-        <Link href={ROUTES.HOME.VERIFY}>
+        <Link href={ROUTES.HOME.VERIFY} className="flex items-center">
           <BadgeCheck className="mr-2 h-4 w-4" />
-          Verify Account
+          <span>Verify Account</span>
         </Link>
       </Button>
     );
   }
-
   if (user.verificationStatus === 'pending') {
     return (
       <Tooltip>
+               {' '}
         <TooltipTrigger asChild>
+                   {' '}
           <Button>
-            <Clock className="mr-2 h-4 w-4" />
-            Pending Verification
+                        <Clock className="mr-2 h-4 w-4" />            Pending
+            Verification          {' '}
           </Button>
+                 {' '}
         </TooltipTrigger>
+               {' '}
         <TooltipContent align="center" side="right">
-          <p>Verifying account, kindly check again later.</p>
+                    <p>Verifying account, kindly check again later.</p>     
+           {' '}
         </TooltipContent>
+             {' '}
       </Tooltip>
     );
   }
 
   return (
     <Button asChild>
-      <Link href={ROUTES.TRANSACTION.NEW}>
+      <Link href={ROUTES.TRANSACTION.NEW} className="flex items-center">
         <Plus className="mr-2 h-4 w-4" />
-        Create Transaction
+        <span>Create Transaction</span>
       </Link>
     </Button>
   );
 };
-
 export default HeroAction;
