@@ -1,3 +1,5 @@
+export type VerificationStatus = 'not-started' | 'pending' | 'complete';
+
 export interface SessionType {
   session: {
     user: {
@@ -14,7 +16,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  isVerified: boolean;
+  verificationStatus: VerificationStatus;
   rating: number;
   joinDate: Date;
   transactionCount: number;

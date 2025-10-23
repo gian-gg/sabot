@@ -2,15 +2,17 @@
 
 import { useEffect } from 'react';
 import { useUserStore } from '@/store/user/userStore';
+import type { VerificationStatus } from '@/types/user';
 
 export function HydrateUser({
   user,
-  isVerified,
+  verificationStatus,
 }: {
   user?: AuthUser | null;
-  isVerified?: boolean;
+  verificationStatus?: VerificationStatus;
 }) {
-  const { setId, setEmail, setImage, setName, setIsVerified } = useUserStore();
+  const { setId, setEmail, setImage, setName, setVerificationStatus } =
+    useUserStore();
 
   useEffect(() => {
     if (user) {
@@ -19,8 +21,16 @@ export function HydrateUser({
       setImage(user.user_metadata.avatar_url);
       setName(user.user_metadata.full_name);
     }
-    setIsVerified(isVerified ?? false);
-  }, [user, isVerified, setId, setEmail, setImage, setName, setIsVerified]);
+    setVerificationStatus(verificationStatus ?? 'not-started');
+  }, [
+    user,
+    verificationStatus,
+    setId,
+    setEmail,
+    setImage,
+    setName,
+    setVerificationStatus,
+  ]);
 
   return null; // nothing visible, just hydrates the store
 }

@@ -1,16 +1,17 @@
 import { create } from 'zustand';
+import type { VerificationStatus } from '@/types/user';
 
 interface UserState {
   id: string;
   email: string;
   image: string;
   name: string;
-  isVerified: boolean;
+  verificationStatus: VerificationStatus;
   setId: (id: string) => void;
   setEmail: (email: string) => void;
   setImage: (image: string) => void;
   setName: (name: string) => void;
-  setIsVerified: (isVerified: boolean) => void;
+  setVerificationStatus: (status: VerificationStatus) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -18,12 +19,12 @@ export const useUserStore = create<UserState>((set) => ({
   email: '',
   image: '',
   name: '',
-  isVerified: false,
+  verificationStatus: 'not-started',
   setId: (id) => set({ id }),
   setEmail: (email) => set({ email }),
   setImage: (image) => set({ image }),
   setName: (name) => set({ name }),
-  setIsVerified: (isVerified) => set({ isVerified }),
+  setVerificationStatus: (status) => set({ verificationStatus: status }),
 }));
 
 export const clearUser = () => {
@@ -32,6 +33,6 @@ export const clearUser = () => {
     email: '',
     image: '',
     name: '',
-    isVerified: false,
+    verificationStatus: 'not-started',
   });
 };
