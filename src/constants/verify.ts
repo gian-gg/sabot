@@ -1,6 +1,7 @@
 import type { IdType } from '@/types/verify';
 
 export const VERIFY_STEPS = [
+  { id: 'PERMISSION_CONSENT', title: 'Consent' },
   { id: 'ID_SELECTION', title: 'Select ID' },
   { id: 'ID_CAPTURE', title: 'Upload ID' },
   { id: 'BIOMETRIC_CAPTURE', title: 'Biometrics' },

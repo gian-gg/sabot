@@ -1,6 +1,7 @@
 import type { VerificationStatus } from './user';
 
 export type VerificationStep =
+  | 'PERMISSION_CONSENT'
   | 'ID_SELECTION'
   | 'ID_CAPTURE'
   | 'BIOMETRIC_CAPTURE'

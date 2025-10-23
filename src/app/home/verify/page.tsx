@@ -5,6 +5,7 @@ import {
   BiometricCapture,
   IdCapture,
   IdSelection,
+  PermissionConsent,
   SubmissionPending,
   SubmissionReview,
   VerificationContainer,
@@ -23,7 +24,7 @@ import { toast } from 'sonner';
 export default function VerifyPage() {
   const user = useUserStore();
 
-  const [step, setStep] = useState<VerificationStep>('ID_SELECTION');
+  const [step, setStep] = useState<VerificationStep>('PERMISSION_CONSENT');
   const [userID, setUserID] = useState<UserIDType | null>(null); // step 1
   const [userData, setUserData] = useState<GovernmentIdInfo | null>(null); // step 2
   const [livenessCheckCaptures, setLivenessCheckCaptures] = useState<
@@ -33,6 +34,7 @@ export default function VerifyPage() {
 
   const goToNextStep = () => {
     const steps: VerificationStep[] = [
+      'PERMISSION_CONSENT',
       'ID_SELECTION',
       'ID_CAPTURE',
       'BIOMETRIC_CAPTURE',
@@ -47,6 +49,7 @@ export default function VerifyPage() {
 
   const goToPrevStep = () => {
     const steps: VerificationStep[] = [
+      'PERMISSION_CONSENT',
       'ID_SELECTION',
       'ID_CAPTURE',
       'BIOMETRIC_CAPTURE',
@@ -120,12 +123,15 @@ export default function VerifyPage() {
 
   const renderStep = () => {
     switch (step) {
+      case 'PERMISSION_CONSENT':
+        return <PermissionConsent onNext={goToNextStep} />;
       case 'ID_SELECTION':
         return (
           <IdSelection
             selectedIDType={userID}
             setSelectedIDType={setUserID}
             onNext={goToNextStep}
+            onPrev={goToPrevStep}
           />
         );
       case 'ID_CAPTURE':
@@ -163,13 +169,7 @@ export default function VerifyPage() {
       case 'SUBMISSION_PENDING':
         return <SubmissionPending />;
       default:
-        return (
-          <IdSelection
-            selectedIDType={userID}
-            setSelectedIDType={setUserID}
-            onNext={goToNextStep}
-          />
-        );
+        return <PermissionConsent onNext={goToNextStep} />;
     }
   };
 
