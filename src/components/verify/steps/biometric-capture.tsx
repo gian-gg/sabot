@@ -11,10 +11,28 @@ import NavigationButtons from '@/components/verify/components/navigation-buttons
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Summary from '@/components/verify/components/biometrics-capture/summary';
 import CameraView from '@/components/verify/components/biometrics-capture/camera-view';
-import { LIVENESS_CHECK_STEPS } from '@/constants/verify';
+import {
+  LIVENESS_CHECK_STEPS_FIXED,
+  LIVENESS_CHECK_STEPS_RANDOM,
+  LIVENESS_CHECK_MAX_STEPS,
+} from '@/constants/verify';
 import { verifyLivenessCheck } from '@/lib/gemini/verify';
 
 import type { CaptureData, StepNavProps, UserIDType } from '@/types/verify';
+
+// Utility function to generate random steps
+const generateRandomSteps = (count: number): string[] => {
+  const availableSteps = [...LIVENESS_CHECK_STEPS_RANDOM];
+  const selected: string[] = [];
+
+  for (let i = 0; i < count && availableSteps.length > 0; i++) {
+    const randomIndex = Math.floor(Math.random() * availableSteps.length);
+    selected.push(availableSteps[randomIndex]);
+    availableSteps.splice(randomIndex, 1); // Remove to avoid duplicates
+  }
+
+  return selected;
+};
 
 export function BiometricCapture({
   onNext,
@@ -30,6 +48,16 @@ export function BiometricCapture({
   // Refs for video element and media stream
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Generate steps sequence: fixed steps + random steps
+  const allSteps = useMemo(() => {
+    const numRandomSteps = Math.max(
+      0,
+      LIVENESS_CHECK_MAX_STEPS - LIVENESS_CHECK_STEPS_FIXED.length
+    );
+    const randomSteps = generateRandomSteps(numRandomSteps);
+    return [...LIVENESS_CHECK_STEPS_FIXED, ...randomSteps];
+  }, []); // Only generate once on mount
 
   // Component state
   const [isCameraOn, setIsCameraOn] = useState(false);
@@ -109,7 +137,7 @@ export function BiometricCapture({
         type: 'image/jpeg',
       });
 
-      const stepName = LIVENESS_CHECK_STEPS[currentStep];
+      const stepName = allSteps[currentStep];
 
       // Verify liveness with Gemini API
       const data = await verifyLivenessCheck(
@@ -139,14 +167,12 @@ export function BiometricCapture({
     } finally {
       setIsLoading(false);
     }
-  }, [isCameraOn, userIDCard?.file, currentStep, setCapturedFrames]);
+  }, [isCameraOn, userIDCard?.file, currentStep, setCapturedFrames, allSteps]);
 
   const screenPrompt = useCallback(() => {
     if (!isCameraOn) return 'Click "Start" to begin the liveness check.';
-    return currentStep < LIVENESS_CHECK_STEPS.length
-      ? LIVENESS_CHECK_STEPS[currentStep]
-      : undefined;
-  }, [isCameraOn, currentStep]);
+    return currentStep < allSteps.length ? allSteps[currentStep] : undefined;
+  }, [isCameraOn, currentStep, allSteps]);
 
   // Reset state and navigate back
   const handleBack = useCallback(() => {
@@ -160,8 +186,8 @@ export function BiometricCapture({
 
   // Memoize completion status
   const isComplete = useMemo(
-    () => currentStep >= LIVENESS_CHECK_STEPS.length,
-    [currentStep]
+    () => currentStep >= allSteps.length,
+    [currentStep, allSteps.length]
   );
 
   // Determine if next button should be disabled

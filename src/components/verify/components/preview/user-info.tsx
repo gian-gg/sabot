@@ -28,7 +28,7 @@ const UserInfo = ({ userData }: UserInfoProps) => {
         <div className="flex justify-between border-b py-2">
           <span className="text-muted-foreground">Date of Birth</span>
           <span className="font-medium">
-            {formatDate(userData?.dateOfBirth || null)}
+            {formatDate(userData?.dateOfBirth || '')}
           </span>
         </div>
         <div className="flex justify-between border-b py-2">
@@ -38,13 +38,13 @@ const UserInfo = ({ userData }: UserInfoProps) => {
         <div className="flex justify-between border-b py-2">
           <span className="text-muted-foreground">Issue Date</span>
           <span className="font-medium">
-            {formatDate(userData?.issueDate || null)}
+            {formatDate(userData?.issueDate || '')}
           </span>
         </div>
         <div className="flex justify-between border-b py-2">
           <span className="text-muted-foreground">Expiry Date</span>
           <span className="font-medium">
-            {formatDate(userData?.expiryDate || null)}
+            {formatDate(userData?.expiryDate || '')}
           </span>
         </div>
         {userData?.address && (

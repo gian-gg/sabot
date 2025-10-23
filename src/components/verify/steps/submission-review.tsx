@@ -6,7 +6,6 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import Biometrics from '../components/preview/biometrics';
 
 import type {
   StepNavProps,
@@ -18,6 +17,8 @@ import type {
 import NavigationButtons from '@/components/verify/components/navigation-buttons';
 import UserID from '../components/preview/userID';
 import UserInfo from '../components/preview/user-info';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 type SubmissionReviewProps = StepNavProps & {
   userData: GovernmentIdInfo | null;
@@ -28,7 +29,6 @@ type SubmissionReviewProps = StepNavProps & {
 export function SubmissionReview({
   userData,
   userID,
-  livenessCheckCaptures,
   onNext,
   onPrev,
 }: SubmissionReviewProps) {
@@ -46,9 +46,14 @@ export function SubmissionReview({
         <Separator />
         {/* Extracted Information Section */}
         <UserInfo userData={userData} />
-        <Separator />
-        {/* Biometric Verification Section */}
-        <Biometrics livenessCheckCaptures={livenessCheckCaptures} />
+        <Alert className="border-primary bg-primary/5 mt-2">
+          <AlertTriangle className="mt-0.5 size-4" />
+          <AlertTitle>Review Submission</AlertTitle>
+          <AlertDescription>
+            Please ensure all information is correct before submitting. Once
+            submitted, changes cannot be made.
+          </AlertDescription>
+        </Alert>
         <NavigationButtons isLoading={false} onNext={onNext} onPrev={onPrev} />
       </CardContent>
     </Card>
