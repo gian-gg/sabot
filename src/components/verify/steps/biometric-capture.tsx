@@ -211,7 +211,8 @@ export function BiometricCapture({
       <CardHeader>
         <CardTitle>Liveness Check</CardTitle>
         <CardDescription>
-          Position your face in the oval and follow the instructions.
+          This step helps verify that you are a real person by capturing several
+          captures. Please follow the on-screen prompts.
         </CardDescription>
       </CardHeader>
       <CardContent>
