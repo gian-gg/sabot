@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-
 'use client';
 
 import { useState } from 'react';
@@ -85,13 +82,13 @@ export function CreateEscrowForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState<CreateEscrowPayload>({
-    type: 'item',
+  // Form state (simplified for UI, will be transformed to CreateEscrowPayload)
+  const [formData, setFormData] = useState({
+    type: 'item' as EscrowType,
     title: '',
     description: '',
     deliverable_description: '',
-    amount: undefined,
+    amount: undefined as number | undefined,
     currency: 'USD',
     expected_completion_date: '',
     verification_required: false,
@@ -99,8 +96,8 @@ export function CreateEscrowForm() {
   });
 
   const handleInputChange = (
-    field: keyof CreateEscrowPayload,
-    value: string | number | boolean
+    field: string,
+    value: string | number | boolean | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
@@ -119,17 +116,31 @@ export function CreateEscrowForm() {
     }
 
     try {
+      // Transform form data to CreateEscrowPayload
+      const payload: CreateEscrowPayload = {
+        title: formData.title,
+        description: formData.description,
+        deliverables: [
+          {
+            id: crypto.randomUUID(),
+            type: formData.type,
+            description: formData.deliverable_description,
+            party_responsible: 'participant',
+            value: formData.amount,
+            currency: formData.currency,
+          },
+        ],
+        expected_completion_date:
+          formData.expected_completion_date || undefined,
+        participant_email: formData.participant_email || undefined,
+      };
+
       const response = await fetch('/api/escrow/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          amount: formData.amount
-            ? parseFloat(String(formData.amount))
-            : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
