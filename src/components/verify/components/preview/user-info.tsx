@@ -1,9 +1,9 @@
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
 
 import { formatDate } from '@/lib/utils/helpers';
 
 import type { GovernmentIdInfo } from '@/types/verify';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 type UserInfoProps = {
   userData: GovernmentIdInfo | null;
@@ -57,19 +57,13 @@ const UserInfo = ({ userData }: UserInfoProps) => {
         )}
       </div>
       {userData?.notes && (
-        <div className="mt-3 rounded-md bg-yellow-50 p-3 dark:bg-yellow-950">
-          <div className="flex gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Additional Notes
-              </p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                {userData.notes}
-              </p>
-            </div>
-          </div>
-        </div>
+        <Disclaimer
+          variant="success"
+          className="mb-4"
+          title=" Additional Notes"
+        >
+          {userData.notes}
+        </Disclaimer>
       )}
     </div>
   );

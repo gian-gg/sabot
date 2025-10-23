@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import type { GovernmentIdInfo } from '@/types/verify';
 import { getFormValueOrNull } from '@/lib/utils/helpers';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 const PreviewForm = ({
   extractedData,
@@ -80,13 +80,9 @@ const PreviewForm = ({
   return (
     <>
       {extractedData?.notes ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-yellow-900 dark:text-yellow-100"
-        >
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <p className="text-sm">{extractedData.notes}</p>
-        </div>
+        <Disclaimer variant="warning" className="mb-4">
+          {extractedData.notes}
+        </Disclaimer>
       ) : (
         <>
           <form
@@ -193,16 +189,10 @@ const PreviewForm = ({
               </div>
             </div>
           </form>
-          <div
-            role="status"
-            className="mt-4 flex items-start gap-2 rounded-md border border-slate-300/30 bg-slate-50 p-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-slate-600 dark:text-slate-300" />
-            <p className="text-sm">
-              Please review the extracted information and update any fields that
-              are incorrect before continuing.
-            </p>
-          </div>
+          <Disclaimer variant="info" className="mb-4" title="Note">
+            Please review the extracted information and update any fields that
+            are incorrect before continuing.
+          </Disclaimer>
         </>
       )}
     </>
