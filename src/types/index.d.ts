@@ -1,3 +1,5 @@
+import type { VerificationStatus, UserRole } from './user';
+
 // Tell TypeScript this file contains global declarations
 export {};
 
@@ -19,6 +21,7 @@ declare global {
     email: string;
     image: string;
     name: string;
-    isVerified: boolean;
+    verificationStatus: VerificationStatus;
+    role: UserRole;
   }
 }

@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { GovernmentIdInfo } from '@/types/verify';
 import { getFormValueOrNull } from '@/lib/utils/helpers';
+import { Disclaimer } from '@/components/ui/disclaimer';
 
 const PreviewForm = ({
   extractedData,
@@ -17,9 +24,15 @@ const PreviewForm = ({
   const latestExtractedRef = useRef<GovernmentIdInfo | null>(extractedData);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentSnapshotRef = useRef<string | null>(null);
+  const [sexValue, setSexValue] = React.useState<string>(
+    extractedData?.sex ?? ''
+  );
 
   useEffect(() => {
     latestExtractedRef.current = extractedData;
+    if (extractedData?.sex) {
+      setSexValue(extractedData.sex);
+    }
   }, [extractedData]);
 
   // Debounced autosave to avoid excessive updates on every keystroke
@@ -44,7 +57,7 @@ const PreviewForm = ({
             issueDate: getFormValueOrNull(formData.get('issueDate')),
             expiryDate: getFormValueOrNull(formData.get('expiryDate')),
             address: getFormValueOrNull(formData.get('address')),
-            sex: getFormValueOrNull(formData.get('sex')),
+            sex: sexValue || null,
           }
         : null;
 
@@ -55,7 +68,7 @@ const PreviewForm = ({
         lastSentSnapshotRef.current = snapshot;
       }
     }, 300);
-  }, [setUserData]);
+  }, [setUserData, sexValue]);
 
   useEffect(
     () => () => {
@@ -67,13 +80,9 @@ const PreviewForm = ({
   return (
     <>
       {extractedData?.notes ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-yellow-900 dark:text-yellow-100"
-        >
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <p className="text-sm">{extractedData.notes}</p>
-        </div>
+        <Disclaimer variant="warning" className="mb-4">
+          {extractedData.notes}
+        </Disclaimer>
       ) : (
         <>
           <form
@@ -122,21 +131,30 @@ const PreviewForm = ({
               </div>
 
               <div className="space-y-1.5">
+                <Label htmlFor="sex">Sex</Label>
+                <Select
+                  value={sexValue}
+                  onValueChange={(value) => {
+                    setSexValue(value);
+                    scheduleAutoSave();
+                  }}
+                >
+                  <SelectTrigger id="sex" className="w-full">
+                    <SelectValue placeholder="Select sex" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Male</SelectItem>
+                    <SelectItem value="F">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
                 <Input
                   id="dateOfBirth"
                   type="date"
                   name="dateOfBirth"
                   defaultValue={extractedData?.dateOfBirth ?? ''}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sex">Sex</Label>
-                <Input
-                  id="sex"
-                  name="sex"
-                  defaultValue={extractedData?.sex ?? ''}
-                  placeholder="Sex"
                 />
               </div>
               <div className="space-y-1.5">
@@ -171,16 +189,10 @@ const PreviewForm = ({
               </div>
             </div>
           </form>
-          <div
-            role="status"
-            className="mt-4 flex items-start gap-2 rounded-md border border-slate-300/30 bg-slate-50 p-3 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-slate-600 dark:text-slate-300" />
-            <p className="text-sm">
-              Please review the extracted information and update any fields that
-              are incorrect before continuing.
-            </p>
-          </div>
+          <Disclaimer variant="info" className="mb-4" title="Note">
+            Please review the extracted information and update any fields that
+            are incorrect before continuing.
+          </Disclaimer>
         </>
       )}
     </>

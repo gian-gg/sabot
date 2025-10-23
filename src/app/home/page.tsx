@@ -21,7 +21,7 @@ export default function Page() {
       <HeroSection />
 
       <div className="mt-16">
-        {user.isVerified ? (
+        {user.verificationStatus === 'complete' ? (
           <>
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="mt-8">
