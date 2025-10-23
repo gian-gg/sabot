@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -18,6 +18,7 @@ import {
 import { AgreementDetails } from '@/components/agreement/id/agreement-details';
 import { DocumentStructure } from '@/components/agreement/id/document-structure';
 import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
+import { useDocumentStore } from '@/store/document/documentStore';
 
 interface Party {
   id: string;
@@ -54,6 +55,7 @@ interface Suggestion {
 interface AgreementData {
   id: string;
   title?: string;
+  content?: string;
   parties?: Party[];
   details?: DetailItem[];
   structure?: Section[];
@@ -62,6 +64,9 @@ interface AgreementData {
 
 export default function FinalizePage({ params }: { params: { id: string } }) {
   const router = useRouter();
+
+  // Get document from store
+  const { title: storedTitle, content: storedContent } = useDocumentStore();
 
   // State for parties confirmation
   const [parties, setParties] = useState<Party[]>([]);
@@ -72,7 +77,8 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
   // Mock data - replace with real data from API/database
   const agreementData: AgreementData = {
     id: params.id,
-    title: 'Partnership Agreement',
+    title: storedTitle || 'Partnership Agreement',
+    content: storedContent || '',
     parties: [
       {
         id: '1',

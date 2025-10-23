@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
 import { MinimalRightSidebar } from '@/components/agreement/editor/minimal-right-sidebar';
 import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
@@ -12,6 +12,7 @@ import {
   generateFileName,
 } from '@/lib/pdf/export-agreement';
 import { type Template } from '@/lib/templates/template-loader';
+import { useDocumentStore } from '@/store/document/documentStore';
 import { toast } from 'sonner';
 
 interface EditorLayoutProps {
@@ -37,6 +38,27 @@ export function EditorLayout({
   );
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
   const [isConnected, setIsConnected] = useState(false);
+
+  // Document store
+  const { setDocumentId, setTitle, setContent, setIdeaBlocks } =
+    useDocumentStore();
+
+  // Sync with document store when content or title changes
+  useEffect(() => {
+    setDocumentId(documentId);
+    setTitle(editorTitle);
+    setContent(editorContent);
+    setIdeaBlocks(currentIdeaBlocks);
+  }, [
+    documentId,
+    editorTitle,
+    editorContent,
+    currentIdeaBlocks,
+    setDocumentId,
+    setTitle,
+    setContent,
+    setIdeaBlocks,
+  ]);
 
   // Combine legal blocks with any initial idea blocks
   const legalBlocks = [
