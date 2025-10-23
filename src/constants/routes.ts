@@ -10,6 +10,9 @@ export const ROUTES = {
     ROOT: '/home',
     VERIFY: '/home/verify',
   },
+  ADMIN: {
+    ROOT: '/home/admin',
+  },
   PROFILE: {
     VIEW: (id: string) => `/profile/${id}`,
   },
