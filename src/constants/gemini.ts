@@ -36,9 +36,9 @@ The JSON format must strictly follow this structure:
 - Dates must be in YYYY-MM-DD format.
 - If a field is not present or is unreadable, its value must be null.
 - If the image quality is poor, add that information to the "notes" field. This will also trigger the CRITICAL OVERRIDE RULE.
+- **Date Plausibility (Current Date: ${Date.now()}):** Dates must be reasonable. 'dateOfBirth and 'issueDate' must not be in the future. If 'expiryDate' is in the past, add "ID is expired." to the "notes" field (this triggers the CRITICAL OVERRIDE RULE). If 'dateOfBirth' is implausibly in the past (e.g., >120 years ago), treat it as null and add a note.
 
-Respond with valid JSON only.
-`;
+Respond with valid JSON only.`;
 
 export const conversationPromptTemplate = `
 Analyze this messaging app screenshot and extract transaction details. Look for WhatsApp, Telegram, Messenger, or other chat platforms.

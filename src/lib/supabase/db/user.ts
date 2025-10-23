@@ -34,17 +34,15 @@ export async function updateUserVerificationStatus(
 ): Promise<boolean> {
   const supabase = await createClient();
 
-  // Try to update first, and ask for the data back
   const { data, error: updateError } = await supabase
     .from('user_data')
     .update({ verification_status: status })
     .eq('id', userId)
-    .select('id'); // <-- Chain .select() here
+    .select('id');
 
   console.log(userId, updateError);
 
   if (updateError) {
-    // This catches *real* errors, like RLS violations or network issues
     console.error('Error updating user verification status:', updateError);
     return false;
   }
@@ -65,7 +63,6 @@ export async function updateUserVerificationStatus(
     }
   }
 
-  // If we get here, either the update or the insert was successful
   return true;
 }
 

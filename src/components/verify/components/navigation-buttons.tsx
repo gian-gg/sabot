@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 import type { StepNavProps } from '@/types/verify';
 
@@ -32,6 +33,7 @@ const NavigationButtons = ({
         className="transition-all duration-150 active:scale-[0.98]"
         disabled={isLoading || disableNext}
       >
+        {isLoading ? <Spinner className="mr-2" /> : null}
         Continue
       </Button>
     </div>
