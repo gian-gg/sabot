@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -38,7 +38,12 @@ interface AgreementData {
   content?: string;
 }
 
-export default function FinalizedPage({ params }: { params: { id: string } }) {
+export default function FinalizedPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -47,7 +52,7 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
 
   // Mock data - replace with real data from API/database
   const agreementData: AgreementData = {
-    id: params.id,
+    id: id,
     title: storedTitle || 'Partnership Agreement',
     content: storedContent || '',
     blockchainHash: '0x8f34c3c0f8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c',
@@ -91,7 +96,7 @@ export default function FinalizedPage({ params }: { params: { id: string } }) {
         fileName,
         includePageNumbers: true,
         includeTimestamp: true,
-        documentId: params.id,
+        documentId: id,
       });
 
       toast.success('Agreement downloaded successfully!');

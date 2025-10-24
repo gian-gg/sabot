@@ -27,12 +27,24 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const payload: CreateAgreementPayload = await request.json();
 
+    // Get creator profile info from user metadata
+    const creatorName =
+      user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+    const creatorEmail = user.email || '';
+    const creatorAvatarUrl = user.user_metadata?.avatar_url || null;
+
     // Create agreement
-    console.log('Creating agreement for user:', user.id);
+    console.log('Creating agreement for user:', user.id, {
+      name: creatorName,
+      email: creatorEmail,
+    });
     const { data: agreement, error: agreementError } = await supabase
       .from('agreements')
       .insert({
         creator_id: user.id,
+        creator_name: creatorName,
+        creator_email: creatorEmail,
+        creator_avatar_url: creatorAvatarUrl,
         title: payload.title || 'New Agreement',
         agreement_type: payload.agreement_type || 'Custom',
         status: 'waiting_for_participant',
