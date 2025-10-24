@@ -98,12 +98,12 @@ const HeroAction = () => {
           >
             Agreement
           </button>
-          <button
+          {/* <button
             onClick={goToTutorial}
             className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
           >
             Tutorial
-          </button>
+          </button> */}
         </div>
       )}
     </div>
