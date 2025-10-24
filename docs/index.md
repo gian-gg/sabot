@@ -1,13 +1,28 @@
-# Sabot — Project Documentation
+# Sabot Documentation
 
-Welcome to the Sabot documentation. This collection explains how the project is structured, the technology choices, and how to get started developing and deploying the app.
+Welcome to the official documentation for Sabot, a dual-purpose platform for trust and safety in P2P transactions and collaborative agreement creation.
 
-## Table of Contents
+This documentation is divided into the following sections:
 
-- **[User Guide](user-guide)**: Detailed information for end-users on how to use the application.
-- **[Developer Guide](developer-guide)**: Comprehensive guides for developers, covering setup, architecture, and contribution guidelines.
-- **[Architecture](architecture)**: Documentation related to the application's architecture and design.
-- **[API Reference](api-reference)**: Detailed information about the API.
-- **[ADRs](adr)**: Architecture Decision Records.
+## 1. Introduction
 
-If something is missing or out-of-date, open a PR — documentation is code.
+-   [Product Vision](./01-introduction/01-product-vision.md)
+
+## 2. Architecture
+
+-   [High-Level Architecture](./02-architecture/01-high-level-architecture.md)
+-   [Flow Diagram](./02-architecture/02-flow-diagram.md)
+-   [Real-Time Architecture](./02-architecture/03-realtime-architecture.md)
+-   [Transaction Flow Setup](./02-architecture/04-transaction-flow-setup.md)
+-   [Agreement Platform Plan](./02-architecture/05-agreement-platform-plan.md)
+
+## 3. Developer Guide
+
+-   [Tech Stack](./03-developer-guide/01-tech-stack.md)
+-   [Setup](./03-developer-guide/02-setup.md)
+-   [Contributing](./03-developer-guide/03-contributing.md)
+
+## 4. User Guide
+
+-   [Escrow Quick Start](./04-user-guide/01-escrow-quick-start.md)
+-   [PDF Export Guide](./04-user-guide/02-pdf-export-guide.md)
