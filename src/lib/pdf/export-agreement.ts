@@ -126,7 +126,13 @@ export async function exportAgreementToPDF(
         pdf.text(splitText, margin + (line.indent || 0), currentY);
         currentY += line.height ?? 0;
       } else if (line.type === 'signature-block') {
-        addSignatureBlock(pdf, margin, currentY, contentWidth);
+        addSignatureBlock(
+          pdf,
+          margin,
+          currentY,
+          contentWidth,
+          line.signatureImage
+        );
         currentY += line.height ?? 0;
       } else if (line.type === 'box') {
         addBoxBlock(pdf, margin, currentY, contentWidth, line);
@@ -177,6 +183,7 @@ interface PDFLine {
   title?: string;
   content?: string;
   color?: string;
+  signatureImage?: string;
 }
 
 /**
@@ -225,9 +232,10 @@ function parseElement(
   if (dataType === 'signature') {
     lines.push({
       type: 'signature-block',
-      height: 40,
+      height: signatureImage ? 50 : 40,
       text: '',
-    });
+      signatureImage,
+    } as PDFLine);
     lines.push({ type: 'spacing', height: 10, text: '' });
     return lines;
   }
@@ -407,7 +415,26 @@ function parseElement(
 /**
  * Add signature block to PDF
  */
-function addSignatureBlock(pdf: jsPDF, x: number, y: number, _width: number) {
+function addSignatureBlock(
+  pdf: jsPDF,
+  x: number,
+  y: number,
+  _width: number,
+  signatureImage?: string
+) {
+  if (signatureImage) {
+    // If signature image exists, display it
+    try {
+      // Convert base64 data URL to image and add to PDF
+      pdf.addImage(signatureImage, 'PNG', x, y, 60, 25);
+      return;
+    } catch (error) {
+      console.warn('Failed to add signature image to PDF:', error);
+      // Fall back to empty signature block
+    }
+  }
+
+  // Default empty signature block
   const lineWidth = 50;
   const lineY = y + 5;
 

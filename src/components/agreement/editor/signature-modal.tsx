@@ -156,7 +156,7 @@ export function SignatureModal({
 
           <TabsContent value="saved" className="space-y-4">
             {savedSignature ? (
-              <Card className="bg-muted/30 p-4">
+              <Card className="bg-white p-4">
                 <div className="relative h-32 w-full">
                   <Image
                     src={savedSignature}
