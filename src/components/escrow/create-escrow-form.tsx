@@ -123,11 +123,15 @@ export function CreateEscrowForm() {
         deliverables: [
           {
             id: crypto.randomUUID(),
+            escrow_id: '', // Will be set when creating escrow
             type: formData.type,
             description: formData.deliverable_description,
             party_responsible: 'participant',
             value: formData.amount,
             currency: formData.currency,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
         ],
         expected_completion_date:

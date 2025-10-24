@@ -17,103 +17,123 @@ import {
   Download,
   AlertCircle,
   Star,
+  XCircle,
+  Wrench,
+  CreditCard,
+  Layers,
 } from 'lucide-react';
+import { SubmitProofDialog } from './submit-proof-dialog';
+import {
+  getDeliverableStatusConfig,
+  getOracleTypeConfig,
+  getDeliverableTypeConfig,
+  getConfidenceScoreColor,
+  formatDeliverableValue,
+} from '@/lib/escrow/deliverable-status';
+import type {
+  Deliverable,
+  OracleVerification,
+  EscrowProof,
+} from '@/types/escrow';
 
 interface DeliverableStatusProps {
-  id: string;
-  name: string;
-  description: string;
-  party: 'initiator' | 'participant';
-  status: 'pending' | 'in_progress' | 'completed' | 'verified' | 'failed';
-  progress: number;
-  submittedAt?: string;
-  verifiedAt?: string;
-  oracleType?: 'ipfs' | 'ai' | 'manual';
-  confidence?: number;
-  notes?: string;
+  deliverable: Deliverable;
+  verification?: OracleVerification;
+  proofs?: EscrowProof[];
   partyName: string;
-  onAction?: (action: 'submit' | 'verify' | 'approve' | 'reject') => void;
+  currentUserId?: string;
+  escrow?: { initiator_id: string; participant_id?: string };
+  onProofSubmitted?: () => void;
   disabled?: boolean;
 }
 
-const statusConfig = {
-  pending: {
-    icon: Package,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
-    label: 'Pending',
-    description: 'Waiting to be submitted',
-  },
-  in_progress: {
-    icon: Clock,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    label: 'In Progress',
-    description: 'Currently being processed',
-  },
-  completed: {
-    icon: CheckCircle,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-    label: 'Completed',
-    description: 'Successfully completed',
-  },
-  verified: {
-    icon: Star,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-    label: 'Verified',
-    description: 'Oracle verified',
-  },
-  failed: {
-    icon: AlertCircle,
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
-    label: 'Failed',
-    description: 'Verification failed',
-  },
-};
-
-const oracleTypeConfig = {
-  ipfs: {
-    icon: FileText,
-    label: 'IPFS',
-    description: 'File verification',
-  },
-  ai: {
-    icon: Bot,
-    label: 'AI',
-    description: 'AI verification',
-  },
-  manual: {
-    icon: User,
-    label: 'Manual',
-    description: 'Manual review',
-  },
+// Get deliverable type icon
+const getDeliverableIcon = (type: string) => {
+  switch (type) {
+    case 'cash':
+      return DollarSign;
+    case 'digital_transfer':
+      return CreditCard;
+    case 'item':
+      return Package;
+    case 'service':
+      return Wrench;
+    case 'digital':
+    case 'document':
+      return FileText;
+    case 'mixed':
+      return Layers;
+    default:
+      return Package;
+  }
 };
 
 export function DeliverableStatus({
-  id,
-  name,
-  description,
-  party,
-  status,
-  progress,
-  submittedAt,
-  verifiedAt,
-  oracleType,
-  confidence,
-  notes,
+  deliverable,
+  verification,
+  proofs = [],
   partyName,
-  onAction,
+  currentUserId,
+  escrow,
+  onProofSubmitted,
   disabled = false,
 }: DeliverableStatusProps) {
-  const config = statusConfig[status];
-  const oracleConfig = oracleType ? oracleTypeConfig[oracleType] : null;
-  const StatusIcon = config.icon;
+  const statusConfig = getDeliverableStatusConfig(deliverable.status);
+  const oracleType = getOracleTypeForDeliverable(deliverable);
+  const oracleConfig = getOracleTypeConfig(oracleType);
+  const deliverableConfig = getDeliverableTypeConfig(deliverable.type);
+
+  // Helper function to determine oracle type
+  function getOracleTypeForDeliverable(
+    deliverable: Deliverable
+  ): 'ipfs' | 'ai' | 'manual' {
+    switch (deliverable.type) {
+      case 'digital':
+      case 'document':
+        return 'ipfs';
+      case 'service':
+        return 'ai';
+      default:
+        return 'manual';
+    }
+  }
+
+  const StatusIcon = statusConfig.icon;
+  const DeliverableIcon = getDeliverableIcon(deliverable.type);
+
+  // Calculate progress based on status
+  const getProgress = () => {
+    switch (deliverable.status) {
+      case 'pending':
+        return 0;
+      case 'in_progress':
+        return 25;
+      case 'submitted':
+        return 50;
+      case 'verified':
+        return 100;
+      case 'completed':
+        return 100;
+      case 'failed':
+        return 0;
+      default:
+        return 0;
+    }
+  };
+
+  const progress = getProgress();
+
+  // Check if user can submit proof
+  const canSubmitProof =
+    currentUserId &&
+    escrow &&
+    ((currentUserId === escrow.initiator_id &&
+      deliverable.party_responsible === 'initiator') ||
+      (currentUserId === escrow.participant_id &&
+        deliverable.party_responsible === 'participant'));
 
   const getCardStyles = () => {
-    switch (status) {
+    switch (deliverable.status) {
       case 'completed':
       case 'verified':
         return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950';
@@ -126,6 +146,8 @@ export function DeliverableStatus({
     }
   };
 
+  const config = getDeliverableStatusConfig(deliverable.status);
+
   return (
     <Card className={`transition-colors ${getCardStyles()}`}>
       <CardContent className="pt-4">
@@ -134,43 +156,55 @@ export function DeliverableStatus({
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full ${config.bgColor} ${config.color}`}
             >
-              <StatusIcon className="h-4 w-4" />
+              {React.createElement(StatusIcon, { size: 16 })}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h4 className="font-medium">{name}</h4>
+                <h4 className="font-medium">{deliverable.description}</h4>
                 <Badge variant="outline" className="text-xs">
-                  {party === 'initiator' ? 'Initiator' : 'Participant'}
+                  {deliverable.party_responsible === 'initiator'
+                    ? 'Initiator'
+                    : 'Participant'}
                 </Badge>
-                {oracleConfig && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1 text-xs"
-                  >
-                    <oracleConfig.icon className="h-3 w-3" />
-                    {oracleConfig.label}
-                  </Badge>
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1 text-xs"
+                >
+                  {React.createElement(oracleConfig.icon, {
+                    className: 'h-3 w-3',
+                  })}
+                  {oracleConfig.label}
+                </Badge>
+              </div>
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                {React.createElement(DeliverableIcon, { className: 'h-3 w-3' })}
+                <span>{deliverableConfig.label}</span>
+                {formatDeliverableValue(deliverable) && (
+                  <span className="font-medium text-green-600">
+                    {formatDeliverableValue(deliverable)}
+                  </span>
                 )}
               </div>
-              <p className="text-muted-foreground text-sm">{description}</p>
               <div className="text-muted-foreground flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1">
                   <User className="h-3 w-3" />
                   <span>{partyName}</span>
                 </div>
-                {submittedAt && (
+                {proofs.length > 0 && (
                   <div className="flex items-center gap-1">
                     <Upload className="h-3 w-3" />
                     <span>
-                      Submitted {new Date(submittedAt).toLocaleDateString()}
+                      {proofs.length} proof{proofs.length > 1 ? 's' : ''}{' '}
+                      submitted
                     </span>
                   </div>
                 )}
-                {verifiedAt && (
+                {verification && (
                   <div className="flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" />
                     <span>
-                      Verified {new Date(verifiedAt).toLocaleDateString()}
+                      Verified{' '}
+                      {new Date(verification.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 )}
@@ -178,15 +212,17 @@ export function DeliverableStatus({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-medium">{config.label}</div>
-            {confidence && (
-              <div className="text-muted-foreground text-xs">
-                {confidence}% confidence
+            <div className="text-sm font-medium">{statusConfig.label}</div>
+            {verification?.confidence_score && (
+              <div
+                className={`text-xs ${getConfidenceScoreColor(verification.confidence_score)}`}
+              >
+                {verification.confidence_score}% confidence
               </div>
             )}
-            {notes && (
+            {verification?.notes && (
               <div className="text-muted-foreground mt-1 max-w-32 truncate text-xs">
-                {notes}
+                {verification.notes}
               </div>
             )}
           </div>
@@ -202,61 +238,60 @@ export function DeliverableStatus({
         </div>
 
         {/* Action Buttons */}
-        {onAction && status === 'pending' && (
+        {canSubmitProof && deliverable.status === 'pending' && (
           <div className="mt-3 border-t pt-3">
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => onAction('submit')}
-                disabled={disabled}
-                className="flex-1"
+              <SubmitProofDialog
+                deliverable={deliverable}
+                onProofSubmitted={onProofSubmitted}
               >
-                <Upload className="mr-1 h-3 w-3" />
-                Submit
-              </Button>
+                <Button size="sm" disabled={disabled} className="flex-1">
+                  <Upload className="mr-1 h-3 w-3" />
+                  Submit Proof
+                </Button>
+              </SubmitProofDialog>
             </div>
           </div>
         )}
 
-        {onAction && status === 'completed' && (
+        {canSubmitProof && deliverable.status === 'submitted' && (
           <div className="mt-3 border-t pt-3">
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onAction('verify')}
-                disabled={disabled}
-                className="flex-1"
+              <SubmitProofDialog
+                deliverable={deliverable}
+                onProofSubmitted={onProofSubmitted}
               >
-                <Star className="mr-1 h-3 w-3" />
-                Verify
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={disabled}
+                  className="flex-1"
+                >
+                  <Upload className="mr-1 h-3 w-3" />
+                  Update Proof
+                </Button>
+              </SubmitProofDialog>
             </div>
           </div>
         )}
 
-        {onAction && status === 'verified' && (
+        {deliverable.status === 'failed' && canSubmitProof && (
           <div className="mt-3 border-t pt-3">
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => onAction('approve')}
-                disabled={disabled}
-                className="flex-1"
+              <SubmitProofDialog
+                deliverable={deliverable}
+                onProofSubmitted={onProofSubmitted}
               >
-                <CheckCircle className="mr-1 h-3 w-3" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onAction('reject')}
-                disabled={disabled}
-                className="flex-1"
-              >
-                <AlertCircle className="mr-1 h-3 w-3" />
-                Reject
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={disabled}
+                  className="flex-1"
+                >
+                  <Upload className="mr-1 h-3 w-3" />
+                  Resubmit Proof
+                </Button>
+              </SubmitProofDialog>
             </div>
           </div>
         )}
