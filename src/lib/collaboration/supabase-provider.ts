@@ -1,7 +1,10 @@
 'use client';
 
-import * as Y from 'yjs';
+// Use type-only import to avoid runtime evaluation of Yjs
+// Y.Doc instance is passed in from use-collaboration.ts (already lazy-loaded)
+import type * as Y from 'yjs';
 import { createClient } from '@/lib/supabase/client';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -25,12 +28,21 @@ export class SupabaseProvider {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private awareness: any;
   private isReady = false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private Y: any = null;
 
   constructor(config: SupabaseProviderConfig) {
     this.ydoc = config.ydoc;
     this.name = config.name;
     this.awareness = config.awareness;
     this.supabase = createClient();
+  }
+
+  private async loadYjs(): Promise<void> {
+    if (!this.Y) {
+      this.Y = await import('yjs');
+      console.log('[Provider] ✅ Yjs loaded');
+    }
   }
 
   async connect(): Promise<void> {
@@ -60,6 +72,11 @@ export class SupabaseProvider {
         console.log('[Provider] Creating channel:', channelName);
         this.channel = this.supabase.channel(channelName);
 
+        // Ensure Yjs is loaded before setting up listeners
+        this.loadYjs().catch((err) => {
+          console.error('[Provider] ❌ Failed to load Yjs:', err);
+        });
+
         console.log('[Provider] Setting up broadcast listener...');
         this.channel.on(
           'broadcast',
@@ -68,8 +85,8 @@ export class SupabaseProvider {
             console.log(
               '[Provider] Received update from broadcast, applying...'
             );
-            if (payload.update) {
-              Y.applyUpdate(this.ydoc, payload.update);
+            if (payload.update && this.Y) {
+              this.Y.applyUpdate(this.ydoc, payload.update);
             }
           }
         );
