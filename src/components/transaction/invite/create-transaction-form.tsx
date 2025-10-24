@@ -661,8 +661,35 @@ export function CreateTransactionForm({
 
         const data = await response.json();
         finalTransactionId = data.transaction.id;
+      } else {
+        // Update existing transaction with form data
+        console.log('Updating transaction:', {
+          transactionId,
+          formData: {
+            item_name: formData.item_name,
+            transaction_type: formData.transaction_type,
+            price: formData.price,
+          },
+        });
+
+        const response = await fetch(`/api/transaction/${transactionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }));
+          console.error('Transaction update failed:', errorData);
+          throw new Error(errorData.error || 'Failed to update transaction');
+        }
+
+        const updateData = await response.json();
+        console.log('Transaction updated successfully:', updateData);
+        finalTransactionId = transactionId;
       }
-      // If transactionId exists, transaction is already created, just finalize with escrow
 
       // If escrow enabled, create escrow for the transaction
       if (
@@ -1317,7 +1344,7 @@ export function CreateTransactionForm({
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Calendar className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+                      <Calendar className="text-muted-foreground pointer-events-none absolute top-3 left-3 z-10 h-4 w-4" />
                       <Input
                         id="meeting_time"
                         type="datetime-local"
@@ -1872,7 +1899,7 @@ export function CreateTransactionForm({
                       {isCompleted && !isActive ? (
                         <CheckCircle2 className="h-5 w-5" />
                       ) : (
-                        <Icon className="h-5 w-5" />
+                        React.createElement(Icon, { className: 'h-5 w-5' })
                       )}
                     </div>
                     <p

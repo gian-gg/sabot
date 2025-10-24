@@ -33,7 +33,17 @@ import {
 } from 'lucide-react';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { createClient } from '@/lib/supabase/client';
-import type { Escrow, Deliverable } from '@/types/escrow';
+import type {
+  Escrow,
+  Deliverable,
+  DeliverableWithStatus,
+  OracleVerification,
+} from '@/types/escrow';
+import { DeliverableStatus } from '@/components/escrow/deliverable-status';
+import {
+  getOverallProgress,
+  getOracleVerificationSummary,
+} from '@/lib/escrow/deliverable-status';
 
 export default function TransactionActive({
   params,
@@ -44,11 +54,33 @@ export default function TransactionActive({
   const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   const [sellerConfirmed] = useState(false);
   const [escrowData, setEscrowData] = useState<Escrow | null>(null);
+  const [deliverableStatuses, setDeliverableStatuses] = useState<
+    DeliverableWithStatus[]
+  >([]);
+  const [oracleVerifications, setOracleVerifications] = useState<
+    OracleVerification[]
+  >([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const router = useRouter();
 
   // Use real data instead of mock data
-  const { status, loading, error } = useTransactionStatus(id);
+  const { status, setStatus, loading, error } = useTransactionStatus(id);
+
+  // Debug logging
+  useEffect(() => {
+    if (error) {
+      console.error('Transaction status error:', error);
+    }
+    if (status) {
+      console.log('Transaction status loaded:', {
+        transactionId: status.transaction?.id,
+        status: status.transaction?.status,
+        participantCount: status.participants?.length,
+        hasEscrow: !!status.escrow,
+        deliverableCount: status.deliverable_statuses?.length || 0,
+      });
+    }
+  }, [status, error]);
 
   // Get participant profiles from status
   const buyer = status?.participants.find((p) => p.role === 'invitee');
@@ -67,15 +99,46 @@ export default function TransactionActive({
         setCurrentUserId(user.id);
       }
 
-      // Fetch escrow data if it exists
+      // Fetch escrow data with deliverables if it exists
       const { data: escrow } = await supabase
         .from('escrows')
-        .select('*')
+        .select(
+          `
+          *,
+          deliverables(*)
+        `
+        )
         .eq('transaction_id', id)
         .single();
 
       if (escrow) {
         setEscrowData(escrow);
+
+        // Fetch oracle verifications for this escrow
+        const { data: verifications } = await supabase
+          .from('oracle_verifications')
+          .select('*')
+          .eq('escrow_id', escrow.id);
+
+        if (verifications) {
+          setOracleVerifications(verifications);
+        }
+
+        // Calculate deliverable statuses with verifications
+        const enrichedDeliverables =
+          escrow.deliverables?.map(
+            (deliverable: { id: string; [key: string]: unknown }) => ({
+              ...deliverable,
+              verification: verifications?.find(
+                (v) =>
+                  // Match verification to deliverable through proofs
+                  v.escrow_id === escrow.id
+              ),
+              proofs: [], // Will be populated by API
+            })
+          ) || [];
+
+        setDeliverableStatuses(enrichedDeliverables);
       }
     };
 
@@ -296,10 +359,106 @@ export default function TransactionActive({
     }
   };
 
+  const handleConfirmTransaction = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const response = await fetch(`/api/transaction/${id}/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error confirming transaction:', errorData);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('Transaction confirmation result:', result);
+
+      if (result.both_confirmed) {
+        // Both parties confirmed - redirect to home after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else {
+        // Refresh the page to show updated status
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error confirming transaction:', error);
+    }
+  };
+
+  const handleConfirmDeliverable = async (deliverableType: string) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/transaction/${id}/confirm-deliverable`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ deliverableType }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error confirming deliverable:', errorData);
+        return;
+      }
+
+      // Refresh the page to get the latest data from the server
+      // This ensures both users see the updated status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error confirming deliverable:', error);
+    }
+  };
+
+  // Helper function to determine if current user can confirm a deliverable
+  const canConfirmDeliverable = (deliverableType: string) => {
+    if (!currentUserId || !status?.participants) {
+      return false;
+    }
+
+    const currentUser = status.participants.find(
+      (p) => p.user_id === currentUserId
+    );
+
+    if (!currentUser) {
+      return false;
+    }
+
+    // For item deliverable: creator (seller) can confirm (they delivered the item)
+    // For payment deliverable: participant (buyer) can confirm (they received the payment)
+    if (deliverableType === 'item') {
+      return currentUser.role === 'creator';
+    } else if (deliverableType === 'payment') {
+      return currentUser.role === 'invitee';
+    }
+
+    return false;
+  };
+
+  // Check if all deliverables are confirmed
+  const allDeliverablesConfirmed =
+    status?.participants?.every(
+      (p) => p.item_confirmed && p.payment_confirmed
+    ) || false;
+
   const bothConfirmed = escrowData
     ? escrowData.initiator_confirmation === 'confirmed' &&
       escrowData.participant_confirmation === 'confirmed'
-    : buyerConfirmed && sellerConfirmed;
+    : allDeliverablesConfirmed;
 
   const isCurrentUserConfirmed = escrowData
     ? currentUserId === escrowData.initiator_id
@@ -309,7 +468,7 @@ export default function TransactionActive({
 
   // Transform transaction data for display
   const transformedTransaction = {
-    price: parseFloat(transaction.price || '0'),
+    price: parseFloat(String(transaction.price || '0')),
     location: getTransactionLocation(),
     type: transaction.transaction_type,
     time: getTransactionTime(),
@@ -352,17 +511,65 @@ export default function TransactionActive({
               <CardTitle className="text-white">Transaction Details</CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Item Information */}
+              <div className="mb-6 space-y-4">
+                <div className="rounded-lg bg-black/40 p-4">
+                  <h3 className="mb-3 text-sm font-medium text-neutral-300">
+                    Item Information
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-neutral-500">Item Name</p>
+                      <p className="text-sm text-white">
+                        {transaction.item_name || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500">Category</p>
+                      <p className="text-sm text-white">
+                        {transaction.category || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500">Condition</p>
+                      <p className="text-sm text-white">
+                        {transaction.condition || 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500">Quantity</p>
+                      <p className="text-sm text-white">
+                        {transaction.quantity || '1'}
+                      </p>
+                    </div>
+                  </div>
+                  {transaction.item_description && (
+                    <div className="mt-3">
+                      <p className="text-xs text-neutral-500">Description</p>
+                      <p className="text-sm text-white">
+                        {transaction.item_description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Transaction Type and Location */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="flex items-start gap-3 rounded-lg bg-black/40 p-3">
                   {React.createElement(
-                    getTransactionTypeIcon(transformedTransaction.type),
+                    getTransactionTypeIcon(
+                      transformedTransaction.type || 'meetup'
+                    ),
                     {
                       className: 'mt-0.5 h-5 w-5 flex-shrink-0 text-blue-400',
                     }
                   )}
                   <div>
                     <p className="mb-1 text-xs text-neutral-500">
-                      {getTransactionTypeLabel(transformedTransaction.type)}
+                      {getTransactionTypeLabel(
+                        transformedTransaction.type || 'meetup'
+                      )}
                     </p>
                     <p className="text-sm text-white">
                       {transformedTransaction.location}
@@ -380,11 +587,226 @@ export default function TransactionActive({
                 </div>
               </div>
 
+              {/* Additional Details based on transaction type */}
+              {transaction.transaction_type === 'delivery' &&
+                transaction.delivery_method && (
+                  <div className="mt-4 rounded-lg bg-black/40 p-3">
+                    <p className="mb-1 text-xs text-neutral-500">
+                      Delivery Method
+                    </p>
+                    <p className="text-sm text-white">
+                      {transaction.delivery_method}
+                    </p>
+                  </div>
+                )}
+
+              {transaction.transaction_type === 'online' && (
+                <div className="mt-4 space-y-3">
+                  {transaction.online_platform && (
+                    <div className="rounded-lg bg-black/40 p-3">
+                      <p className="mb-1 text-xs text-neutral-500">Platform</p>
+                      <p className="text-sm text-white">
+                        {transaction.online_platform}
+                      </p>
+                    </div>
+                  )}
+                  {transaction.online_contact && (
+                    <div className="rounded-lg bg-black/40 p-3">
+                      <p className="mb-1 text-xs text-neutral-500">Contact</p>
+                      <p className="text-sm text-white">
+                        {transaction.online_contact}
+                      </p>
+                    </div>
+                  )}
+                  {transaction.online_instructions && (
+                    <div className="rounded-lg bg-black/40 p-3">
+                      <p className="mb-1 text-xs text-neutral-500">
+                        Instructions
+                      </p>
+                      <p className="text-sm text-white">
+                        {transaction.online_instructions}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-4 rounded-lg bg-black/40 p-3">
                 <p className="mb-2 text-xs text-neutral-500">Amount</p>
                 <p className="text-2xl font-bold text-white">
                   ₱{transformedTransaction.price.toLocaleString()}
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Deliverable Status - Always Show */}
+          <Card className="border-orange-500/30 bg-gradient-to-b from-orange-900/20 to-orange-950/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Package className="h-5 w-5 text-orange-400" />
+                Deliverable Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Item Deliverable */}
+                <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/20">
+                      <Package className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">
+                        {transaction.item_name || 'Item'}
+                      </p>
+                      <p className="text-sm text-neutral-400">
+                        {transaction.item_description || 'Item to be delivered'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <Badge
+                        className={
+                          status?.participants?.every((p) => p.item_confirmed)
+                            ? 'border-green-500/30 bg-green-500/20 text-green-300'
+                            : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
+                        }
+                      >
+                        {status?.participants?.every((p) => p.item_confirmed)
+                          ? 'Confirmed'
+                          : 'Pending'}
+                      </Badge>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {transaction.quantity || '1'} unit
+                        {transaction.quantity && transaction.quantity > 1
+                          ? 's'
+                          : ''}
+                      </p>
+                    </div>
+                    {(() => {
+                      const allItemConfirmed = status?.participants?.every(
+                        (p) => p.item_confirmed
+                      );
+                      const canConfirm = canConfirmDeliverable('item');
+
+                      return (
+                        !allItemConfirmed &&
+                        canConfirm && (
+                          <Button
+                            onClick={() => handleConfirmDeliverable('item')}
+                            size="sm"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                          >
+                            <CheckCircle2 className="mr-1 h-4 w-4" />
+                            Confirm
+                          </Button>
+                        )
+                      );
+                    })()}
+                    {!status?.participants?.every((p) => p.item_confirmed) &&
+                      !canConfirmDeliverable('item') && (
+                        <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
+                          Waiting for receiver
+                        </div>
+                      )}
+                  </div>
+                </div>
+
+                {/* Payment Deliverable */}
+                <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
+                      <DollarSign className="h-4 w-4 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">Payment</p>
+                      <p className="text-sm text-neutral-400">
+                        ₱{transformedTransaction.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <Badge
+                        className={
+                          status?.participants?.every(
+                            (p) => p.payment_confirmed
+                          )
+                            ? 'border-green-500/30 bg-green-500/20 text-green-300'
+                            : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
+                        }
+                      >
+                        {status?.participants?.every((p) => p.payment_confirmed)
+                          ? 'Confirmed'
+                          : 'Pending'}
+                      </Badge>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {transaction.transaction_type === 'meetup'
+                          ? 'Cash on meetup'
+                          : transaction.transaction_type === 'delivery'
+                            ? 'Payment on delivery'
+                            : 'Online payment'}
+                      </p>
+                    </div>
+                    {(() => {
+                      const allPaymentConfirmed = status?.participants?.every(
+                        (p) => p.payment_confirmed
+                      );
+                      const canConfirm = canConfirmDeliverable('payment');
+
+                      return (
+                        !allPaymentConfirmed &&
+                        canConfirm && (
+                          <Button
+                            onClick={() => handleConfirmDeliverable('payment')}
+                            size="sm"
+                            className="bg-green-600 text-white hover:bg-green-700"
+                          >
+                            <CheckCircle2 className="mr-1 h-4 w-4" />
+                            Confirm
+                          </Button>
+                        )
+                      );
+                    })()}
+                    {!status?.participants?.every((p) => p.payment_confirmed) &&
+                      !canConfirmDeliverable('payment') && (
+                        <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
+                          Waiting for receiver
+                        </div>
+                      )}
+                  </div>
+                </div>
+
+                {/* Progress Summary */}
+                <div className="mt-4 rounded-lg bg-black/40 p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm text-neutral-300">
+                      Overall Progress
+                    </span>
+                    <span className="text-sm text-white">
+                      {allDeliverablesConfirmed ? '100%' : '50%'}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-neutral-700">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        allDeliverablesConfirmed
+                          ? 'bg-green-500'
+                          : 'bg-orange-500'
+                      }`}
+                      style={{
+                        width: allDeliverablesConfirmed ? '100%' : '50%',
+                      }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    {allDeliverablesConfirmed
+                      ? 'All deliverables confirmed successfully'
+                      : 'Waiting for deliverable confirmations'}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -400,64 +822,91 @@ export default function TransactionActive({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Overall Progress */}
+                  {deliverableStatuses.length > 0 && (
+                    <div className="rounded-lg bg-black/40 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium text-blue-300">
+                          Overall Progress
+                        </span>
+                        <span className="text-sm text-white">
+                          {getOverallProgress(deliverableStatuses)}%
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-neutral-700">
+                        <div
+                          className="h-2 rounded-full bg-blue-500 transition-all duration-300"
+                          style={{
+                            width: `${getOverallProgress(deliverableStatuses)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Oracle Verification Summary */}
+                  {oracleVerifications.length > 0 && (
+                    <div className="rounded-lg bg-black/40 p-3">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm font-medium text-purple-300">
+                          Oracle Verification Summary
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="text-center">
+                          <div className="font-medium text-green-400">
+                            {
+                              oracleVerifications.filter((v) => v.verified)
+                                .length
+                            }
+                          </div>
+                          <div className="text-neutral-400">Verified</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-red-400">
+                            {
+                              oracleVerifications.filter((v) => !v.verified)
+                                .length
+                            }
+                          </div>
+                          <div className="text-neutral-400">Failed</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium text-blue-400">
+                            {oracleVerifications.length}
+                          </div>
+                          <div className="text-neutral-400">Total</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Deliverables Status */}
                   <div>
                     <h4 className="mb-3 text-sm font-medium text-blue-300">
                       Deliverables Status
                     </h4>
-                    <div className="space-y-2">
-                      {escrowData.deliverables.map((deliverable, index) => {
-                        const IconComponent = getDeliverableIcon(
-                          deliverable.type
-                        );
-                        const status = getDeliverableStatus(
-                          deliverable,
-                          deliverable.party_responsible
-                        );
-                        const isCompleted = status === 'completed';
-
-                        return (
-                          <div
-                            key={deliverable.id || index}
-                            className="flex items-center justify-between rounded-lg bg-black/40 p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <IconComponent className="h-4 w-4 text-blue-400" />
-                              <div>
-                                <p className="text-sm text-white">
-                                  {deliverable.description}
-                                </p>
-                                <p className="text-xs text-neutral-400">
-                                  {deliverable.party_responsible === 'initiator'
-                                    ? 'Seller'
-                                    : 'Buyer'}{' '}
-                                  • {deliverable.type}
-                                  {deliverable.value &&
-                                    deliverable.currency && (
-                                      <span>
-                                        {' '}
-                                        • {deliverable.currency}{' '}
-                                        {deliverable.value.toLocaleString()}
-                                      </span>
-                                    )}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {isCompleted ? (
-                                <CheckCircle className="h-4 w-4 text-green-400" />
-                              ) : (
-                                <Clock className="h-4 w-4 text-yellow-400" />
-                              )}
-                              <span
-                                className={`text-xs ${isCompleted ? 'text-green-400' : 'text-yellow-400'}`}
-                              >
-                                {isCompleted ? 'Completed' : 'Pending'}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-3">
+                      {deliverableStatuses.map((deliverable, index) => (
+                        <DeliverableStatus
+                          key={deliverable.id || index}
+                          deliverable={deliverable}
+                          verification={deliverable.verification}
+                          proofs={deliverable.proofs}
+                          partyName={
+                            deliverable.party_responsible === 'initiator'
+                              ? seller?.name || 'Creator'
+                              : buyer?.name || 'Participant'
+                          }
+                          currentUserId={currentUserId || ''}
+                          escrow={escrowData}
+                          onProofSubmitted={() => {
+                            // Refresh data after proof submission
+                            window.location.reload();
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
 
@@ -488,132 +937,110 @@ export default function TransactionActive({
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {/* Buyer */}
+                {/* Participant */}
                 <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar
-                      name={buyer?.name || 'Unknown Buyer'}
+                      name={buyer?.name || 'Unknown Participant'}
                       avatar={buyer?.avatar}
                       size="md"
                     />
                     <div>
                       <p className="text-sm font-medium text-white">
-                        {buyer?.name || 'Unknown Buyer'}
+                        {buyer?.name || 'Unknown Participant'}
                       </p>
-                      <p className="text-xs text-neutral-500">Buyer</p>
+                      <p className="text-xs text-neutral-500">Participant</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {escrowData ? (
-                      <>
-                        {escrowData.participant_confirmation === 'confirmed' ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-400" />
-                        ) : escrowData.participant_confirmation ===
-                          'disputed' ? (
-                          <AlertTriangle className="h-5 w-5 text-red-400" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-400" />
-                        )}
-                        <span
-                          className={`text-xs ${
-                            escrowData.participant_confirmation === 'confirmed'
-                              ? 'text-green-400'
-                              : escrowData.participant_confirmation ===
-                                  'disputed'
-                                ? 'text-red-400'
-                                : 'text-yellow-400'
-                          }`}
-                        >
-                          {escrowData.participant_confirmation === 'confirmed'
-                            ? 'Confirmed'
-                            : escrowData.participant_confirmation === 'disputed'
-                              ? 'Disputed'
-                              : 'Pending'}
-                        </span>
-                      </>
+                    {buyer?.has_confirmed ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     ) : (
-                      <>
-                        {buyerConfirmed ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-400" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-400" />
-                        )}
-                        <span
-                          className={`text-xs ${buyerConfirmed ? 'text-green-400' : 'text-yellow-400'}`}
-                        >
-                          {buyerConfirmed ? 'Confirmed' : 'Pending'}
-                        </span>
-                      </>
+                      <Clock className="h-5 w-5 text-yellow-400" />
                     )}
+                    <span
+                      className={`text-xs ${buyer?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
+                    >
+                      {buyer?.has_confirmed ? 'Confirmed' : 'Pending'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Seller */}
+                {/* Creator */}
                 <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar
-                      name={seller?.name || 'Unknown Seller'}
+                      name={seller?.name || 'Unknown Creator'}
                       avatar={seller?.avatar}
                       size="md"
                     />
                     <div>
                       <p className="text-sm font-medium text-white">
-                        {seller?.name || 'Unknown Seller'}
+                        {seller?.name || 'Unknown Creator'}
                       </p>
-                      <p className="text-xs text-neutral-500">Seller</p>
+                      <p className="text-xs text-neutral-500">Creator</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {escrowData ? (
-                      <>
-                        {escrowData.initiator_confirmation === 'confirmed' ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-400" />
-                        ) : escrowData.initiator_confirmation === 'disputed' ? (
-                          <AlertTriangle className="h-5 w-5 text-red-400" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-400" />
-                        )}
-                        <span
-                          className={`text-xs ${
-                            escrowData.initiator_confirmation === 'confirmed'
-                              ? 'text-green-400'
-                              : escrowData.initiator_confirmation === 'disputed'
-                                ? 'text-red-400'
-                                : 'text-yellow-400'
-                          }`}
-                        >
-                          {escrowData.initiator_confirmation === 'confirmed'
-                            ? 'Confirmed'
-                            : escrowData.initiator_confirmation === 'disputed'
-                              ? 'Disputed'
-                              : 'Pending'}
-                        </span>
-                      </>
+                    {seller?.has_confirmed ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     ) : (
-                      <>
-                        {sellerConfirmed ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-400" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-400" />
-                        )}
-                        <span
-                          className={`text-xs ${sellerConfirmed ? 'text-green-400' : 'text-yellow-400'}`}
-                        >
-                          {sellerConfirmed ? 'Confirmed' : 'Pending'}
-                        </span>
-                      </>
+                      <Clock className="h-5 w-5 text-yellow-400" />
                     )}
+                    <span
+                      className={`text-xs ${seller?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
+                    >
+                      {seller?.has_confirmed ? 'Confirmed' : 'Pending'}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
-                <p className="text-xs text-blue-300">
-                  {bothConfirmed
-                    ? 'Both parties have confirmed completion. Transaction will be finalized.'
-                    : 'Both parties must confirm completion before the transaction can be finalized'}
-                </p>
-              </div>
+              {/* Confirmation Button */}
+              {!status?.participants?.find((p) => p.user_id === currentUserId)
+                ?.has_confirmed && (
+                <div className="mt-4 rounded-lg border border-blue-800/50 bg-blue-900/20 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-200">
+                        Confirm Transaction
+                      </p>
+                      <p className="text-xs text-blue-300/70">
+                        {allDeliverablesConfirmed
+                          ? 'All deliverables confirmed. Ready to finalize transaction.'
+                          : 'Confirm all deliverables before proceeding'}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleConfirmTransaction}
+                      disabled={!allDeliverablesConfirmed}
+                      className={`${
+                        allDeliverablesConfirmed
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'cursor-not-allowed bg-gray-600 text-gray-400'
+                      }`}
+                      size="sm"
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {allDeliverablesConfirmed
+                        ? 'Confirm'
+                        : 'Complete Deliverables First'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Both Confirmed Status */}
+              {status?.participants?.every((p) => p.has_confirmed) && (
+                <div className="mt-4 rounded-lg border border-green-800/50 bg-green-900/20 p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                    <p className="text-sm font-medium text-green-200">
+                      Both parties confirmed! Transaction is confirmed.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -649,55 +1076,6 @@ export default function TransactionActive({
                     </Button>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-amber-400" />
-                    <h3 className="text-sm font-medium text-amber-300">
-                      Transaction Safety
-                    </h3>
-                  </div>
-                  <p className="mt-2 text-xs text-amber-200">
-                    Verify the item/service before confirming completion. Once
-                    you&apos;ve verified the item/service, confirm completion
-                    below
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleConfirmCompletion}
-                  disabled={isCurrentUserConfirmed}
-                  className="w-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  {isCurrentUserConfirmed ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Confirmed - Waiting for other party
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Confirm Completion
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full border-neutral-700 text-neutral-300 hover:bg-white/5"
-                  asChild
-                >
-                  <Link href={ROUTES.TRANSACTION.VIEW(transaction.id)}>
-                    View Transaction Details
-                  </Link>
-                </Button>
               </div>
             </CardContent>
           </Card>
