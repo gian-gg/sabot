@@ -19,6 +19,32 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get transaction first to check status
+    const { data: transaction, error: transactionError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (transactionError || !transaction) {
+      console.error('Error fetching transaction:', transactionError);
+      return NextResponse.json(
+        { error: 'Transaction not found' },
+        { status: 404 }
+      );
+    }
+
+    // Only allow confirmation when transaction is active
+    if (transaction.status !== 'active') {
+      return NextResponse.json(
+        {
+          error: 'Transaction must be in active status to confirm',
+          current_status: transaction.status,
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if user is a participant in this transaction
     const { data: participant, error: participantError } = await supabase
       .from('transaction_participants')
@@ -28,28 +54,62 @@ export async function POST(
       .single();
 
     if (participantError || !participant) {
+      console.error('Error fetching participant:', participantError);
       return NextResponse.json(
         { error: 'Not a participant of this transaction' },
         { status: 403 }
       );
     }
 
+    // Check if already confirmed
+    if (participant.has_confirmed) {
+      return NextResponse.json(
+        { error: 'You have already confirmed this transaction' },
+        { status: 400 }
+      );
+    }
+
+    console.log('Confirming transaction participant:', {
+      transactionId: id,
+      userId: user.id,
+      participantId: participant.id,
+    });
+
     // Update participant confirmation
-    const { error: updateError } = await supabase
+    const { data: updateResult, error: updateError } = await supabase
       .from('transaction_participants')
       .update({
         has_confirmed: true,
         confirmed_at: new Date().toISOString(),
       })
-      .eq('id', participant.id);
+      .eq('id', participant.id)
+      .select();
 
     if (updateError) {
       console.error('Error confirming participant:', updateError);
       return NextResponse.json(
-        { error: 'Failed to confirm participation' },
+        {
+          error: 'Failed to confirm participation',
+          details: updateError.message,
+        },
         { status: 500 }
       );
     }
+
+    if (!updateResult?.length) {
+      console.error('Confirmation update had no effect');
+      return NextResponse.json(
+        { error: 'Confirmation update failed', details: 'No rows updated' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Successfully confirmed participant:', {
+      transactionId: id,
+      userId: user.id,
+      participantId: participant.id,
+      updateResult,
+    });
 
     // Check if both participants have confirmed
     const { data: allParticipants, error: participantsError } = await supabase
