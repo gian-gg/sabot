@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
@@ -176,7 +176,9 @@ export function TransactionActivePage({
         <Alert
           className={`${statusInfo.bgColor} ${statusInfo.borderColor} border`}
         >
-          <StatusIcon className={`h-4 w-4 ${statusInfo.color}`} />
+          {React.createElement(StatusIcon, {
+            className: `h-4 w-4 ${statusInfo.color}`,
+          })}
           <AlertDescription className={statusInfo.color}>
             <strong>{statusInfo.text}</strong>
             <br />

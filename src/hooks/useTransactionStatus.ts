@@ -77,5 +77,5 @@ export function useTransactionStatus(transactionId: string | null) {
     };
   }, [transactionId]);
 
-  return { status, loading, error, refresh: () => setLoading(true) };
+  return { status, setStatus, loading, error, refresh: () => setLoading(true) };
 }
