@@ -189,6 +189,47 @@ cd ../SabotBlockchain/transaction-smart-contract
 npx hardhat test
 ```
 
+## Transaction Smart Contract
+
+The smart contract code for this project is hosted in its own repository: [transaction-smart-contract](https://github.com/eliseoalcaraz/transaction-smart-contract).
+
+This project provides a token-based (SBT) system for creating immutable agreements and managing multi-deliverable escrow.
+
+**Key Technologies:**
+*   **Blockchain:** Lisk Sepolia Testnet
+*   **Smart Contract Language:** Solidity
+*   **Development Framework:** Hardhat
+*   **Programming Language (for project configuration/scripts):** TypeScript
+
+**Key Features:**
+
+1.  **Token & Agreement System:**
+    *   **SBT Utility Token:** An ERC20-like token built directly into the contract.
+    *   **User Registration:** `registerUser()` grants new users 100 SBT.
+    *   **Agreement Creation:** `createAgreement()` allows two registered users to create an immutable, timestamped agreement.
+    *   **Fee Mechanism:** 10 SBT from each party (total 20 SBT) for agreement creation. 80% (16 SBT) goes to `devWallet`, 20% (4 SBT) is burned.
+    *   **Reporting System:** `reportIssue()` allows parties to create on-chain reports for disputes.
+    *   **Admin Controls:** `Ownable` contract (OpenZeppelin) allows owner to update `devWallet`.
+
+2.  **Escrow System:**
+    *   **Multiple Deliverable Types:** Supports Crypto (ETH), BankTransfer, FileDeliverable, PhysicalItem, Service, and Hybrid escrows.
+    *   **ETH Locking:** Securely locks ETH for crypto-based escrows.
+    *   **Hash-Based Verification:** Uses cryptographic hashes for non-crypto deliverables.
+    *   **Dual Confirmation:** Both parties must confirm completion for fund release.
+    *   **Proof Submission:** Parties can submit proof of delivery/completion.
+    *   **Mutual Arbiter Selection:** Disputes require both parties to approve an arbiter.
+    *   **Arbiter Resolution:** Arbiters can resolve disputes (release, refund, split).
+    *   **Fee Structure:** 2% platform fee on successful completion, 1% arbiter fee for dispute resolution.
+    *   **Expiration Handling:** Automatic refund to initiator if escrow expires.
+    *   **Cancellation:** Initiators can cancel pending escrows.
+    *   **Security:** `ReentrancyGuard` protection.
+
+3.  **Oracle Verification System:**
+    *   **Purpose:** Automatic verification for `FileDeliverable` and `Service` escrows.
+    *   **Authorization:** `authorizeOracle()` (owner-only) manages oracle addresses.
+    *   **Submission:** `submitOracleVerification()` allows authorized oracles to submit verification results, auto-confirming for the submitting party if verified.
+    *   **Advisory Role:** Assists confirmation but doesn't control release; arbiter decisions always supersede.
+
 <!-- CONTRIBUTING -->
 
 ## 📬 Contributing
