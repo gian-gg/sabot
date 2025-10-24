@@ -1,122 +1,206 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Y from 'yjs';
-import { SupabaseProvider } from './supabase-provider';
-import { createAwareness, type UserPresence } from './presence';
+import { WebrtcProvider } from 'y-webrtc';
 
-interface UseCollaborationProps {
+export interface UseCollaborationOptions {
   documentId: string;
   enabled?: boolean;
+  user?: {
+    name?: string;
+    color?: string;
+    id?: string;
+  };
 }
 
-interface UseCollaborationReturn {
-  ydoc: Y.Doc | null;
-  provider: SupabaseProvider | null;
-  awareness: unknown;
-  isConnected: boolean;
-  activeUsers: UserPresence[];
-  error: Error | null;
-}
-
-/**
- * Hook to manage collaborative editing through Supabase
- */
 export function useCollaboration({
   documentId,
   enabled = true,
-}: UseCollaborationProps): UseCollaborationReturn {
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
-  const [provider, setProvider] = useState<SupabaseProvider | null>(null);
-  const [awareness, setAwareness] = useState<unknown>(null);
+  user,
+}: UseCollaborationOptions) {
+  const [ydoc, setYDoc] = useState<Y.Doc | null>(null);
+  const [provider, setProvider] = useState<WebrtcProvider | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
-  const [error, setError] = useState<Error | null>(null);
-  const providerRef = useRef<SupabaseProvider | null>(null);
-  const ydocRef = useRef<Y.Doc | null>(null);
 
+  // Use refs to store the doc and provider so they persist across re-renders
+  const docRef = useRef<Y.Doc | null>(null);
+  const providerRef = useRef<WebrtcProvider | null>(null);
+
+  // stable user id for awareness
+  const localUser = useMemo(() => {
+    const id = user?.id ?? `user-${Math.floor(Math.random() * 1e6)}`;
+    const name = user?.name ?? `Guest-${id.slice(-4)}`;
+    const color =
+      user?.color ??
+      (() => {
+        // pick a pastel color
+        const palette = [
+          '#f97316',
+          '#ef4444',
+          '#8b5cf6',
+          '#06b6d4',
+          '#f43f5e',
+          '#10b981',
+        ];
+        return palette[Math.floor(Math.random() * palette.length)];
+      })();
+    return { id, name, color };
+  }, [user]);
+
+  // Initialize Y.Doc and WebrtcProvider only once per documentId
   useEffect(() => {
     if (!enabled || !documentId) return;
 
-    let mounted = true;
+    // If we already have a provider for this documentId, don't create a new one
+    if (providerRef.current && docRef.current) {
+      console.log(
+        '[useCollaboration] Using existing doc and provider for:',
+        documentId
+      );
+      setYDoc(docRef.current);
+      setProvider(providerRef.current);
+      return;
+    }
 
-    const initializeCollaboration = async () => {
+    console.log('[useCollaboration] Initializing for documentId:', documentId);
+    const doc = new Y.Doc();
+    docRef.current = doc;
+    console.log('[useCollaboration] Yjs Doc created');
+
+    // Use the maintained yjs.dev signaling server
+    // Note: The old Heroku servers (y-webrtc-signaling-*.herokuapp.com) are no longer working
+    const signalingServers = [
+      'wss://sabot-signaling-server.fly.dev', // ✅ official maintained server
+    ];
+
+    console.log('[useCollaboration] Creating WebrtcProvider...');
+    const prov = new WebrtcProvider(documentId, doc, {
+      signaling: signalingServers,
+      // comment: you can add password: 'secret' to protect rooms
+    });
+    providerRef.current = prov;
+    console.log('[useCollaboration] WebrtcProvider created');
+
+    // Helper function to set awareness state
+    const setAwarenessState = () => {
       try {
-        const newYdoc = new Y.Doc();
-        const newAwareness = createAwareness(newYdoc);
-
-        const newProvider = new SupabaseProvider({
-          ydoc: newYdoc,
-          name: documentId,
-          awareness: newAwareness,
-        });
-
-        await newProvider.connect();
-
-        if (!mounted) return;
-
-        ydocRef.current = newYdoc;
-        providerRef.current = newProvider;
-
-        setYdoc(newYdoc);
-        setProvider(newProvider);
-        setAwareness(newAwareness);
-        setIsConnected(newProvider.isConnected());
-
-        // Listen for awareness changes
-        const awarenessHandler = () => {
-          const states = newAwareness.getStates();
-          const users: UserPresence[] = [];
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          states.forEach((state: any) => {
-            if (state.user && state.user.id !== newAwareness.clientID) {
-              users.push(state.user);
-            }
+        if (prov && prov.awareness) {
+          prov.awareness.setLocalStateField('user', {
+            name: localUser.name,
+            color: localUser.color,
+            id: localUser.id,
           });
-
-          if (mounted) {
-            setActiveUsers(users);
-          }
-        };
-
-        newAwareness.on('awareness-update', awarenessHandler);
-
-        return () => {
-          newAwareness.off('awareness-update', awarenessHandler);
-        };
-      } catch (err) {
-        const error =
-          err instanceof Error
-            ? err
-            : new Error('Collaboration initialization failed');
-        if (mounted) {
-          setError(error);
+          console.log('[y-webrtc] Awareness state set successfully');
         }
-        console.error('Collaboration error:', error);
+      } catch (error) {
+        console.warn('[y-webrtc] Failed to set awareness state:', error);
       }
     };
 
-    const cleanupPromise = initializeCollaboration();
+    // Defer awareness setup until provider is ready (equivalent to Vue's $nextTick)
+    // This ensures the provider is fully initialized before we access awareness
+    setTimeout(() => {
+      setAwarenessState();
+    }, 0);
+
+    // listen connection status
+    prov.on('status', ({ connected }: { connected: boolean }) => {
+      console.log(
+        '[y-webrtc] Connection status:',
+        connected ? '✅ CONNECTED' : '❌ DISCONNECTED'
+      );
+      setIsConnected(connected);
+
+      // Set awareness when connection is established
+      if (connected) {
+        setAwarenessState();
+      }
+    });
+
+    // Listen for peer changes
+    prov.on(
+      'peers',
+      ({
+        added,
+        removed,
+        webrtcPeers,
+      }: {
+        added: string[];
+        removed: string[];
+        webrtcPeers: unknown[];
+      }) => {
+        console.log('[y-webrtc] Peers changed:', {
+          added,
+          removed,
+          totalPeers: webrtcPeers.length,
+        });
+      }
+    );
+
+    // Listen for document updates
+    const docUpdateHandler = (update: Uint8Array, origin: unknown) => {
+      const isLocalUpdate = origin === prov;
+      console.log('[Yjs] Document updated:', update.length, 'bytes', {
+        origin: isLocalUpdate ? 'LOCAL (WebrtcProvider)' : 'REMOTE (peer)',
+        isLocalUpdate,
+      });
+    };
+    doc.on('update', docUpdateHandler);
+
+    // Log sync state - helps debug if syncing is actually happening
+    console.log('[y-webrtc] Sync config:', {
+      awareness: !!prov.awareness,
+      room: documentId,
+      signalingServerCount: signalingServers.length,
+    });
+
+    // Listen for sync events from WebRTC
+    prov.on('synced', ({ synced }: { synced: boolean }) => {
+      console.log(
+        '[y-webrtc] Synced event:',
+        synced ? '✅ SYNCED' : '❌ NOT_SYNCED'
+      );
+    });
+
+    console.log('[useCollaboration] Setting state - ydoc and provider');
+    setYDoc(doc);
+    setProvider(prov);
 
     return () => {
-      mounted = false;
-      if (providerRef.current) {
-        providerRef.current.disconnect();
-      }
-      if (ydocRef.current) {
-        ydocRef.current.destroy();
-      }
-      cleanupPromise?.then((fn) => fn?.());
+      // Don't destroy the doc on cleanup - it needs to persist for the collaboration session
+      // Keep update listener attached so it continues to work
+      console.log(
+        '[useCollaboration] Cleanup - keeping doc and provider alive'
+      );
     };
   }, [documentId, enabled]);
+
+  // Update awareness whenever localUser changes
+  useEffect(() => {
+    if (!providerRef.current?.awareness || !localUser) return;
+
+    console.log(
+      '[useCollaboration] Updating awareness with new localUser:',
+      localUser
+    );
+    try {
+      providerRef.current.awareness.setLocalStateField('user', {
+        name: localUser.name,
+        color: localUser.color,
+        id: localUser.id,
+      });
+      console.log('[y-webrtc] Awareness updated with new user info');
+    } catch (error) {
+      console.warn('[y-webrtc] Failed to update awareness:', error);
+    }
+  }, [localUser]);
 
   return {
     ydoc,
     provider,
-    awareness,
+    awareness: provider?.awareness ?? null,
     isConnected,
-    activeUsers,
-    error,
+    localUser,
   };
 }

@@ -1,0 +1,12 @@
+--- a/node_modules/@tiptap/react/src/ReactNodeViewRenderer.tsx
++++ b/node_modules/@tiptap/react/src/ReactNodeViewRenderer.tsx
+@@ -164,8 +164,8 @@ export class ReactNodeView<
+       className: `node-${this.node.type.name} ${className}`.trim(),
+     })
+
++    this.updateElementAttributes()
+     this.editor.on('selectionUpdate', this.handleSelectionUpdate)
+-    this.updateElementAttributes()
+   }
+
+   /**

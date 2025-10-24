@@ -14,6 +14,7 @@ import Blockquote from '@tiptap/extension-blockquote';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
+// import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { Loader } from 'lucide-react';
 import { EditorToolbar } from './editor-toolbar';
@@ -35,46 +36,59 @@ export function TiptapEditor({
   onOpenSignature,
   editorRef,
 }: TiptapEditorProps) {
-  const { ydoc, isConnected } = useCollaboration({
+  const { ydoc, isConnected, awareness, localUser } = useCollaboration({
     documentId,
     enabled: true,
   });
 
-  const editor = useEditor({
-    extensions: [
-      // Use StarterKit with modified configuration
-      StarterKit.configure({
-        strike: false,
-        code: false,
-        blockquote: false,
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-      }),
-      Underline,
-      Strike,
-      Code,
-      Blockquote,
-      BulletList,
-      OrderedList,
-      ListItem,
-      Placeholder.configure({
-        placeholder: 'Start typing your agreement...',
-      }),
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Typography,
-      // Collaborative editing extensions (only add if ydoc is ready)
+  console.log('[TiptapEditor] Component render', {
+    ydocReady: !!ydoc,
+    isConnected,
+    documentId,
+  });
+
+  const editor = useEditor(
+    {
+      extensions: [
+        // Use StarterKit with modified configuration
+        StarterKit.configure({
+          strike: false,
+          code: false,
+          blockquote: false,
+          bulletList: false,
+          orderedList: false,
+          listItem: false,
+        }),
+        Underline,
+        Strike,
+        Code,
+        Blockquote,
+        BulletList,
+        OrderedList,
+        ListItem,
+        Placeholder.configure({
+          placeholder: 'Start typing your agreement...',
+        }),
+        Highlight.configure({
+          multicolor: true,
+        }),
+        Typography,
+        // Collaborative editing extensions (only add if ydoc is ready)
+        ...(ydoc
+          ? [
+              Collaboration.configure({
+                document: ydoc,
+                field: 'default',
+              }),
+            ]
+          : []),
+      ],
+      // Only set initial content if no Yjs collaboration is set up yet
+      // Once ydoc exists, content comes from Yjs synchronization
       ...(ydoc
-        ? [
-            Collaboration.configure({
-              document: ydoc,
-            }),
-          ]
-        : []),
-    ],
-    content: `
+        ? {} // When ydoc is ready, don't set content - let Yjs drive it
+        : {
+            content: `
       <h1>Partnership Agreement</h1>
       <p>This Partnership Agreement ("Agreement") is entered into as of [Date], by and between:</p>
 
@@ -91,21 +105,57 @@ export function TiptapEditor({
       <p><strong>3.1 Scope of Agreement:</strong> This Agreement shall govern the partnership between the parties for [describe scope].</p>
       <p><strong>3.2 Obligations:</strong> Each party agrees to fulfill their respective obligations as outlined in this section.</p>
     `,
-    immediatelyRender: false,
-    shouldRerenderOnTransaction: false,
-    onCreate({ editor: editorInstance }) {
-      // Notify parent when editor is ready
-      if (onContentChange) {
-        onContentChange(editorInstance.getHTML());
-      }
+          }),
+      immediatelyRender: false,
+      shouldRerenderOnTransaction: true, // ✅ CRITICAL: Must be true for Yjs updates to render
     },
-    onUpdate({ editor: editorInstance }) {
-      // Notify parent of content changes
+    [ydoc, awareness, localUser] // ✅ Add dependencies to recreate editor when collaboration is ready
+  );
+
+  // Handle editor updates in useEffect to avoid state updates during render
+  useEffect(() => {
+    if (!editor) return;
+
+    console.log('[TiptapEditor] useEffect - editor ready', {
+      editorExists: !!editor,
+      ydocExists: !!ydoc,
+      isConnected,
+      extensionsList: editor.extensionManager.extensions.map(
+        (ext: unknown) => (ext as { name: string }).name
+      ),
+    });
+
+    const handleUpdate = ({ editor: editorInstance }: { editor: unknown }) => {
+      const editorInst = editorInstance as { getHTML: () => string };
+      const html = editorInst.getHTML();
+      console.log('[TiptapEditor] Editor updated (transaction)', {
+        htmlLength: html.length,
+        htmlContent: html,
+      });
       if (onContentChange) {
-        onContentChange(editorInstance.getHTML());
+        onContentChange(html);
       }
-    },
-  });
+    };
+
+    editor.on('update', handleUpdate);
+
+    // Notify parent when editor is ready
+    const html = editor.getHTML();
+    console.log('[TiptapEditor] Editor created - initial content', {
+      htmlLength: html.length,
+      htmlContent: html,
+    });
+    if (onContentChange) {
+      onContentChange(html);
+    }
+
+    return () => {
+      console.log(
+        '[TiptapEditor] useEffect cleanup - removing update listener'
+      );
+      editor.off('update', handleUpdate);
+    };
+  }, [editor, onContentChange, ydoc, isConnected]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
