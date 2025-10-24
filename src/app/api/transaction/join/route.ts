@@ -75,7 +75,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add user as participant
+    // Get user profile data
+    const userProfile = {
+      name:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        'Participant',
+      email: user.email || '',
+      avatar:
+        user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+    };
+
+    // Add user as participant with profile data
     console.log('Join - Adding user as participant...');
     const { data: participant, error: participantError } = await supabase
       .from('transaction_participants')
@@ -83,6 +95,9 @@ export async function POST(request: NextRequest) {
         transaction_id: payload.transaction_id,
         user_id: user.id,
         role: 'invitee',
+        participant_name: userProfile.name,
+        participant_email: userProfile.email,
+        participant_avatar_url: userProfile.avatar,
       })
       .select()
       .single();

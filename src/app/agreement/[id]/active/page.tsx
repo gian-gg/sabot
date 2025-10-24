@@ -1,16 +1,39 @@
 'use client';
 
-import { use } from 'react';
-import { EditorLayout } from '@/components/agreement/editor/editor-layout';
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { PageHeader } from '@/components/core/page-header';
 
-export default function ActiveEditorPage({
+export default function AgreementActive({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id } = React.use(params);
 
-  // Go directly to the editor
-  // The questionnaire is now handled in the invitation acceptance flow
-  return <EditorLayout documentId={id} initialIdeaBlocks={[]} />;
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-neutral-950">
+      <PageHeader>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Agreement Active</h1>
+          <p className="text-neutral-400">
+            Track your agreement progress and deliverables
+          </p>
+        </div>
+      </PageHeader>
+
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
+          <CardHeader>
+            <CardTitle className="text-white">Agreement {id}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-neutral-400">
+              Agreement active page - implementation coming soon
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }
