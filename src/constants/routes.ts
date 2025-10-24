@@ -18,13 +18,13 @@ export const ROUTES = {
     VIEW: (id: string) => `/profile/${id}`,
   },
   WALLET: '/wallet',
+  BUY_TOKENS: '/buy-tokens',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
   LEGAL: {
     PRIVACY: 'legal/privacy',
     TERMS: 'legal/terms',
   },
-  TUTORIAL: '/tutorial',
   TRANSACTION: {
     ACCEPT: '/transaction/accept',
     UPLOAD: '/transaction/upload',

@@ -90,9 +90,11 @@ export default function HeaderAction({ user }: { user: User }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <CirclePoundSterling />
-            Buy Tokens
+          <DropdownMenuItem asChild>
+            <Link href={ROUTES.BUY_TOKENS}>
+              <CirclePoundSterling />
+              Buy Tokens
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
