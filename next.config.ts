@@ -19,6 +19,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  transpilePackages: ['yjs', 'lib0'],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      yjs: require.resolve('yjs'),
+      lib0: require.resolve('lib0'),
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

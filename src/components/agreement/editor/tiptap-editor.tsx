@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Collaboration from '@tiptap/extension-collaboration';
+// Collaboration extension is lazy-loaded to prevent SSR module evaluation errors
+// import Collaboration from '@tiptap/extension-collaboration';
+// import CollaborationCursor from '@tiptap/extension-collaboration-cursor'; // Disabled temporarily
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
@@ -15,6 +17,7 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
+import { type UserPresence } from '@/lib/collaboration/presence';
 import { Loader } from 'lucide-react';
 import { EditorToolbar } from './editor-toolbar';
 
@@ -23,6 +26,7 @@ interface TiptapEditorProps {
   isReviewing: boolean;
   onContentChange?: (content: string) => void;
   onConnectionStatusChange?: (isConnected: boolean) => void;
+  onActiveUsersChange?: (users: UserPresence[]) => void;
   onOpenSignature?: () => void;
   editorRef?: React.RefObject<HTMLDivElement | null>;
 }
@@ -32,49 +36,102 @@ export function TiptapEditor({
   isReviewing,
   onContentChange,
   onConnectionStatusChange,
+  onActiveUsersChange,
   onOpenSignature,
   editorRef,
 }: TiptapEditorProps) {
-  const { ydoc, isConnected } = useCollaboration({
+  const { ydoc, isConnected, activeUsers, awareness } = useCollaboration({
     documentId,
     enabled: true,
   });
 
-  const editor = useEditor({
-    extensions: [
-      // Use StarterKit with modified configuration
-      StarterKit.configure({
-        strike: false,
-        code: false,
-        blockquote: false,
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-      }),
-      Underline,
-      Strike,
-      Code,
-      Blockquote,
-      BulletList,
-      OrderedList,
-      ListItem,
-      Placeholder.configure({
-        placeholder: 'Start typing your agreement...',
-      }),
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Typography,
-      // Collaborative editing extensions (only add if ydoc is ready)
-      ...(ydoc
-        ? [
-            Collaboration.configure({
-              document: ydoc,
-            }),
-          ]
-        : []),
-    ],
-    content: `
+  // Lazy-load Collaboration extension to prevent SSR errors
+  const [CollaborationExt, setCollaborationExt] = useState<unknown>(null);
+
+  useEffect(() => {
+    if (ydoc && awareness) {
+      console.log('[Editor] Lazy-loading Collaboration extension...');
+      import('@tiptap/extension-collaboration')
+        .then((mod) => {
+          console.log('[Editor] ✅ Collaboration extension loaded');
+          setCollaborationExt(() => mod.default);
+        })
+        .catch((err) => {
+          console.error(
+            '[Editor] ❌ Failed to load Collaboration extension:',
+            err
+          );
+        });
+    }
+  }, [ydoc, awareness]);
+
+  // Log collaboration state changes
+  useEffect(() => {
+    console.log('[Editor] Collaboration state:', {
+      ydoc: !!ydoc,
+      awareness: !!awareness,
+      isConnected,
+      activeUsers: activeUsers.length,
+      userNames: activeUsers.map((u) => u.name),
+    });
+    if (ydoc && awareness) {
+      console.log('[Editor] Collaboration ready:', {
+        yDocReady: true,
+        awarenessReady: true,
+      });
+    }
+  }, [ydoc, awareness, isConnected, activeUsers]);
+
+  // Notify parent of active users changes
+  useEffect(() => {
+    onActiveUsersChange?.(activeUsers);
+  }, [activeUsers, onActiveUsersChange]);
+
+  const editor = useEditor(
+    {
+      extensions: [
+        // Use StarterKit with modified configuration
+        StarterKit.configure({
+          strike: false,
+          code: false,
+          blockquote: false,
+          bulletList: false,
+          orderedList: false,
+          listItem: false,
+        }),
+        Underline,
+        Strike,
+        Code,
+        Blockquote,
+        BulletList,
+        OrderedList,
+        ListItem,
+        Placeholder.configure({
+          placeholder: 'Start typing your agreement...',
+        }),
+        Highlight.configure({
+          multicolor: true,
+        }),
+        Typography,
+        // Collaborative editing extensions (only add if ydoc and CollaborationExt are ready)
+        ...(ydoc && awareness && CollaborationExt
+          ? [
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (CollaborationExt as any).configure({
+                document: ydoc,
+              }),
+              // TODO: Re-enable CollaborationCursor once awareness is properly initialized
+              // CollaborationCursor.configure({
+              //   provider: awareness,
+              // }),
+            ]
+          : []),
+      ],
+      // When using Collaboration extension, NEVER set static content
+      // The Collaboration extension manages all content from Y.Doc
+      content: ydoc
+        ? ''
+        : `
       <h1>Partnership Agreement</h1>
       <p>This Partnership Agreement ("Agreement") is entered into as of [Date], by and between:</p>
 
@@ -91,21 +148,29 @@ export function TiptapEditor({
       <p><strong>3.1 Scope of Agreement:</strong> This Agreement shall govern the partnership between the parties for [describe scope].</p>
       <p><strong>3.2 Obligations:</strong> Each party agrees to fulfill their respective obligations as outlined in this section.</p>
     `,
-    immediatelyRender: false,
-    shouldRerenderOnTransaction: false,
-    onCreate({ editor: editorInstance }) {
-      // Notify parent when editor is ready
-      if (onContentChange) {
-        onContentChange(editorInstance.getHTML());
-      }
+      immediatelyRender: false,
+      shouldRerenderOnTransaction: false,
+      onCreate({ editor: editorInstance }) {
+        console.log('[Editor] ✅ Editor created and ready');
+        // Notify parent when editor is ready
+        if (onContentChange) {
+          onContentChange(editorInstance.getHTML());
+        }
+      },
+      onUpdate({ editor: editorInstance, transaction }) {
+        console.log(
+          '[Editor] 📝 Editor update - origin:',
+          transaction.getMeta('collaboration') ? 'remote' : 'local'
+        );
+        // Notify parent of content changes
+        if (onContentChange) {
+          onContentChange(editorInstance.getHTML());
+        }
+      },
+      editable: !isReviewing,
     },
-    onUpdate({ editor: editorInstance }) {
-      // Notify parent of content changes
-      if (onContentChange) {
-        onContentChange(editorInstance.getHTML());
-      }
-    },
-  });
+    [ydoc, awareness, CollaborationExt, isReviewing, onContentChange] // Re-create editor when collaboration becomes available
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -158,19 +223,27 @@ export function TiptapEditor({
   }, [isConnected, onConnectionStatusChange]);
 
   if (!ydoc) {
+    console.log('[Editor] Still initializing... ydoc not ready yet');
     return (
       <main className="relative flex-1 overflow-y-auto pt-14">
         <div className="mx-auto flex h-full max-w-4xl items-center justify-center p-8">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-4">
             <Loader className="h-5 w-5 animate-spin" />
-            <span className="text-muted-foreground">
-              Initializing editor...
-            </span>
+            <div className="text-center">
+              <p className="text-muted-foreground font-medium">
+                Initializing editor...
+              </p>
+              <p className="text-muted-foreground/70 mt-2 text-xs">
+                Check browser console for connection details
+              </p>
+            </div>
           </div>
         </div>
       </main>
     );
   }
+
+  console.log('[Editor] ✅ Editor initialized, ydoc ready');
 
   return (
     <main className="relative flex flex-1 flex-col pt-14">

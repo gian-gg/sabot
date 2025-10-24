@@ -11,12 +11,15 @@ import {
   generateFileName,
 } from '@/lib/pdf/export-agreement';
 import { clearDocument } from '@/store/document/documentStore';
+import { ActiveCollaborators } from './active-collaborators';
+import { type UserPresence } from '@/lib/collaboration/presence';
 
 interface EditorHeaderProps {
   documentId: string;
   editorTitle?: string;
   editorContent?: string;
   isConnected?: boolean;
+  activeUsers?: UserPresence[];
 }
 
 export function EditorHeader({
@@ -24,6 +27,7 @@ export function EditorHeader({
   editorTitle = 'Agreement',
   editorContent = '',
   isConnected = true,
+  activeUsers = [],
 }: EditorHeaderProps) {
   const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
@@ -83,16 +87,18 @@ export function EditorHeader({
   return (
     <header className="glass fixed top-0 right-0 left-0 z-50 w-full border-none">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Title with Status Indicator */}
-        <div className="flex items-center gap-2">
-          {!isConnected ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-green-500" />
-          ) : (
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-          )}
-          <h1 className="text-foreground text-base font-semibold">
-            {editorTitle}
-          </h1>
+        {/* Title with Status Indicator and Active Collaborators */}
+        <div className="flex flex-1 items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-base font-semibold">
+              {editorTitle}
+            </h1>
+          </div>
+          {/* Active collaborators list */}
+          <ActiveCollaborators
+            activeUsers={activeUsers}
+            isConnected={isConnected}
+          />
         </div>
 
         {/* Action buttons */}

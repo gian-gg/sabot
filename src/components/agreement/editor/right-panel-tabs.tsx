@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, BookOpen } from 'lucide-react';
-import { AiAssistant } from './ai-assistant';
+// import { AiAssistant } from './ai-assistant'; // Disabled for now - slow AI analysis
 import { DocumentOutline } from './document-outline';
 
 interface RightPanelTabsProps {
@@ -37,8 +37,16 @@ export function RightPanelTabs({
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto">
           <TabsContent value="ai" className="m-0 h-full">
-            <div className="h-full">
-              <AiAssistant editorContent={editorContent} />
+            <div className="flex h-full items-center justify-center p-4">
+              <div className="text-center">
+                <p className="text-muted-foreground mb-2 text-sm">
+                  AI Assistant temporarily disabled
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Testing collaboration features. Will be re-enabled as optional
+                  soon.
+                </p>
+              </div>
             </div>
           </TabsContent>
 

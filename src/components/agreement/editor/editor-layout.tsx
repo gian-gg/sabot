@@ -14,6 +14,7 @@ import {
 import { type Template } from '@/lib/templates/template-loader';
 import { useDocumentStore } from '@/store/document/documentStore';
 import { toast } from 'sonner';
+import { type UserPresence } from '@/lib/collaboration/presence';
 
 interface EditorLayoutProps {
   documentId: string;
@@ -38,6 +39,7 @@ export function EditorLayout({
   );
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
   const [isConnected, setIsConnected] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
 
   // Document store
   const { setDocumentId, setTitle, setContent, setIdeaBlocks } =
@@ -178,6 +180,7 @@ export function EditorLayout({
         editorTitle={editorTitle}
         editorContent={editorContent}
         isConnected={isConnected}
+        activeUsers={activeUsers}
       />
 
       {/* Main Layout: Editor + Right Sidebar */}
@@ -188,6 +191,7 @@ export function EditorLayout({
           isReviewing={false}
           onContentChange={setEditorContent}
           onConnectionStatusChange={setIsConnected}
+          onActiveUsersChange={setActiveUsers}
           onOpenSignature={() => setIsSignatureOpen(true)}
           editorRef={editorRef}
         />

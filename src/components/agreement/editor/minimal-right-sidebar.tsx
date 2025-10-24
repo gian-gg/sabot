@@ -10,7 +10,7 @@ import {
   Settings,
   GripVertical,
 } from 'lucide-react';
-import { AiAssistant } from './ai-assistant';
+// import { AiAssistant } from './ai-assistant'; // Disabled for now - slow AI analysis
 import { DocumentOutline } from './document-outline';
 import { cn } from '@/lib/utils';
 
@@ -143,10 +143,17 @@ export function MinimalRightSidebar({
               {expandedPanel === 'ai' && (
                 <>
                   <p className="text-muted-foreground mb-3 text-xs">
-                    AI analysis of your document
+                    AI analysis disabled for testing
                   </p>
-                  <div className="flex-1 overflow-y-auto">
-                    <AiAssistant editorContent={editorContent} />
+                  <div className="flex-1 overflow-y-auto py-8 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      AI Assistant temporarily disabled to prioritize
+                      collaboration testing.
+                    </p>
+                    <p className="text-muted-foreground mt-4 text-xs">
+                      This will be re-enabled as an optional feature in the next
+                      phase.
+                    </p>
                   </div>
                 </>
               )}

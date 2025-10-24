@@ -30,19 +30,24 @@ const USER_COLORS = [
 /**
  * Create and manage user presence awareness
  */
-export function createAwareness(ydoc: Y.Doc): awarenessProtocol.Awareness {
+export function createAwareness(
+  ydoc: Y.Doc,
+  userId?: string,
+  userEmail?: string,
+  userName?: string
+): awarenessProtocol.Awareness {
   const awareness = new awarenessProtocol.Awareness(ydoc);
 
   // Assign random color to user
   const randomColor =
     USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
 
-  // Set initial awareness state
+  // Set initial awareness state with real user data if provided
   awareness.setLocalState({
     user: {
-      id: `user-${Math.random().toString(36).substring(2, 11)}`,
-      email: 'user@example.com',
-      name: 'User',
+      id: userId || `user-${Math.random().toString(36).substring(2, 11)}`,
+      email: userEmail || 'user@example.com',
+      name: userName || 'Anonymous User',
       color: randomColor,
       cursor: null,
       selection: null,
