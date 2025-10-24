@@ -507,9 +507,10 @@ export default function DataConflictResolver({
                   value={
                     selectedValues[field] !== undefined
                       ? String(selectedValues[field])
-                      : undefined
+                      : ''
                   }
                   onValueChange={(value) => {
+                    if (value === '') return; // Ignore empty selection
                     // Try to parse back to original type
                     const originalValue = values.find(
                       (v) => String(v.value) === value
