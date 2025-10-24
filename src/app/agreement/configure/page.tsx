@@ -48,12 +48,6 @@ function ConfigureContent() {
                 Tell us about your agreement to get started
               </CardDescription>
             </div>
-            <Badge
-              variant="outline"
-              className="border-primary/30 bg-primary/10 text-primary"
-            >
-              Step 1/1
-            </Badge>
           </div>
         </CardHeader>
         <CardContent>
