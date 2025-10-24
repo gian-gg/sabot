@@ -210,7 +210,7 @@ export default function BuyTokensPage() {
           <CardContent className="space-y-3 p-6">
             <div className="text-muted-foreground flex items-center gap-2 text-sm tracking-wide uppercase">
               <TrendingUp className="size-4" />
-              Circulating Supply
+              Total Supply
             </div>
             <div className="space-y-2">
               <p className="text-4xl font-bold">
