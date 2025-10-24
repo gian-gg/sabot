@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS blockchain_agreements (
   agreement_hash TEXT NOT NULL,
   tx_hash TEXT,
   summary TEXT NOT NULL,
+  buyer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  seller_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

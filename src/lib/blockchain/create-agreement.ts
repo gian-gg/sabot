@@ -5,23 +5,24 @@ import { getPublicAddress, getEncryptedKey } from '@/lib/supabase/db/user';
 import { getWritableLedgerContract } from './contract';
 
 export async function createBlockchainAgreement(
-  initiatorId: string,
-  participantId: string,
-  details: string
+  buyerId: string,
+  sellerId: string,
+  details: string,
+  isBuyerInitiator: boolean
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Get blockchain addresses for both parties
-    const initiatorAddress = await getPublicAddress(initiatorId);
-    const participantAddress = await getPublicAddress(participantId);
+    const buyerAddress = await getPublicAddress(buyerId);
+    const sellerAddress = await getPublicAddress(sellerId);
 
-    if (!initiatorAddress || !participantAddress) {
+    if (!buyerAddress || !sellerAddress) {
       throw new Error('Could not find blockchain addresses for users');
     }
 
-    // Prepare transaction data
+    // Prepare transaction data with clear buyer/seller roles
     const transactionData: TransactionData = {
-      partyA: initiatorAddress,
-      partyB: participantAddress,
+      partyA: isBuyerInitiator ? buyerAddress : sellerAddress,
+      partyB: isBuyerInitiator ? sellerAddress : buyerAddress,
       details: details,
       timestamp: Date.now(),
     };
@@ -32,16 +33,20 @@ export async function createBlockchainAgreement(
     // Store agreement details in database
     const agreementId = await storeAgreementDetails(
       agreementHash,
-      initiatorId,
-      participantId,
-      details
+      buyerId,
+      sellerId,
+      details,
+      isBuyerInitiator
     );
 
     if (!agreementId) {
       throw new Error('Failed to store agreement details');
     }
 
-    // Get encrypted private key for transaction signing
+    // Get encrypted private key for transaction signing from the initiator
+    const initiatorId = isBuyerInitiator ? buyerId : sellerId;
+    const recipientAddress = isBuyerInitiator ? sellerAddress : buyerAddress;
+
     const encryptedKey = await getEncryptedKey(initiatorId);
     if (!encryptedKey) {
       throw new Error('No encrypted key found for user');
@@ -52,7 +57,7 @@ export async function createBlockchainAgreement(
 
     // Create agreement on blockchain with the details hash
     const tx = await contract.createAgreement(
-      participantAddress,
+      recipientAddress,
       ethers.encodeBytes32String(agreementHash)
     );
 

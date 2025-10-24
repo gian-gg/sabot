@@ -5,15 +5,21 @@ export interface BlockchainAgreementData {
   agreementHash: string;
   txHash?: string;
   summary: string;
+  buyerId: string;
+  sellerId: string;
 }
 
 export async function storeAgreementDetails(
   agreementHash: string,
-  initiatorId: string,
-  participantId: string,
-  details: string
+  buyerId: string,
+  sellerId: string,
+  details: string,
+  isBuyerInitiator: boolean
 ): Promise<string | null> {
   const supabase = await createClient();
+
+  const initiatorId = isBuyerInitiator ? buyerId : sellerId;
+  const participantId = isBuyerInitiator ? sellerId : buyerId;
 
   const { data, error } = await supabase
     .from('agreements')
@@ -30,19 +36,19 @@ export async function storeAgreementDetails(
     return null;
   }
 
-  // Add participants
+  // Add participants with buyer/seller roles
   const participantsPromises = [
     supabase.from('agreement_participants').insert({
       agreement_id: data.id,
-      user_id: initiatorId,
-      role: 'creator',
-      has_confirmed: true,
+      user_id: buyerId,
+      role: 'buyer',
+      has_confirmed: isBuyerInitiator,
     }),
     supabase.from('agreement_participants').insert({
       agreement_id: data.id,
-      user_id: participantId,
-      role: 'invitee',
-      has_confirmed: false,
+      user_id: sellerId,
+      role: 'seller',
+      has_confirmed: !isBuyerInitiator,
     }),
   ];
 
@@ -67,6 +73,8 @@ export async function createBlockchainAgreement(
     agreement_hash: data.agreementHash,
     tx_hash: data.txHash,
     summary: data.summary,
+    buyer_id: data.buyerId,
+    seller_id: data.sellerId,
   });
 
   if (error) {
@@ -119,5 +127,7 @@ export async function getBlockchainAgreement(
     agreementHash: data.agreement_hash,
     txHash: data.tx_hash,
     summary: data.summary,
+    buyerId: data.buyer_id,
+    sellerId: data.seller_id,
   };
 }
