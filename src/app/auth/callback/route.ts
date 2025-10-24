@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { ethers } from 'ethers';
+import { getPublicAddress, postNewUserWallet } from '@/lib/supabase/db/user';
+import { createWallet } from '@/lib/blockchain/wallet';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  // if "next" is in param, use it as the redirect URL
+
   let next = searchParams.get('next') ?? '/';
   if (!next.startsWith('/')) {
-    next = '/'; // Default to root if "next" is not a relative URL
+    next = '/';
   }
 
   if (code) {
@@ -22,43 +23,35 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: userProfile } = await supabase
-          .from('user_wallet')
-          .select('address')
-          .eq('id', user.id)
-          .single();
+        const existAddress = await getPublicAddress(user.id);
 
-        // If the user profile exists and already has a wallet, redirect to the main app.
-        if (userProfile && userProfile.address) {
+        if (existAddress) {
           return NextResponse.redirect(`${origin}${next}`);
         }
 
-        // --- NEW LOGIC ---
-        // If the user is new or doesn't have a wallet, create one.
-        const newWallet = ethers.Wallet.createRandom();
-        const publicAddress = newWallet.address;
-        const privateKey = newWallet.privateKey;
+        const secretKey = process.env.PRIVATE_KEY_SECRET!;
+        const newWallet = createWallet(secretKey);
 
-        if (!newWallet.mnemonic) {
-          console.error('Wallet creation failed to generate a mnemonic.');
-          return new Response('Wallet creation failed.', { status: 500 });
+        if (!newWallet) {
+          return NextResponse.redirect(`${origin}/auth/auth-code-error`);
         }
+        const {
+          address: publicAddress,
+          privateKey,
+          mnemonic,
+          encryptedKey,
+        } = newWallet;
 
-        const mnemonic = newWallet.mnemonic.phrase;
+        const saveSuccess = await postNewUserWallet(
+          user.id,
+          publicAddress,
+          encryptedKey
+        );
 
-        const { error: updateError } = await supabase
-          .from('user_wallet')
-          .insert([{ address: publicAddress }])
-          .eq('id', user.id);
-
-        if (updateError) {
-          console.error('Failed to save new wallet address:', updateError);
-          // Redirect to an error page if saving fails
+        if (!saveSuccess) {
           return NextResponse.redirect(`${origin}/auth/auth-code-error`);
         }
 
-        // Redirect to a new page to display the mnemonic phrase securely.
-        // We pass the mnemonic as a query parameter for the one-time display.
         const redirectUrl = new URL(`${origin}/wallet/setup`);
         redirectUrl.searchParams.append('mnemonic', mnemonic);
         redirectUrl.searchParams.append('address', publicAddress);
@@ -69,6 +62,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // Fallback: return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }

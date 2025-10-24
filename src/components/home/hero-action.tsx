@@ -11,14 +11,20 @@ import { useRouter } from 'next/navigation';
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+
+import { useRegisterWallet } from '@/hooks/useRegisterWallet';
 
 const HeroAction = () => {
   const user = useUserStore();
   const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   const createRef = useRef<HTMLDivElement>(null);
+
+  // Trigger wallet registration when user verification is complete
+  useRegisterWallet(user.verificationStatus === 'complete');
 
   const goToTransactionNew = () => {
     router.push(ROUTES.TRANSACTION.INVITE);
@@ -38,9 +44,9 @@ const HeroAction = () => {
   if (user.verificationStatus === 'not-started') {
     return (
       <Button asChild>
-        <Link href={ROUTES.HOME.VERIFY}>
+        <Link href={ROUTES.HOME.VERIFY} className="flex items-center">
           <BadgeCheck className="mr-2 h-4 w-4" />
-          Verify Account
+          <span>Verify Account</span>
         </Link>
       </Button>
     );
@@ -48,17 +54,19 @@ const HeroAction = () => {
 
   if (user.verificationStatus === 'pending') {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button>
-            <Clock className="mr-2 h-4 w-4" />
-            Pending Verification
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent align="center" side="right">
-          <p>Verifying account, kindly check again later.</p>
-        </TooltipContent>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button>
+              <Clock className="mr-2 h-4 w-4" />
+              Pending Verification
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent align="center" side="right">
+            <p>Verifying account, kindly check again later.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
@@ -97,5 +105,4 @@ const HeroAction = () => {
     </div>
   );
 };
-
 export default HeroAction;

@@ -103,3 +103,53 @@ export async function getUsersVerificationMap(
   }
   return map;
 }
+
+export async function getEncryptedKey(userId: string): Promise<string | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('user_wallet')
+    .select('encrypt_private_key')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return String(data.encrypt_private_key);
+}
+
+export async function getPublicAddress(userId: string): Promise<string | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('user_wallet')
+    .select('address')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return String(data.address);
+}
+
+export async function postNewUserWallet(
+  userId: string,
+  publicAddress: string,
+  encryptedKey: string
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('user_wallet')
+    .insert([
+      { id: userId, address: publicAddress, encrypt_private_key: encryptedKey },
+    ]);
+
+  if (error) return false;
+
+  return true;
+}
