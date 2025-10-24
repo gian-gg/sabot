@@ -6,8 +6,9 @@ The Sabot platform implements a comprehensive identity verification system that 
 
 > **🎯 Hackathon Prototype Notice**  
 > This is a submission for **Cebu Hacktoberfest 2025**. The current implementation is a **prototype** designed to demonstrate the feasibility and workflow of AI-powered identity verification. We utilize Gemini AI for rapid prototyping, which allows us to quickly implement and showcase the verification flow in a hackathon environment.
-> 
+>
 > **Production vs Prototype:**
+>
 > - **Prototype (Current)**: Uses Gemini AI for ease of implementation and demonstration purposes
 > - **Production (Future)**: Would utilize specialized identity verification services, advanced biometric models, government ID validation APIs, certified liveness detection systems, and compliance-grade security measures required for real-world KYC/AML requirements
 >
@@ -43,18 +44,21 @@ The verification process consists of six main steps:
 **Purpose**: Inform users about data collection and obtain explicit consent
 
 **User Experience**:
+
 - Clear explanation of what data will be collected
 - Privacy policy disclosure
 - Information about data usage and security
 - Explicit consent checkbox required
 
 **What Users See**:
+
 - Government ID upload requirement
 - Facial biometric scan requirement
 - Personal information collection notice
 - Data usage and privacy guarantees
 
 **Technical Details**:
+
 ```typescript
 // Step: PERMISSION_CONSENT
 // Component: PermissionConsent
@@ -72,18 +76,21 @@ The verification process consists of six main steps:
 **Purpose**: User selects their government-issued ID type
 
 **Supported ID Types**:
+
 - **Passport** - International travel document
 - **UMID** (Unified Multi-Purpose ID) - Philippine national ID
 - **PhilSys ID** - Philippine Identification System
 - **Driver's License** - Philippine driver's license
 
 **User Experience**:
+
 - Clean card-based selection interface
 - Clear icons and labels
 - Radio button selection
 - Helpful descriptions for each ID type
 
 **Technical Details**:
+
 ```typescript
 // Step: ID_SELECTION
 // Component: IdSelection
@@ -103,6 +110,7 @@ type UserIDType = {
 **Purpose**: Upload and verify government ID document using AI
 
 **User Experience**:
+
 1. Drag-and-drop or click to upload
 2. Camera capture support on mobile devices
 3. Real-time image preview
@@ -111,6 +119,7 @@ type UserIDType = {
 6. Comprehensive validation
 
 **AI Processing**:
+
 ```typescript
 // Prototype: Uses Gemini AI to analyze uploaded ID
 // Production: Would use specialized ID verification APIs
@@ -133,6 +142,7 @@ const data = await verifyUserId(idType, file);
 > **Prototype Implementation**: The current system uses Gemini AI's vision capabilities to extract information from ID documents. This approach is excellent for rapid prototyping and hackathon demonstrations, allowing us to showcase the complete verification flow quickly.
 >
 > **Production Considerations**: In a real-world deployment, this would be replaced with:
+>
 > - Dedicated OCR engines optimized for government IDs
 > - Official government ID validation APIs
 > - Document authenticity verification (holograms, watermarks, security features)
@@ -140,6 +150,7 @@ const data = await verifyUserId(idType, file);
 > - Certified compliance with local data protection regulations
 
 **File Requirements**:
+
 - **Format**: Image files only (JPEG, PNG, etc.)
 - **Size**: Maximum 10 MB
 - **Quality**: Clear, readable photo
@@ -147,19 +158,20 @@ const data = await verifyUserId(idType, file);
 
 **Validation Rules**:
 
-| Field | Requirement |
-|-------|-------------|
-| First Name | Min 2 chars, letters only |
-| Last Name | Min 2 chars, letters only |
-| Middle Name | Optional, letters only if provided |
-| ID Number | Min 4 chars, alphanumeric |
-| Date of Birth | Min age 18 years, not future date |
-| Issue Date | Not future, after date of birth |
-| Expiry Date | Future date, after issue date (not required for UMID) |
-| Sex | M/F or Male/Female |
-| Address | Min 10 chars, max 500 chars |
+| Field         | Requirement                                           |
+| ------------- | ----------------------------------------------------- |
+| First Name    | Min 2 chars, letters only                             |
+| Last Name     | Min 2 chars, letters only                             |
+| Middle Name   | Optional, letters only if provided                    |
+| ID Number     | Min 4 chars, alphanumeric                             |
+| Date of Birth | Min age 18 years, not future date                     |
+| Issue Date    | Not future, after date of birth                       |
+| Expiry Date   | Future date, after issue date (not required for UMID) |
+| Sex           | M/F or Male/Female                                    |
+| Address       | Min 10 chars, max 500 chars                           |
 
 **Error Handling**:
+
 - Invalid file type → Error toast
 - File too large → Error toast
 - AI extraction failure → User can retry
@@ -167,6 +179,7 @@ const data = await verifyUserId(idType, file);
 - Validation errors → Listed in disclaimer
 
 **Technical Details**:
+
 ```typescript
 // Step: ID_CAPTURE
 // Component: IdCapture
@@ -181,6 +194,7 @@ const data = await verifyUserId(idType, file);
 **Purpose**: Verify user is live person and matches ID photo
 
 **Process Overview**:
+
 1. Camera access requested
 2. User performs series of actions
 3. Each action captured and verified
@@ -190,11 +204,13 @@ const data = await verifyUserId(idType, file);
 **Liveness Check Steps**:
 
 **Fixed Steps** (always performed):
+
 - Look straight ahead
 - Turn your head to the left
 - Turn your head to the right
 
 **Random Steps** (1 randomly selected):
+
 - Smile
 - Open your mouth
 - Raise your eyebrows
@@ -203,27 +219,29 @@ const data = await verifyUserId(idType, file);
 Total: 4 steps per verification session
 
 **AI Verification**:
+
 ```typescript
 // Prototype: For each step, Gemini AI verifies liveness and face matching
 // Production: Would use specialized biometric verification systems
 const result = await verifyLivenessCheck(
-  faceCapture,    // Current camera frame
-  userIdCard,     // Uploaded ID
-  stepName        // Current instruction
+  faceCapture, // Current camera frame
+  userIdCard, // Uploaded ID
+  stepName // Current instruction
 );
 
 // Returns:
 interface LivenessCheckResult {
-  isLivenessVerified: boolean;      // Real person detected
-  isFaceMatchVerified: boolean;     // Face matches ID
+  isLivenessVerified: boolean; // Real person detected
+  isFaceMatchVerified: boolean; // Face matches ID
   faceMatchConfidence: number | null; // 0-1 confidence score
-  notes: string[];                   // Any issues/warnings
+  notes: string[]; // Any issues/warnings
 }
 ```
 
 > **Prototype Implementation**: Gemini AI analyzes each captured frame to detect faces, verify liveness based on the requested action, and match against the ID photo. This demonstrates the complete flow and user experience effectively for a hackathon prototype.
 >
 > **Production Considerations**: Real-world implementation would require:
+>
 > - Certified liveness detection SDKs (iProov, Onfido, Jumio, etc.)
 > - Advanced anti-spoofing measures (3D depth sensing, passive liveness)
 > - ISO/IEC 30107-3 compliant liveness detection
@@ -232,6 +250,7 @@ interface LivenessCheckResult {
 > - Compliance with biometric data regulations (GDPR, BIPA, etc.)
 
 **User Instructions**:
+
 - Find a well-lit area
 - Remove glasses, hats, and masks
 - Look straight at the camera
@@ -239,14 +258,16 @@ interface LivenessCheckResult {
 - Ensure face is inside the frame
 
 **Captured Data**:
+
 ```typescript
 interface CaptureData extends LivenessCheckResult {
-  step: string;           // Which action was performed
-  timestamp: string;      // ISO timestamp
+  step: string; // Which action was performed
+  timestamp: string; // ISO timestamp
 }
 ```
 
 **Success Criteria**:
+
 - ✅ All steps completed successfully
 - ✅ Face detected in each frame
 - ✅ Liveness verified (not a photo/video)
@@ -254,6 +275,7 @@ interface CaptureData extends LivenessCheckResult {
 - ✅ Confidence score meets threshold
 
 **Technical Details**:
+
 ```typescript
 // Step: BIOMETRIC_CAPTURE
 // Component: BiometricCapture
@@ -263,6 +285,7 @@ interface CaptureData extends LivenessCheckResult {
 ```
 
 **Privacy & Security**:
+
 - Camera access required only during this step
 - Frames processed immediately, not stored long-term
 - Face matching done server-side
@@ -291,6 +314,7 @@ interface CaptureData extends LivenessCheckResult {
    - Liveness check results
 
 **User Experience**:
+
 - Read-only preview of all data
 - Clear organization by section
 - Success disclaimer confirming completion
@@ -298,6 +322,7 @@ interface CaptureData extends LivenessCheckResult {
 - Final "Submit" button
 
 **Technical Details**:
+
 ```typescript
 // Step: SUBMISSION_REVIEW
 // Component: SubmissionReview
@@ -306,6 +331,7 @@ interface CaptureData extends LivenessCheckResult {
 ```
 
 **Validation**:
+
 - All required fields present
 - ID file uploaded
 - Liveness check completed
@@ -319,6 +345,7 @@ interface CaptureData extends LivenessCheckResult {
 **Purpose**: Inform user that verification is under review
 
 **User Experience**:
+
 - Success confirmation message
 - "Pending Review" status
 - Estimated review timeline
@@ -326,6 +353,7 @@ interface CaptureData extends LivenessCheckResult {
 - Navigation back to home
 
 **Backend Processing**:
+
 ```typescript
 async function handleSubmit() {
   // 1. Upload ID to storage
@@ -333,21 +361,19 @@ async function handleSubmit() {
     bucket: 'verification-ids',
     content: govIdFile,
     fileName: 'government-id',
-    pathPrefix: `${userID}/`
+    pathPrefix: `${userID}/`,
   });
 
   // 2. Insert verification request
-  await supabase
-    .from('verification_requests')
-    .insert({
-      user_id,
-      user_name,
-      user_email,
-      id_type,
-      face_match: faceMatchConfidence,
-      user_govid_path: storagePath,
-      user_govid_info: governmentIdInfo
-    });
+  await supabase.from('verification_requests').insert({
+    user_id,
+    user_name,
+    user_email,
+    id_type,
+    face_match: faceMatchConfidence,
+    user_govid_path: storagePath,
+    user_govid_info: governmentIdInfo,
+  });
 
   // 3. Update user status to 'pending'
   await updateUserVerificationStatus(userID, 'pending');
@@ -357,6 +383,7 @@ async function handleSubmit() {
 **Database Tables**:
 
 **verification_requests**:
+
 - `id` (UUID) - Request ID
 - `user_id` (UUID) - User reference
 - `user_name` - Full name
@@ -368,11 +395,13 @@ async function handleSubmit() {
 - `created_at` - Timestamp
 
 **user_data.verification_status**:
+
 - `not-started` - Initial state
 - `pending` - Submitted, awaiting review
 - `complete` - Approved by admin
 
 **Technical Details**:
+
 ```typescript
 // Step: SUBMISSION_PENDING
 // Component: SubmissionPending
@@ -389,6 +418,7 @@ async function handleSubmit() {
 **Access**: `/admin/verify` (admin users only)
 
 **Features**:
+
 - Table view of all verification requests
 - Filter by status (pending/complete)
 - Sort by submission date
@@ -396,6 +426,7 @@ async function handleSubmit() {
 - Quick review action buttons
 
 **Table Columns**:
+
 - User (name + email)
 - ID Type (badge)
 - Submitted (date)
@@ -440,6 +471,7 @@ async function handleSubmit() {
 **Admin Actions**:
 
 **Approve**:
+
 ```typescript
 // Updates user status to 'complete'
 await updateUserVerificationStatus(userID, 'complete');
@@ -452,6 +484,7 @@ user.verificationStatus = 'complete';
 ```
 
 **Reject**:
+
 ```typescript
 // Updates user status back to 'not-started'
 await updateUserVerificationStatus(userID, 'not-started');
@@ -463,6 +496,7 @@ await deleteVerificationRequest(requestID);
 ```
 
 **Review Criteria**:
+
 - ✅ ID document is clear and legible
 - ✅ Photo matches biometric captures
 - ✅ Information is consistent
@@ -511,6 +545,7 @@ User Journey:
 ### Backend Components
 
 **File Structure**:
+
 ```
 src/
 ├── app/home/verify/page.tsx          # Main verification page
@@ -541,37 +576,37 @@ src/
 export async function verifyUserId(
   idType: IdType,
   file: File
-): Promise<GovernmentIdInfo>
+): Promise<GovernmentIdInfo>;
 
 // Liveness Check
 export async function verifyLivenessCheck(
   faceCapture: File,
   userIdCard: File,
   step: string
-): Promise<LivenessCheckResult>
+): Promise<LivenessCheckResult>;
 ```
 
 **Database Operations** (`src/lib/supabase/db/verify.ts`):
 
 ```typescript
 // Fetch all verification requests
-export async function getVerificationRequests(): 
-  Promise<VerificationRequests[]>
+export async function getVerificationRequests(): Promise<
+  VerificationRequests[]
+>;
 
 // Submit new verification
 export async function submitVerificationRequest(
   input: SubmitVerificationRequestInput
-): Promise<VerificationRequests>
+): Promise<VerificationRequests>;
 
 // Delete request (rejection)
-export async function deleteVerificationRequest(
-  id: string
-): Promise<boolean>
+export async function deleteVerificationRequest(id: string): Promise<boolean>;
 ```
 
 ### State Management
 
 **Component State** (React `useState`):
+
 - `step` - Current verification step
 - `userID` - Selected ID type + file
 - `userData` - Extracted government ID info
@@ -579,6 +614,7 @@ export async function deleteVerificationRequest(
 - `isSubmitting` - Submission loading state
 
 **User Store** (Zustand):
+
 - `user.verificationStatus` - Global verification state
 - Updates on: submission, approval, rejection
 - Persisted across sessions
@@ -624,20 +660,23 @@ export async function deleteVerificationRequest(
 ### Data Protection
 
 **Encryption**:
+
 - All data encrypted in transit (HTTPS)
 - Files encrypted at rest in Supabase Storage
 - Database fields encrypted
 
 **Access Control**:
+
 - RLS (Row Level Security) policies
 - Users can only access their own data
 - Admins can access all verification requests
 - Signed URLs for temporary image access
 
 **Storage Security**:
+
 ```typescript
 // Files stored with user-specific paths
-pathPrefix: `${userID}/`
+pathPrefix: `${userID}/`;
 
 // Bucket: 'verification-ids'
 // Access: Private, requires authentication
@@ -647,17 +686,20 @@ pathPrefix: `${userID}/`
 ### Privacy Compliance
 
 **Data Minimization**:
+
 - Only collect necessary information
 - No long-term storage of biometric frames
 - Face match scores stored, not raw images
 
 **User Rights**:
+
 - Right to access personal data
 - Right to request deletion
 - Data usage clearly disclosed
 - Explicit consent required
 
 **Retention Policy**:
+
 - Verification data retained while account active
 - Can request deletion at any time
 - Automatic cleanup on account deletion
@@ -665,18 +707,21 @@ pathPrefix: `${userID}/`
 ### Security Best Practices
 
 **Input Validation**:
+
 - File type checking (images only)
 - File size limits (10 MB max)
 - Content validation (AI checks quality)
 - Field validation (format, length, patterns)
 
 **AI Security**:
+
 - Liveness detection prevents photo replay
 - Multiple capture angles
 - Random step selection
 - Confidence thresholds
 
 **API Security**:
+
 - Server-side AI processing
 - Authentication required
 - Rate limiting (future enhancement)
@@ -689,6 +734,7 @@ pathPrefix: `${userID}/`
 ### Common Issues
 
 **Camera Access Denied**:
+
 ```
 Error: "Camera access denied"
 Solution: User must grant camera permission
@@ -696,6 +742,7 @@ Fallback: Instructions to enable in browser settings
 ```
 
 **Poor Image Quality**:
+
 ```
 Error: AI extraction failed or notes present
 Solution: User can retake photo
@@ -703,6 +750,7 @@ Guidance: Better lighting, clear focus
 ```
 
 **Face Not Detected**:
+
 ```
 Error: "No face detected in frame"
 Solution: User adjusts position
@@ -710,6 +758,7 @@ Guidance: Center face, remove obstructions
 ```
 
 **Low Face Match Confidence**:
+
 ```
 Warning: Confidence < 70%
 Action: User can retry liveness check
@@ -717,6 +766,7 @@ Admin: Manual review required
 ```
 
 **Expired ID**:
+
 ```
 Validation: Expiry date in past
 Error: "ID has expired"
@@ -724,6 +774,7 @@ Solution: User must use valid ID
 ```
 
 **Age Restriction**:
+
 ```
 Validation: Date of birth < 18 years
 Error: "Must be 18 years or older"
@@ -733,17 +784,20 @@ Solution: Cannot proceed
 ### Error Recovery
 
 **Upload Failures**:
+
 - Automatic retry with exponential backoff
 - Clear error messages
 - Option to retry manually
 
 **AI Service Failures**:
+
 - Graceful degradation
 - Error logging for admin review
 - User-friendly error messages
 - Retry capability
 
 **Network Issues**:
+
 - Loading states during operations
 - Timeout handling
 - Offline detection
@@ -756,6 +810,7 @@ Solution: Cannot proceed
 ### Test Cases
 
 **ID Upload**:
+
 - ✅ Valid passport upload
 - ✅ Valid UMID upload
 - ✅ Valid PhilSys upload
@@ -765,6 +820,7 @@ Solution: Cannot proceed
 - ❌ Corrupted image file
 
 **Liveness Check**:
+
 - ✅ All steps completed correctly
 - ✅ Face detected in all frames
 - ✅ High confidence face match
@@ -774,6 +830,7 @@ Solution: Cannot proceed
 - ❌ Poor lighting conditions
 
 **Data Validation**:
+
 - ✅ All required fields present
 - ✅ Valid date formats
 - ✅ Age ≥ 18 years
@@ -784,6 +841,7 @@ Solution: Cannot proceed
 - ❌ Expired ID
 
 **Admin Review**:
+
 - ✅ Approve valid request
 - ✅ Reject invalid request
 - ✅ View all request details
@@ -794,6 +852,7 @@ Solution: Cannot proceed
 ### Mock Data
 
 **Development Mode**:
+
 ```typescript
 // Hackathon shortcut available in dev
 // Skip entire verification flow
@@ -808,6 +867,7 @@ Solution: Cannot proceed
 ### Prototype to Production Roadmap
 
 **Phase 1: Production-Grade Verification Services**
+
 - Replace Gemini AI with specialized identity verification providers
   - Onfido, Jumio, Veriff, or similar certified services
   - Government ID validation APIs
@@ -817,6 +877,7 @@ Solution: Cannot proceed
 - Document authenticity verification (UV, IR, hologram detection)
 
 **Phase 2: Enhanced Security & Compliance**
+
 - Multi-factor verification layers
 - Document forgery detection (security features analysis)
 - Real-time video liveness with depth sensing
@@ -825,6 +886,7 @@ Solution: Cannot proceed
 - Biometric data encryption standards
 
 **Phase 3: User Experience Improvements**
+
 - Progress saving (resume later)
 - Multi-language support (Tagalog, English, etc.)
 - Accessibility improvements (screen readers, high contrast)
@@ -833,6 +895,7 @@ Solution: Cannot proceed
 - Reduced verification time (<2 minutes)
 
 **Phase 4: Admin & Operations Tools**
+
 - Batch processing workflows
 - Real-time analytics dashboard
 - Automated risk scoring and fraud detection
@@ -841,6 +904,7 @@ Solution: Cannot proceed
 - Integration with case management systems
 
 **Phase 5: Advanced Integration**
+
 - Webhook notifications for verification events
 - Third-party KYC/AML service integration
 - Philippine government ID APIs (PhilSys, LTO, DFA)
@@ -851,6 +915,7 @@ Solution: Cannot proceed
 ### Scalability Considerations
 
 **Current Prototype Limitations**:
+
 - Gemini AI has rate limits and quotas
 - Synchronous processing may cause delays during peak usage
 - Single AI provider creates dependency risk
@@ -859,6 +924,7 @@ Solution: Cannot proceed
 **Production Scalability Plan**:
 
 **Performance**:
+
 - Image optimization before upload (WebP, compression)
 - CDN for static assets and frequently accessed data
 - Lazy loading components for faster initial load
@@ -867,6 +933,7 @@ Solution: Cannot proceed
 - Parallel processing for multiple verification steps
 
 **Infrastructure**:
+
 - Dedicated verification microservice
 - Message queue system (RabbitMQ, AWS SQS) for async processing
 - Horizontal scaling with load balancers
@@ -875,6 +942,7 @@ Solution: Cannot proceed
 - Database sharding for large-scale user data
 
 **Reliability**:
+
 - Multi-provider failover (primary + backup verification services)
 - Circuit breakers for external API calls
 - Graceful degradation when services unavailable
@@ -888,24 +956,28 @@ Solution: Cannot proceed
 ### For Users
 
 **Can't Upload ID**:
+
 1. Check file is an image (JPEG/PNG)
 2. Verify file size < 10 MB
 3. Try different browser
 4. Clear browser cache
 
 **Camera Won't Start**:
+
 1. Grant camera permission
 2. Check no other app using camera
 3. Try different browser
 4. Restart device
 
 **AI Extraction Failed**:
+
 1. Ensure good lighting
 2. Take clear, focused photo
 3. Include entire ID in frame
 4. Avoid glare/reflections
 
 **Face Not Matching**:
+
 1. Remove glasses/hat
 2. Use good lighting
 3. Look directly at camera
@@ -914,12 +986,14 @@ Solution: Cannot proceed
 ### For Admins
 
 **Image Won't Load**:
+
 1. Check signed URL generation
 2. Verify storage bucket access
 3. Check RLS policies
 4. Try refreshing page
 
 **Can't Approve Request**:
+
 1. Verify admin role
 2. Check database connection
 3. Review console errors
@@ -940,16 +1014,9 @@ type VerificationStep =
   | 'SUBMISSION_REVIEW'
   | 'SUBMISSION_PENDING';
 
-type IdType = 
-  | 'passport' 
-  | 'umid' 
-  | 'philsys' 
-  | 'drivers_license';
+type IdType = 'passport' | 'umid' | 'philsys' | 'drivers_license';
 
-type VerificationStatus = 
-  | 'not-started' 
-  | 'pending' 
-  | 'complete';
+type VerificationStatus = 'not-started' | 'pending' | 'complete';
 ```
 
 ### Constants
@@ -986,6 +1053,7 @@ const LIVENESS_CHECK_STEPS_RANDOM = [
 ### Contact
 
 For questions or issues:
+
 - Review this documentation
 - Check browser console for errors
 - Test with different ID documents
@@ -1011,6 +1079,7 @@ This system builds trust in the platform while maintaining user privacy and secu
 ### Hackathon Context
 
 As a **Cebu Hacktoberfest 2025** submission, this prototype successfully demonstrates:
+
 - **Feasibility**: Complete end-to-end verification flow
 - **User Experience**: Intuitive, step-by-step process
 - **AI Integration**: Practical use of Gemini AI for rapid development
@@ -1018,6 +1087,7 @@ As a **Cebu Hacktoberfest 2025** submission, this prototype successfully demonst
 - **Innovation**: Modern approach to identity verification in P2P transactions
 
 The use of **Gemini AI makes perfect sense for a hackathon prototype** because:
+
 - ⚡ **Rapid Development**: Implement complex verification logic in hours, not weeks
 - 🎯 **Proof of Concept**: Demonstrates the complete user journey effectively
 - 🔧 **Flexibility**: Easy to modify and iterate during hackathon timeline

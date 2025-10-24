@@ -13,8 +13,8 @@ bun install
 
 Create a `.env.local` at the repository root with at least the following values:
 
--   `SUPABASE_URL` — URL for your Supabase project
--   `SUPABASE_ANON_KEY` — Anon key for your Supabase project
+- `SUPABASE_URL` — URL for your Supabase project
+- `SUPABASE_ANON_KEY` — Anon key for your Supabase project
 
 ## Database
 
@@ -23,7 +23,6 @@ Migrations are handled via the Supabase CLI.
 ## Running Tests
 
 End-to-end tests are not yet implemented.
-
 
 Notes
 
