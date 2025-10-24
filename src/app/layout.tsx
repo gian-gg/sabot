@@ -6,7 +6,6 @@ import Footer from '@/components/core/footer';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
 import React from 'react';
-import SonnerToaster from '@/components/shared/sonner-toaster';
 
 export const metadata: Metadata = {
   title: 'sabot',
@@ -37,7 +36,6 @@ export default async function RootLayout({
         <Footer />
 
         <Toaster richColors theme="dark" />
-        <SonnerToaster />
       </body>
     </html>
   );
