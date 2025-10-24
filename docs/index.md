@@ -26,3 +26,7 @@ This documentation is divided into the following sections:
 
 -   [Escrow Quick Start](./04-user-guide/01-escrow-quick-start.md)
 -   [PDF Export Guide](./04-user-guide/02-pdf-export-guide.md)
+
+## 5. Verification System
+
+-   [Verification Flow](./05-verification-system/01-verification-flow.md)
