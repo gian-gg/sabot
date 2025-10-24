@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -21,12 +22,16 @@ import {
 } from '@/lib/pdf/export-agreement';
 
 interface Party {
-  id: string;
+  id?: string;
+  user_id?: string;
   name: string;
   email: string;
+  avatar?: string;
   color: string;
   signature?: string;
   signedAt?: string;
+  has_confirmed?: boolean;
+  role?: 'creator' | 'invitee';
 }
 
 interface AgreementData {
@@ -46,37 +51,78 @@ export default function FinalizedPage({
   const { id } = use(params);
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [agreementData, setAgreementData] = useState<AgreementData>({
+    id: id,
+    title: 'Loading...',
+    parties: [],
+  });
 
   // Get document from store
   const { title: storedTitle, content: storedContent } = useDocumentStore();
 
-  // Mock data - replace with real data from API/database
-  const agreementData: AgreementData = {
-    id: id,
-    title: storedTitle || 'Partnership Agreement',
-    content: storedContent || '',
-    blockchainHash: '0x8f34c3c0f8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c',
-    finalizedAt: new Date().toISOString(),
-    parties: [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        color: '#1DB954',
-        signature: 'https://via.placeholder.com/200x80?text=John+Doe+Signature',
-        signedAt: new Date(Date.now() - 300000).toISOString(),
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        color: '#FF6B6B',
-        signature:
-          'https://via.placeholder.com/200x80?text=Jane+Smith+Signature',
-        signedAt: new Date().toISOString(),
-      },
-    ],
-  };
+  // Fetch real agreement data from API
+  useEffect(() => {
+    const fetchAgreement = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/agreement/${id}/finalized`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch agreement');
+        }
+
+        const data = await response.json();
+
+        // Map API response to component state
+        // Generate colors for parties if not present
+        const colors = ['#1DB954', '#FF6B6B', '#4A90E2', '#F5A623'];
+        const parties: Party[] = (data.participants || []).map(
+          (
+            participant: {
+              id: string;
+              user_id: string;
+              name: string;
+              email: string;
+              avatar?: string;
+              role: 'creator' | 'invitee';
+              has_confirmed?: boolean;
+              signed_at?: string;
+            },
+            index: number
+          ) => ({
+            id: participant.id,
+            user_id: participant.user_id,
+            name: participant.name,
+            email: participant.email,
+            avatar: participant.avatar,
+            color: colors[index % colors.length],
+            role: participant.role,
+            has_confirmed: participant.has_confirmed,
+            signed_at: participant.signed_at,
+          })
+        );
+
+        setAgreementData({
+          id: data.agreement.id,
+          title: storedTitle || data.agreement.title || 'Agreement',
+          content: storedContent || data.agreement.content || '',
+          blockchainHash:
+            data.agreement.blockchain_hash ||
+            '0x8f34c3c0f8c8e8c8e8c8e8c8e8c8e8c8e8c8e8c',
+          finalizedAt: data.agreement.finalized_at || new Date().toISOString(),
+          parties,
+        });
+      } catch (error) {
+        console.error('Error fetching agreement:', error);
+        toast.error('Failed to load agreement details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgreement();
+  }, [id, storedTitle, storedContent]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -223,15 +269,32 @@ export default function FinalizedPage({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex flex-1 items-center gap-3">
-                        <div
-                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                          style={{ backgroundColor: party.color }}
-                        >
-                          {party.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                        </div>
+                        {party.avatar ? (
+                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                            <Image
+                              src={party.avatar}
+                              alt={party.name}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              onError={(result) => {
+                                // If image fails to load, hide it and show fallback
+                                result.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : null}
+                        {!party.avatar && (
+                          <div
+                            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: party.color }}
+                          >
+                            {party.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <p className="text-foreground truncate text-sm font-semibold">
                             {party.name}

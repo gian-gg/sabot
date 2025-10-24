@@ -72,7 +72,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add user as participant
+    // Get invitee info from user metadata
+    const inviteeName = user.user_metadata?.name || 'Invitee';
+    const inviteeEmail = user.email || '';
+    // Use avatar_url from user metadata
+    const inviteeAvatarUrl =
+      user.user_metadata?.avatar_url ||
+      user.user_metadata?.picture ||
+      undefined;
+
+    console.log('Join - Invitee data to store:', {
+      inviteeName,
+      inviteeEmail,
+      inviteeAvatarUrl,
+    });
+
+    // Add user as participant with profile data
     console.log('Join - Adding user as participant...');
     const { data: participant, error: participantError } = await supabase
       .from('agreement_participants')
@@ -80,6 +95,9 @@ export async function POST(request: NextRequest) {
         agreement_id: payload.agreement_id,
         user_id: user.id,
         role: 'invitee',
+        name: inviteeName,
+        email: inviteeEmail,
+        avatar: inviteeAvatarUrl,
       })
       .select()
       .single();
@@ -100,11 +118,20 @@ export async function POST(request: NextRequest) {
 
     console.log('Join - Participant added successfully:', participant.id);
 
-    // Update agreement status to 'both_joined'
-    console.log('Join - Updating agreement status to both_joined...');
+    // Update agreement with invitee data and status to 'both_joined'
+    console.log(
+      'Join - Updating agreement with invitee data and status to both_joined...'
+    );
+    console.log('Join - Avatar URL to store:', inviteeAvatarUrl);
     const { data: updateData, error: updateError } = await supabase
       .from('agreements')
-      .update({ status: 'both_joined' })
+      .update({
+        status: 'both_joined',
+        invitee_id: user.id,
+        invitee_name: inviteeName,
+        invitee_email: inviteeEmail,
+        invitee_avatar_url: inviteeAvatarUrl,
+      })
       .eq('id', payload.agreement_id)
       .select();
 
@@ -112,6 +139,10 @@ export async function POST(request: NextRequest) {
       console.error('Join - Failed to update agreement status:', updateError);
     } else {
       console.log('Join - Agreement status updated:', updateData);
+      console.log(
+        'Join - Invitee avatar URL stored:',
+        updateData?.[0]?.invitee_avatar_url
+      );
     }
 
     // Broadcast update to all clients subscribed to this agreement
