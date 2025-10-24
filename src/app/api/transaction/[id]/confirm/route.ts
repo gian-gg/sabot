@@ -88,6 +88,12 @@ export async function POST(
 
     // Broadcast update to all clients subscribed to this transaction
     const channel = supabase.channel(`transaction:${id}`);
+    console.log('Broadcasting transaction update:', {
+      transaction_id: id,
+      user_id: user.id,
+      both_confirmed: bothConfirmed,
+    });
+
     await channel.send({
       type: 'broadcast',
       event: 'transaction_update',
