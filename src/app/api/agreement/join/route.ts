@@ -6,16 +6,26 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { agreementId, userId } = await request.json();
 
+    // Get the current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Add user to agreement
-    const { data, error } = await supabase
+    const { data: agreement, error: agreementError } = await supabase
       .from('agreements')
       .select('*')
-      .eq('id', payload.agreement_id)
+      .eq('id', agreementId)
       .single();
 
     if (agreementError || !agreement) {
       console.error('Join - Agreement not found:', {
-        agreementId: payload.agreement_id,
+        agreementId,
         error: agreementError,
       });
       return NextResponse.json(
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
     const { count } = await supabase
       .from('agreement_participants')
       .select('*', { count: 'exact', head: true })
-      .eq('agreement_id', payload.agreement_id);
+      .eq('agreement_id', agreementId);
 
     if (count && count >= 2) {
       return NextResponse.json(
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
     const { data: participant, error: participantError } = await supabase
       .from('agreement_participants')
       .insert({
-        agreement_id: payload.agreement_id,
+        agreement_id: agreementId,
         user_id: user.id,
         role: 'invitee',
         name: inviteeName,
@@ -88,8 +98,6 @@ export async function POST(request: NextRequest) {
         details: participantError.details,
         hint: participantError.hint,
       });
-
-    if (error) {
       return NextResponse.json(
         { error: 'Failed to join agreement' },
         { status: 500 }
@@ -112,7 +120,7 @@ export async function POST(request: NextRequest) {
         invitee_email: inviteeEmail,
         invitee_avatar_url: inviteeAvatarUrl,
       })
-      .eq('id', payload.agreement_id)
+      .eq('id', agreementId)
       .select();
 
     if (updateError) {
@@ -126,13 +134,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Broadcast update to all clients subscribed to this agreement
-    const channel = supabase.channel(`agreement:${payload.agreement_id}`);
+    const channel = supabase.channel(`agreement:${agreementId}`);
     await channel.send({
       type: 'broadcast',
       event: 'agreement_update',
       payload: {
         type: 'participant_joined',
-        agreement_id: payload.agreement_id,
+        agreement_id: agreementId,
         user_id: user.id,
       },
     });

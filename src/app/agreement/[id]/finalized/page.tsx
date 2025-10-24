@@ -176,8 +176,8 @@ export default function FinalizedPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-neutral-950">
-      <PageHeader>
-        <div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
           <h1 className="text-2xl font-bold text-white">Agreement Finalized</h1>
           <p className="text-neutral-400">Agreement {id} has been finalized</p>
         </div>

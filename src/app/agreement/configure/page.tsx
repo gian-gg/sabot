@@ -28,31 +28,6 @@ export default function AgreementConfigure() {
           </CardContent>
         </Card>
       </div>
-    );
-  }
-
-  const handleQuestionnaireComplete = () => {
-    // Navigate directly to the editor
-    router.push(`/agreement/${agreementId}/active`);
-  };
-
-  return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <CardTitle className="text-xl">Agreement Configuration</CardTitle>
-              <CardDescription>
-                Tell us about your agreement to get started
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ProjectQuestionnaire onComplete={handleQuestionnaireComplete} />
-        </CardContent>
-      </Card>
     </div>
   );
 }
