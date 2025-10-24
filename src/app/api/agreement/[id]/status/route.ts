@@ -41,7 +41,7 @@ export async function GET(
       );
     }
 
-    // Get participants with user details
+    // Get participants
     const { data: participants, error: participantsError } = await supabase
       .from('agreement_participants')
       .select(
@@ -67,6 +67,19 @@ export async function GET(
       );
     }
 
+    // Enrich participants with creator profile info from the agreement table
+    const participantsData = (participants || []).map((participant) => {
+      if (participant.role === 'creator') {
+        return {
+          ...participant,
+          name: agreement.creator_name || 'Agreement Creator',
+          email: agreement.creator_email || '',
+          avatar: agreement.creator_avatar_url || undefined,
+        };
+      }
+      return participant;
+    });
+
     // Determine current user's role
     const currentUserParticipant = participants?.find(
       (p) => p.user_id === user.id
@@ -74,18 +87,18 @@ export async function GET(
     const currentUserRole = currentUserParticipant?.role;
 
     // Check if ready for next step (both joined)
-    const isReadyForNextStep = participants?.length === 2;
+    const isReadyForNextStep = participantsData?.length === 2;
 
     console.log('Status - Response:', {
       agreementId,
       status: agreement.status,
-      participantCount: participants?.length,
+      participantCount: participantsData?.length,
       isReadyForNextStep,
     });
 
     return NextResponse.json({
       agreement,
-      participants: participants || [],
+      participants: participantsData,
       current_user_role: currentUserRole,
       is_ready_for_next_step: isReadyForNextStep,
     });

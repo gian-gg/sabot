@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -62,7 +62,12 @@ interface AgreementData {
   suggestions?: Suggestion[];
 }
 
-export default function FinalizePage({ params }: { params: { id: string } }) {
+export default function FinalizePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
 
   // Get document from store
@@ -76,7 +81,7 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
 
   // Mock data - replace with real data from API/database
   const agreementData: AgreementData = {
-    id: params.id,
+    id: id,
     title: storedTitle || 'Partnership Agreement',
     content: storedContent || '',
     parties: [
@@ -128,7 +133,7 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
   };
 
   const handleCancel = () => {
-    router.push(`/agreement/${params.id}/active`);
+    router.push(`/agreement/${id}/active`);
   };
 
   const allConfirmed = displayParties.every((party) => party.hasConfirmed);
@@ -145,7 +150,7 @@ export default function FinalizePage({ params }: { params: { id: string } }) {
 
   const handleReportIssue = () => {
     // TODO: Open report modal or navigate to report page
-    console.log('Report issue for agreement:', params.id);
+    console.log('Report issue for agreement:', id);
   };
 
   const handleUserProfile = (userId: string) => {
