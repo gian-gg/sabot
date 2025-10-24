@@ -27,8 +27,8 @@ Empower individuals and businesses to create professional, legally sound agreeme
 
 ### 1. User Onboarding & Verification
 
--   **Authentication**: Supabase Auth
--   Secure session management
+- **Authentication**: Supabase Auth
+- Secure session management
 
 **Homepage - Public Transaction Ledger**
 The homepage functions as a blockchain-style public feed displaying all confirmed transactions:
@@ -222,11 +222,11 @@ Users can:
 
 ## Technology Stack
 
--   **Framework**: Next.js 15 with App Router
--   **Authentication**: Supabase Auth with email/password
--   **Database**: PostgreSQL with Supabase
--   **UI**: shadcn/ui with Tailwind CSS v4
--   **AI Integration**: Google Generative AI for conversation analysis
+- **Framework**: Next.js 15 with App Router
+- **Authentication**: Supabase Auth with email/password
+- **Database**: PostgreSQL with Supabase
+- **UI**: shadcn/ui with Tailwind CSS v4
+- **AI Integration**: Google Generative AI for conversation analysis
 
 ---
 
@@ -551,25 +551,25 @@ Similar to transaction confirmation:
 
 **Existing Infrastructure**:
 
--   Next.js 15 with App Router
--   PostgreSQL with Supabase
--   Authentication via Supabase Auth
--   Tailwind CSS v4 with shadcn/ui
+- Next.js 15 with App Router
+- PostgreSQL with Supabase
+- Authentication via Supabase Auth
+- Tailwind CSS v4 with shadcn/ui
 
 **Future Dependencies** (Phase 2):
 
--   **Tiptap**: Block-based editor (built on ProseMirror)
--   **Yjs**: CRDT for real-time collaboration
--   **y-websocket**: WebSocket server for sync
--   **Liveblocks** (optional): Managed real-time infrastructure
--   **jsPDF**: PDF generation with signatures
+- **Tiptap**: Block-based editor (built on ProseMirror)
+- **Yjs**: CRDT for real-time collaboration
+- **y-websocket**: WebSocket server for sync
+- **Liveblocks** (optional): Managed real-time infrastructure
+- **jsPDF**: PDF generation with signatures
 
 **Current Implementation** (Phase 1 - Frontend Only):
 
--   Mock data for agreements, parties, sections, AI suggestions
--   Placeholder components ready for UI generation
--   Static blocks (no real-time sync yet)
--   Mock cursor positions and typing indicators
+- Mock data for agreements, parties, sections, AI suggestions
+- Placeholder components ready for UI generation
+- Static blocks (no real-time sync yet)
+- Mock cursor positions and typing indicators
 
 ---
 
