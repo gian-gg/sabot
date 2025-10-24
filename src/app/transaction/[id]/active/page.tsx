@@ -464,10 +464,16 @@ export default function TransactionActive({
   };
 
   // Check if all deliverables are confirmed
-  const allDeliverablesConfirmed =
-    status?.participants?.every(
-      (p) => p.item_confirmed && p.payment_confirmed
-    ) || false;
+  // For escrow transactions, check oracle verification status
+  // For non-escrow transactions, check manual confirmation status
+  const allDeliverablesConfirmed = escrowData
+    ? deliverableStatuses.length > 0 &&
+      deliverableStatuses.every(
+        (d) => d.status === 'verified' || d.status === 'completed'
+      )
+    : status?.participants?.every(
+        (p) => p.item_confirmed && p.payment_confirmed
+      ) || false;
 
   const bothConfirmed = escrowData
     ? escrowData.initiator_confirmation === 'confirmed' &&
@@ -699,30 +705,38 @@ export default function TransactionActive({
                           : ''}
                       </p>
                     </div>
-                    {(() => {
-                      const allItemConfirmed = status?.participants?.every(
-                        (p) => p.item_confirmed
-                      );
-                      const canConfirm = canConfirmDeliverable('item');
+                    {!escrowData &&
+                      (() => {
+                        const allItemConfirmed = status?.participants?.every(
+                          (p) => p.item_confirmed
+                        );
+                        const canConfirm = canConfirmDeliverable('item');
 
-                      return (
-                        !allItemConfirmed &&
-                        canConfirm && (
-                          <Button
-                            onClick={() => handleConfirmDeliverable('item')}
-                            size="sm"
-                            className="bg-green-600 text-white hover:bg-green-700"
-                          >
-                            <CheckCircle2 className="mr-1 h-4 w-4" />
-                            Confirm
-                          </Button>
-                        )
-                      );
-                    })()}
-                    {!status?.participants?.every((p) => p.item_confirmed) &&
+                        return (
+                          !allItemConfirmed &&
+                          canConfirm && (
+                            <Button
+                              onClick={() => handleConfirmDeliverable('item')}
+                              size="sm"
+                              className="bg-green-600 text-white hover:bg-green-700"
+                            >
+                              <CheckCircle2 className="mr-1 h-4 w-4" />
+                              Confirm
+                            </Button>
+                          )
+                        );
+                      })()}
+                    {!escrowData &&
+                      !status?.participants?.every((p) => p.item_confirmed) &&
                       !canConfirmDeliverable('item') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
                           Waiting for receiver
+                        </div>
+                      )}
+                    {escrowData &&
+                      !status?.participants?.every((p) => p.item_confirmed) && (
+                        <div className="rounded bg-purple-800 px-2 py-1 text-xs text-purple-300">
+                          Oracle Verification Required
                         </div>
                       )}
                   </div>
@@ -764,30 +778,44 @@ export default function TransactionActive({
                             : 'Online payment'}
                       </p>
                     </div>
-                    {(() => {
-                      const allPaymentConfirmed = status?.participants?.every(
-                        (p) => p.payment_confirmed
-                      );
-                      const canConfirm = canConfirmDeliverable('payment');
+                    {!escrowData &&
+                      (() => {
+                        const allPaymentConfirmed = status?.participants?.every(
+                          (p) => p.payment_confirmed
+                        );
+                        const canConfirm = canConfirmDeliverable('payment');
 
-                      return (
-                        !allPaymentConfirmed &&
-                        canConfirm && (
-                          <Button
-                            onClick={() => handleConfirmDeliverable('payment')}
-                            size="sm"
-                            className="bg-green-600 text-white hover:bg-green-700"
-                          >
-                            <CheckCircle2 className="mr-1 h-4 w-4" />
-                            Confirm
-                          </Button>
-                        )
-                      );
-                    })()}
-                    {!status?.participants?.every((p) => p.payment_confirmed) &&
+                        return (
+                          !allPaymentConfirmed &&
+                          canConfirm && (
+                            <Button
+                              onClick={() =>
+                                handleConfirmDeliverable('payment')
+                              }
+                              size="sm"
+                              className="bg-green-600 text-white hover:bg-green-700"
+                            >
+                              <CheckCircle2 className="mr-1 h-4 w-4" />
+                              Confirm
+                            </Button>
+                          )
+                        );
+                      })()}
+                    {!escrowData &&
+                      !status?.participants?.every(
+                        (p) => p.payment_confirmed
+                      ) &&
                       !canConfirmDeliverable('payment') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
                           Waiting for receiver
+                        </div>
+                      )}
+                    {escrowData &&
+                      !status?.participants?.every(
+                        (p) => p.payment_confirmed
+                      ) && (
+                        <div className="rounded bg-purple-800 px-2 py-1 text-xs text-purple-300">
+                          Oracle Verification Required
                         </div>
                       )}
                   </div>
@@ -1010,39 +1038,68 @@ export default function TransactionActive({
                 </div>
               </div>
 
-              {/* Confirmation Button */}
-              {!status?.participants?.find((p) => p.user_id === currentUserId)
-                ?.has_confirmed && (
-                <div className="mt-4 rounded-lg border border-blue-800/50 bg-blue-900/20 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-200">
-                        Confirm Transaction
-                      </p>
-                      <p className="text-xs text-blue-300/70">
+              {/* Confirmation Button - Only show for non-escrow transactions */}
+              {!escrowData &&
+                !status?.participants?.find((p) => p.user_id === currentUserId)
+                  ?.has_confirmed && (
+                  <div className="mt-4 rounded-lg border border-blue-800/50 bg-blue-900/20 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-blue-200">
+                          Confirm Transaction
+                        </p>
+                        <p className="text-xs text-blue-300/70">
+                          {allDeliverablesConfirmed
+                            ? 'All deliverables confirmed. Ready to finalize transaction.'
+                            : 'Confirm all deliverables before proceeding'}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleConfirmTransaction}
+                        disabled={!allDeliverablesConfirmed}
+                        className={`${
+                          allDeliverablesConfirmed
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'cursor-not-allowed bg-gray-600 text-gray-400'
+                        }`}
+                        size="sm"
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
                         {allDeliverablesConfirmed
-                          ? 'All deliverables confirmed. Ready to finalize transaction.'
-                          : 'Confirm all deliverables before proceeding'}
-                      </p>
+                          ? 'Confirm'
+                          : 'Complete Deliverables First'}
+                      </Button>
                     </div>
-                    <Button
-                      onClick={handleConfirmTransaction}
-                      disabled={!allDeliverablesConfirmed}
-                      className={`${
-                        allDeliverablesConfirmed
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'cursor-not-allowed bg-gray-600 text-gray-400'
-                      }`}
-                      size="sm"
-                    >
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      {allDeliverablesConfirmed
-                        ? 'Confirm'
-                        : 'Complete Deliverables First'}
-                    </Button>
                   </div>
-                </div>
-              )}
+                )}
+
+              {/* Escrow Confirmation - Only show for escrow transactions */}
+              {escrowData &&
+                !status?.participants?.find((p) => p.user_id === currentUserId)
+                  ?.has_confirmed && (
+                  <div className="mt-4 rounded-lg border border-purple-800/50 bg-purple-900/20 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-purple-200">
+                          Escrow Protection Active
+                        </p>
+                        <p className="text-xs text-purple-300/70">
+                          {allDeliverablesConfirmed
+                            ? 'All deliverables verified by oracle. Ready to finalize transaction.'
+                            : 'Upload proof files for oracle verification. The system will automatically confirm deliverables once verified.'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-purple-400" />
+                        <span className="text-xs text-purple-300">
+                          {allDeliverablesConfirmed
+                            ? 'Oracle Verification Complete'
+                            : 'Oracle Verification Required'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Waiting for other party */}
               {status?.participants?.find((p) => p.user_id === currentUserId)
