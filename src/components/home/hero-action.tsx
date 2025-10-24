@@ -36,11 +36,6 @@ const HeroAction = () => {
     setCreateOpen(false);
   };
 
-  const goToTutorial = () => {
-    router.push(ROUTES.TUTORIAL);
-    setCreateOpen(false);
-  };
-
   if (user.verificationStatus === 'not-started') {
     return (
       <Button asChild>
@@ -81,7 +76,7 @@ const HeroAction = () => {
         Create Transaction
       </button>
       {createOpen && (
-        <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute top-full right-0 z-50 mt-2 w-44 rounded-md border bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           <button
             onClick={goToTransactionNew}
             className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
