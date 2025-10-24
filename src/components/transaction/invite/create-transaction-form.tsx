@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/constants/routes';
+import { mapConditionToOption } from '@/lib/utils/condition-mapping';
 import {
   Card,
   CardContent,
@@ -32,6 +33,7 @@ import {
   Shield,
   Loader2,
   Truck,
+  Globe,
   ChevronLeft,
   ChevronRight,
   Lock,
@@ -39,6 +41,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
   EscrowProtectionEnhanced,
   type EnhancedEscrowData,
@@ -66,11 +69,14 @@ interface TransactionFormData {
   quantity: string;
   condition: string;
   category: string;
-  transaction_type: 'meetup' | 'delivery';
+  transaction_type: 'meetup' | 'delivery' | 'online';
   meeting_location: string;
   meeting_time: string;
   delivery_address?: string;
   delivery_method?: string;
+  online_platform?: string;
+  online_contact?: string;
+  online_instructions?: string;
 }
 
 interface AnalysisWithSource extends AnalysisData {
@@ -113,6 +119,9 @@ export function CreateTransactionForm({
     meeting_time: false,
     delivery_address: false,
     delivery_method: false,
+    online_platform: false,
+    online_contact: false,
+    online_instructions: false,
   });
 
   // Form data
@@ -129,6 +138,9 @@ export function CreateTransactionForm({
     meeting_time: '',
     delivery_address: '',
     delivery_method: '',
+    online_platform: '',
+    online_contact: '',
+    online_instructions: '',
   });
 
   // Fetch user data for escrow
@@ -203,48 +215,210 @@ export function CreateTransactionForm({
     const mapCategoryFromProductType = (productType?: string): string => {
       if (!productType) return 'other';
       const type = productType.toLowerCase();
+
+      // Electronics - most comprehensive matching
       if (
         type.includes('digital') ||
         type.includes('mobile') ||
-        type.includes('credit')
+        type.includes('phone') ||
+        type.includes('smartphone') ||
+        type.includes('iphone') ||
+        type.includes('android') ||
+        type.includes('laptop') ||
+        type.includes('computer') ||
+        type.includes('tablet') ||
+        type.includes('ipad') ||
+        type.includes('headphone') ||
+        type.includes('speaker') ||
+        type.includes('camera') ||
+        type.includes('gaming') ||
+        type.includes('console') ||
+        type.includes('playstation') ||
+        type.includes('xbox') ||
+        type.includes('nintendo') ||
+        type.includes('electronic') ||
+        type.includes('tech') ||
+        type.includes('gadget') ||
+        type.includes('device') ||
+        type.includes('credit') ||
+        type.includes('card')
       )
         return 'electronics';
+
+      // Fashion & Apparel
       if (
         type.includes('fashion') ||
         type.includes('apparel') ||
-        type.includes('clothing')
+        type.includes('clothing') ||
+        type.includes('clothes') ||
+        type.includes('shirt') ||
+        type.includes('dress') ||
+        type.includes('pants') ||
+        type.includes('jeans') ||
+        type.includes('jacket') ||
+        type.includes('coat') ||
+        type.includes('shoes') ||
+        type.includes('sneakers') ||
+        type.includes('boots') ||
+        type.includes('accessories') ||
+        type.includes('jewelry') ||
+        type.includes('watch') ||
+        type.includes('bag') ||
+        type.includes('purse') ||
+        type.includes('handbag')
       )
         return 'fashion';
-      if (type.includes('home') || type.includes('living')) return 'home';
-      if (type.includes('sports') || type.includes('outdoor')) return 'sports';
-      if (type.includes('book') || type.includes('media')) return 'books';
-      if (type.includes('toy') || type.includes('game')) return 'toys';
-      if (type.includes('automotive') || type.includes('vehicle'))
+
+      // Home & Living
+      if (
+        type.includes('home') ||
+        type.includes('living') ||
+        type.includes('furniture') ||
+        type.includes('chair') ||
+        type.includes('table') ||
+        type.includes('sofa') ||
+        type.includes('bed') ||
+        type.includes('mattress') ||
+        type.includes('kitchen') ||
+        type.includes('appliance') ||
+        type.includes('refrigerator') ||
+        type.includes('microwave') ||
+        type.includes('oven') ||
+        type.includes('dishwasher') ||
+        type.includes('washing') ||
+        type.includes('dryer') ||
+        type.includes('decor') ||
+        type.includes('decoration') ||
+        type.includes('lamp') ||
+        type.includes('light') ||
+        type.includes('garden') ||
+        type.includes('plant')
+      )
+        return 'home';
+
+      // Sports & Outdoors
+      if (
+        type.includes('sports') ||
+        type.includes('outdoor') ||
+        type.includes('outdoors') ||
+        type.includes('fitness') ||
+        type.includes('gym') ||
+        type.includes('exercise') ||
+        type.includes('bike') ||
+        type.includes('bicycle') ||
+        type.includes('skateboard') ||
+        type.includes('skate') ||
+        type.includes('surfboard') ||
+        type.includes('surf') ||
+        type.includes('tennis') ||
+        type.includes('basketball') ||
+        type.includes('football') ||
+        type.includes('soccer') ||
+        type.includes('baseball') ||
+        type.includes('golf') ||
+        type.includes('hiking') ||
+        type.includes('camping') ||
+        type.includes('tent') ||
+        type.includes('equipment') ||
+        type.includes('gear')
+      )
+        return 'sports';
+
+      // Books & Media
+      if (
+        type.includes('book') ||
+        type.includes('books') ||
+        type.includes('media') ||
+        type.includes('magazine') ||
+        type.includes('newspaper') ||
+        type.includes('comic') ||
+        type.includes('manga') ||
+        type.includes('novel') ||
+        type.includes('textbook') ||
+        type.includes('dvd') ||
+        type.includes('cd') ||
+        type.includes('vinyl') ||
+        type.includes('record') ||
+        type.includes('movie') ||
+        type.includes('film') ||
+        type.includes('music') ||
+        type.includes('album')
+      )
+        return 'books';
+
+      // Toys & Games
+      if (
+        type.includes('toy') ||
+        type.includes('toys') ||
+        type.includes('game') ||
+        type.includes('games') ||
+        type.includes('board') ||
+        type.includes('puzzle') ||
+        type.includes('doll') ||
+        type.includes('action') ||
+        type.includes('figure') ||
+        type.includes('lego') ||
+        type.includes('barbie') ||
+        type.includes('teddy') ||
+        type.includes('bear') ||
+        type.includes('stuffed') ||
+        type.includes('animal') ||
+        type.includes('card') ||
+        type.includes('cards') ||
+        type.includes('pokemon') ||
+        type.includes('yugioh') ||
+        type.includes('magic')
+      )
+        return 'toys';
+
+      // Automotive
+      if (
+        type.includes('automotive') ||
+        type.includes('vehicle') ||
+        type.includes('car') ||
+        type.includes('truck') ||
+        type.includes('motorcycle') ||
+        type.includes('bike') ||
+        type.includes('scooter') ||
+        type.includes('auto') ||
+        type.includes('motor') ||
+        type.includes('engine') ||
+        type.includes('tire') ||
+        type.includes('wheel') ||
+        type.includes('parts') ||
+        type.includes('accessories') ||
+        type.includes('tools')
+      )
         return 'automotive';
+
       return 'other';
     };
 
     const mapConditionFromProductCondition = (condition?: string): string => {
       if (!condition) return '';
-      const cond = condition.toLowerCase();
-      if (cond.includes('brand') && cond.includes('new')) return 'brand-new';
-      if (cond.includes('like') && cond.includes('new')) return 'like-new';
-      if (cond.includes('excellent')) return 'excellent';
-      if (cond.includes('good')) return 'good';
-      if (cond.includes('fair')) return 'fair';
-      if (cond.includes('poor') || cond.includes('parts')) return 'poor';
-      return '';
+      // Use the improved fuzzy matching logic
+      return mapConditionToOption(condition);
     };
 
-    const mapTransactionType = (type?: string): 'meetup' | 'delivery' => {
+    const mapTransactionType = (
+      type?: string
+    ): 'meetup' | 'delivery' | 'online' => {
       if (!type) return 'meetup';
       const t = type.toLowerCase();
       if (
-        t.includes('online') ||
         t.includes('delivery') ||
-        t.includes('shipping')
-      )
+        t.includes('shipping') ||
+        t.includes('mail')
+      ) {
         return 'delivery';
+      }
+      if (
+        t.includes('online') ||
+        t.includes('virtual') ||
+        t.includes('digital')
+      ) {
+        return 'online';
+      }
       return 'meetup';
     };
 
@@ -281,6 +455,9 @@ export function CreateTransactionForm({
       meeting_time: data.meetingSchedule || '',
       delivery_address: data.deliveryAddress || '',
       delivery_method: data.deliveryMethod || '',
+      online_platform: '',
+      online_contact: '',
+      online_instructions: '',
     };
 
     setFormData(newFormData);
@@ -299,6 +476,9 @@ export function CreateTransactionForm({
       meeting_time: !!data.meetingSchedule,
       delivery_address: !!data.deliveryAddress,
       delivery_method: !!data.deliveryMethod,
+      online_platform: false,
+      online_contact: false,
+      online_instructions: false,
     });
 
     setIsDataExtracted(shouldMarkAsExtracted);
@@ -351,7 +531,6 @@ export function CreateTransactionForm({
     if (!formData.item_description) missing.push('item_description');
     if (!formData.price) missing.push('price');
     if (!formData.quantity) missing.push('quantity');
-    if (!formData.condition) missing.push('condition');
     if (!formData.category) missing.push('category');
     return missing;
   };
@@ -374,15 +553,17 @@ export function CreateTransactionForm({
           formData.item_description &&
           formData.price &&
           formData.quantity &&
-          formData.condition &&
           formData.category
         );
       case 4:
         if (formData.transaction_type === 'meetup') {
           return formData.meeting_location && formData.meeting_time;
-        } else {
+        } else if (formData.transaction_type === 'delivery') {
           return formData.delivery_address && formData.delivery_method;
+        } else if (formData.transaction_type === 'online') {
+          return true; // All online fields are optional
         }
+        return false;
       case 5:
         if (escrowEnabled) {
           // Must have at least one deliverable
@@ -792,7 +973,8 @@ export function CreateTransactionForm({
 
               <div className="space-y-2">
                 <Label htmlFor="condition">
-                  Condition <span className="text-destructive">*</span>
+                  Condition{' '}
+                  <span className="text-muted-foreground">(Optional)</span>
                 </Label>
                 <div className="flex gap-2">
                   <Select
@@ -804,7 +986,7 @@ export function CreateTransactionForm({
                   >
                     <SelectTrigger
                       id="condition"
-                      className={`flex-1 ${fieldLocks.condition ? 'bg-muted cursor-not-allowed' : ''} ${!formData.condition ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      className={`flex-1 ${fieldLocks.condition ? 'bg-muted cursor-not-allowed' : ''}`}
                     >
                       <SelectValue placeholder="Select condition..." />
                     </SelectTrigger>
@@ -983,7 +1165,10 @@ export function CreateTransactionForm({
                 fieldLocks.meeting_location ||
                 fieldLocks.meeting_time ||
                 fieldLocks.delivery_address ||
-                fieldLocks.delivery_method) && (
+                fieldLocks.delivery_method ||
+                fieldLocks.online_platform ||
+                fieldLocks.online_contact ||
+                fieldLocks.online_instructions) && (
                 <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
                   <AlertDescription className="text-green-800 dark:text-green-200">
                     ✓ Some fields were extracted from screenshot analysis
@@ -1021,10 +1206,10 @@ export function CreateTransactionForm({
               </div>
               <RadioGroup
                 value={formData.transaction_type}
-                onValueChange={(value: 'meetup' | 'delivery') =>
+                onValueChange={(value: 'meetup' | 'delivery' | 'online') =>
                   updateFormData('transaction_type', value)
                 }
-                className="grid grid-cols-2 gap-4"
+                className="grid grid-cols-3 gap-4"
                 disabled={fieldLocks.transaction_type}
               >
                 <Label
@@ -1057,6 +1242,22 @@ export function CreateTransactionForm({
                   <span className="font-medium">Delivery</span>
                   <span className="text-muted-foreground mt-1 text-center text-xs">
                     Ship or deliver
+                  </span>
+                </Label>
+                <Label
+                  htmlFor="online"
+                  className={`border-muted bg-popover hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary flex cursor-pointer flex-col items-center justify-between rounded-md border-2 p-4 ${fieldLocks.transaction_type ? 'cursor-not-allowed opacity-60' : ''}`}
+                >
+                  <RadioGroupItem
+                    value="online"
+                    id="online"
+                    className="sr-only"
+                    disabled={fieldLocks.transaction_type}
+                  />
+                  <Globe className="mb-3 h-6 w-6" />
+                  <span className="font-medium">Online</span>
+                  <span className="text-muted-foreground mt-1 text-center text-xs">
+                    Virtual exchange
                   </span>
                 </Label>
               </RadioGroup>
@@ -1163,7 +1364,7 @@ export function CreateTransactionForm({
                   </AlertDescription>
                 </Alert>
               </>
-            ) : (
+            ) : formData.transaction_type === 'delivery' ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="delivery_address">
@@ -1260,104 +1461,252 @@ export function CreateTransactionForm({
                   </AlertDescription>
                 </Alert>
               </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="online_platform">
+                    Platform{' '}
+                    <span className="text-muted-foreground">(Optional)</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Globe className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+                      <Input
+                        id="online_platform"
+                        placeholder="e.g., Discord, Zoom, Google Meet, WhatsApp Video"
+                        value={formData.online_platform}
+                        onChange={(e) =>
+                          updateFormData('online_platform', e.target.value)
+                        }
+                        className={`pl-9 ${fieldLocks.online_platform ? 'bg-muted cursor-not-allowed' : ''}`}
+                        disabled={fieldLocks.online_platform}
+                      />
+                    </div>
+                    {fieldLocks.online_platform && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('online_platform')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.online_platform &&
+                      formData.online_platform && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => toggleFieldLock('online_platform')}
+                          className="shrink-0"
+                        >
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="online_contact">
+                    Contact Information{' '}
+                    <span className="text-muted-foreground">(Optional)</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="online_contact"
+                      placeholder="e.g., username, email, phone number"
+                      value={formData.online_contact}
+                      onChange={(e) =>
+                        updateFormData('online_contact', e.target.value)
+                      }
+                      className={`flex-1 ${fieldLocks.online_contact ? 'bg-muted cursor-not-allowed' : ''}`}
+                      disabled={fieldLocks.online_contact}
+                    />
+                    {fieldLocks.online_contact && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('online_contact')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.online_contact && formData.online_contact && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('online_contact')}
+                        className="shrink-0"
+                      >
+                        <Unlock className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="online_instructions">
+                    Exchange Instructions{' '}
+                    <span className="text-muted-foreground">(Optional)</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="online_instructions"
+                      placeholder="e.g., Meeting link, specific time, verification steps..."
+                      value={formData.online_instructions}
+                      onChange={(e) =>
+                        updateFormData('online_instructions', e.target.value)
+                      }
+                      rows={3}
+                      className={`flex-1 ${fieldLocks.online_instructions ? 'bg-muted cursor-not-allowed' : ''}`}
+                      disabled={fieldLocks.online_instructions}
+                    />
+                    {fieldLocks.online_instructions && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => toggleFieldLock('online_instructions')}
+                        className="shrink-0"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {!fieldLocks.online_instructions &&
+                      formData.online_instructions && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => toggleFieldLock('online_instructions')}
+                          className="shrink-0"
+                        >
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
+                </div>
+
+                <Alert>
+                  <Globe className="h-4 w-4" />
+                  <AlertDescription>
+                    Ensure you have a secure connection and verify the other
+                    party&apos;s identity before proceeding with the exchange.
+                  </AlertDescription>
+                </Alert>
+              </>
             )}
           </div>
         );
 
       case 5:
         return (
-          <div className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Escrow Protection - Left */}
-              <Card className="w-full border-2 shadow-lg">
-                <EscrowProtectionEnhanced
-                  enabled={escrowEnabled}
-                  onEnabledChange={setEscrowEnabled}
-                  onEscrowDataChange={(data) => {
-                    setEscrowData(data);
-                    // Don't auto-enable arbiter from escrow
-                    setArbiterEnabled(false);
-                  }}
-                  agreementTitle={formData.item_name}
-                  agreementTerms={formData.item_description}
-                  itemDetails={{
-                    name: formData.item_name,
-                    description: formData.item_description,
-                    price: parseFloat(formData.price || '0'),
-                    quantity: parseInt(formData.quantity || '1'),
-                    category: formData.category,
-                    condition: formData.condition,
-                  }}
-                  initiatorId={currentUserId || ''}
-                  participantId={otherUserId || ''}
-                  initiatorName={currentUserName}
-                  participantName={otherUserName}
-                />
-              </Card>
+          <div className="space-y-0">
+            {/* Main Content - Responsive Layout */}
+            <div className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-2 xl:gap-4">
+              {/* Escrow Protection Section */}
+              <div className="space-y-1">
+                <Card className="border-2 shadow-lg">
+                  <EscrowProtectionEnhanced
+                    enabled={escrowEnabled}
+                    onEnabledChange={setEscrowEnabled}
+                    onEscrowDataChange={(data) => {
+                      setEscrowData(data);
+                      // Don't auto-enable arbiter from escrow
+                      setArbiterEnabled(false);
+                    }}
+                    agreementTitle={formData.item_name}
+                    agreementTerms={formData.item_description}
+                    itemDetails={{
+                      name: formData.item_name,
+                      description: formData.item_description,
+                      price: parseFloat(formData.price || '0'),
+                      quantity: parseInt(formData.quantity || '1'),
+                      category: formData.category,
+                      condition: formData.condition,
+                    }}
+                    initiatorId={currentUserId || ''}
+                    participantId={otherUserId || ''}
+                    initiatorName={currentUserName}
+                    participantName={otherUserName}
+                  />
+                </Card>
+              </div>
 
-              {/* Arbiter Oversight - Right */}
-              <Card className="w-full border-2 shadow-lg">
-                <div className="bg-muted/30 border-b p-6 pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950">
-                        <Shield className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              {/* Arbiter Oversight Section */}
+              <div className="space-y-1">
+                <Card className="border-2 shadow-lg">
+                  <CardHeader className="bg-muted/30 border-b">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950">
+                          <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            Arbiter Oversight
+                          </CardTitle>
+                          <p className="text-muted-foreground text-sm">
+                            Independent third-party mediation
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold">Arbiter Oversight</h3>
-                        <p className="text-muted-foreground text-sm">
-                          Third-party dispute mediation
-                        </p>
-                      </div>
+                      <Switch
+                        checked={arbiterEnabled}
+                        onCheckedChange={(checked) => {
+                          setArbiterEnabled(checked);
+                          setEscrowData((prev) => ({
+                            ...prev,
+                            arbiter_required: checked,
+                          }));
+                        }}
+                        aria-label="Enable arbiter oversight"
+                        className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
+                      />
                     </div>
-                    <Switch
-                      checked={arbiterEnabled}
-                      onCheckedChange={(checked) => {
-                        setArbiterEnabled(checked);
-                        setEscrowData((prev) => ({
-                          ...prev,
-                          arbiter_required: checked,
-                        }));
-                      }}
-                      aria-label="Enable arbiter oversight"
-                      className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
-                    />
-                  </div>
-                </div>
+                  </CardHeader>
 
-                {arbiterEnabled ? (
-                  <div className="p-6">
-                    <ArbiterSelection
-                      initiatorId={currentUserId || ''}
-                      participantId={otherUserId || ''}
-                      initiatorName={currentUserName}
-                      participantName={otherUserName}
-                      onArbiterSelected={(arbiterId) => {
-                        setEscrowData((prev) => ({
-                          ...prev,
-                          arbiter_id: arbiterId,
-                        }));
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="p-6">
-                    <p className="text-muted-foreground mb-4 text-sm">
-                      Add an independent arbiter to oversee this transaction and
-                      mediate in case of disputes. This provides an extra layer
-                      of security and trust.
-                    </p>
-                    <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-                      <Shield className="h-4 w-4 text-amber-600" />
-                      <AlertDescription className="text-xs text-amber-800 dark:text-amber-200">
-                        <strong>How it works:</strong> An arbiter is a neutral
-                        third party who can help resolve disputes and ensure
-                        fair outcomes for both parties.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-              </Card>
+                  <CardContent className="p-6">
+                    {arbiterEnabled ? (
+                      <div className="space-y-4">
+                        <ArbiterSelection
+                          initiatorId={currentUserId || ''}
+                          participantId={otherUserId || ''}
+                          initiatorName={currentUserName}
+                          participantName={otherUserName}
+                          onArbiterSelected={(arbiterId) => {
+                            setEscrowData((prev) => ({
+                              ...prev,
+                              arbiter_id: arbiterId,
+                            }));
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          Add an independent arbiter to oversee this transaction
+                          and mediate in case of disputes. This provides an
+                          extra layer of security and trust.
+                        </p>
+                        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
+                          <Shield className="h-4 w-4 text-amber-600" />
+                          <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
+                            <strong>How it works:</strong> An arbiter is a
+                            neutral third party who can help resolve disputes
+                            and ensure fair outcomes for both parties.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         );
@@ -1407,15 +1756,50 @@ export function CreateTransactionForm({
                     <p className="text-muted-foreground text-sm">
                       {formData.transaction_type === 'meetup'
                         ? 'Meeting Location'
-                        : 'Delivery Method'}
+                        : formData.transaction_type === 'delivery'
+                          ? 'Delivery Method'
+                          : 'Platform'}
                     </p>
                     <p className="font-medium">
                       {formData.transaction_type === 'meetup'
                         ? formData.meeting_location
-                        : formData.delivery_method}
+                        : formData.transaction_type === 'delivery'
+                          ? formData.delivery_method
+                          : formData.online_platform || 'Not specified'}
                     </p>
                   </div>
                 </div>
+
+                {formData.transaction_type === 'online' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {formData.online_contact && (
+                      <div>
+                        <p className="text-muted-foreground text-sm">
+                          Contact Information
+                        </p>
+                        <p className="font-medium">{formData.online_contact}</p>
+                      </div>
+                    )}
+                    {formData.online_instructions && (
+                      <div className="col-span-2">
+                        <p className="text-muted-foreground text-sm">
+                          Exchange Instructions
+                        </p>
+                        <p className="font-medium">
+                          {formData.online_instructions}
+                        </p>
+                      </div>
+                    )}
+                    {!formData.online_contact &&
+                      !formData.online_instructions && (
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground text-sm italic">
+                            No additional online exchange details provided
+                          </p>
+                        </div>
+                      )}
+                  </div>
+                )}
 
                 {escrowEnabled && (
                   <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
@@ -1463,7 +1847,7 @@ export function CreateTransactionForm({
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-20 pb-8">
       <div
-        className={`w-full transition-all duration-300 ${currentStep === 3 ? 'max-w-6xl' : 'max-w-3xl'}`}
+        className={`w-full transition-all duration-300 ${currentStep === 3 || currentStep === 5 ? 'max-w-6xl' : 'max-w-3xl'}`}
       >
         {/* Progress Indicator */}
         <div className="mb-8">
