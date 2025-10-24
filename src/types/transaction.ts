@@ -141,3 +141,8 @@ export interface TransactionStatusResponse {
   deliverable_statuses?: DeliverableWithStatus[];
   oracle_verifications?: OracleVerification[];
 }
+
+export interface UserRole {
+  user_id: string;
+  role: string;
+}

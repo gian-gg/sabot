@@ -44,6 +44,7 @@ import {
   getOverallProgress,
   getOracleVerificationSummary,
 } from '@/lib/escrow/deliverable-status';
+import { pushTransactionToBlockchain } from '@/lib/blockchain/writeFunctions';
 
 export default function TransactionActive({
   params,
@@ -381,9 +382,16 @@ export default function TransactionActive({
 
       if (result.both_confirmed) {
         // Both parties confirmed - redirect to home after a short delay
-        setTimeout(() => {
-          router.push('/');
-        }, 2000);
+        const txSuccess = await pushTransactionToBlockchain(
+          result.transaction_id
+        );
+
+        if (txSuccess) {
+          console.log('Transaction pushed to blockchain successfully.');
+          setTimeout(() => {
+            router.push('/');
+          }, 2000);
+        }
       } else {
         // Refresh the page to show updated status
         window.location.reload();
