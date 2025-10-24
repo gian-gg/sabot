@@ -13,6 +13,12 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { WalletBalance } from '@/components/wallet/wallet-balance';
+import { useSabotBalance } from '@/hooks/useSabotBalance';
+import {
+  getCirculatingSupply,
+  formatSupply,
+} from '@/lib/blockchain/readFunctions';
 
 interface TokenStats {
   circulatingSupply: number;
@@ -28,6 +34,7 @@ export default function BuyTokensPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const { balance } = useSabotBalance();
 
   useEffect(() => {
     fetchTokenData();
@@ -54,10 +61,8 @@ export default function BuyTokensPage() {
   }
 
   async function fetchLiskCirculatingSupply(): Promise<number> {
-    // GET https://service.lisk.com/api/v3/token/summary/{tokenId}
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(432156789), 500);
-    });
+    const supply = await getCirculatingSupply();
+    return Number(supply);
   }
 
   async function fetchUserTokenBalance(): Promise<number> {
@@ -132,16 +137,11 @@ export default function BuyTokensPage() {
                 Your Balance
               </p>
               <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-bold">
-                  {isLoading ? '—' : formatNumber(tokenStats.userBalance)}
-                </span>
-                <span className="text-muted-foreground text-2xl font-semibold">
-                  $SBT
-                </span>
+                <WalletBalance variant="large" showLabel={false} />
               </div>
               {!isLoading && (
                 <p className="text-muted-foreground text-sm">
-                  ≈ {formatCurrency(tokenStats.userBalance * tokenStats.price)}
+                  ≈ {formatCurrency(Number(balance) * tokenStats.price)}
                 </p>
               )}
             </div>
@@ -214,10 +214,12 @@ export default function BuyTokensPage() {
             </div>
             <div className="space-y-2">
               <p className="text-4xl font-bold">
-                {isLoading ? '—' : formatNumber(tokenStats.circulatingSupply)}
+                {isLoading
+                  ? '—'
+                  : formatSupply(tokenStats.circulatingSupply.toString())}
               </p>
               <p className="text-muted-foreground text-sm">
-                $SBT tokens in active circulation on Lisk
+                $SBT tokens in active circulation
               </p>
             </div>
           </CardContent>
