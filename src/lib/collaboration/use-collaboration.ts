@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 
 // Lazy-load Yjs to prevent SSR module evaluation errors
 // Yjs requires browser APIs and can't be evaluated during server-side bundling
-type YModule = typeof import('yjs');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type YModule = any;
 
 interface UseCollaborationProps {
   documentId: string;
@@ -84,7 +85,7 @@ export function useCollaboration({
         // Don't manually initialize - let Collaboration extension handle it
 
         console.log('[Collab] Creating awareness...');
-        const newAwareness = createAwareness(
+        const newAwareness = await createAwareness(
           newYdoc,
           user.id,
           user.email,

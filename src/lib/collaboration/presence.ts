@@ -1,5 +1,7 @@
-import * as Y from 'yjs';
-import * as awarenessProtocol from 'y-protocols/awareness';
+// Type-only imports to avoid runtime evaluation of Yjs
+// Actual instances are passed in from use-collaboration.ts (already lazy-loaded)
+import type * as Y from 'yjs';
+import type * as awarenessProtocol from 'y-protocols/awareness';
 
 export interface UserPresence {
   id: string;
@@ -29,13 +31,17 @@ const USER_COLORS = [
 
 /**
  * Create and manage user presence awareness
+ * Lazy-loads y-protocols/awareness at runtime to prevent SSR evaluation errors
  */
-export function createAwareness(
+export async function createAwareness(
   ydoc: Y.Doc,
   userId?: string,
   userEmail?: string,
   userName?: string
-): awarenessProtocol.Awareness {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> {
+  // Dynamically import y-protocols/awareness at runtime to prevent module evaluation errors
+  const awarenessProtocol = await import('y-protocols/awareness');
   const awareness = new awarenessProtocol.Awareness(ydoc);
 
   // Assign random color to user
