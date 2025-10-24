@@ -54,7 +54,7 @@ export function useCollaboration({
         // CRITICAL: Dynamically import Yjs to prevent server-side module evaluation
         // Yjs requires browser APIs and can't be evaluated during bundling
         console.log('[Collab] Lazy-loading Yjs...');
-        const { default: Y } = (await import('yjs')) as YModule;
+        const Y = (await import('yjs')) as unknown as YModule;
         console.log('[Collab] ✅ Yjs loaded');
 
         // Fetch current user
