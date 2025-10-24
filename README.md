@@ -168,10 +168,13 @@ Sabot now includes comprehensive blockchain integration for secure escrow manage
 
 ### 📚 Documentation
 
-- [Blockchain Escrow Integration Guide](docs/BLOCKCHAIN_ESCROW_INTEGRATION.md)
-- [Oracle Verification Guide](docs/ORACLE_VERIFICATION_GUIDE.md)
-- [API Documentation](docs/)
-- [Component Documentation](docs/components.md)
+All project documentation is available in the [docs](docs) directory. This includes:
+
+- **[User Guide](docs/user-guide)**: Detailed information for end-users on how to use the application.
+- **[Developer Guide](docs/developer-guide)**: Comprehensive guides for developers, covering setup, architecture, and contribution guidelines.
+- **[Architecture](docs/architecture)**: Documentation related to the application's architecture and design.
+- **[API Reference](docs/api-reference)**: Detailed information about the API.
+- **[ADRs](docs/adr)**: Architecture Decision Records.
 
 ### 🧪 Testing
 
