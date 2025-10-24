@@ -21,10 +21,12 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ['yjs', 'lib0'],
   webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      yjs: require.resolve('yjs'),
-      lib0: require.resolve('lib0'),
+    // Handle lib0 submodule imports (lib0/observable, lib0/random, etc.)
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      'lib0/observable': require.resolve('lib0/observable'),
+      'lib0/error': require.resolve('lib0/error'),
+      'lib0/random': require.resolve('lib0/random'),
     };
     return config;
   },

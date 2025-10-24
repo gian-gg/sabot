@@ -5,11 +5,6 @@ import { SupabaseProvider } from './supabase-provider';
 import { createAwareness, type UserPresence } from './presence';
 import { createClient } from '@/lib/supabase/client';
 
-// Lazy-load Yjs to prevent SSR module evaluation errors
-// Yjs requires browser APIs and can't be evaluated during server-side bundling
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type YModule = any;
-
 interface UseCollaborationProps {
   documentId: string;
   enabled?: boolean;
@@ -55,7 +50,8 @@ export function useCollaboration({
         // CRITICAL: Dynamically import Yjs to prevent server-side module evaluation
         // Yjs requires browser APIs and can't be evaluated during bundling
         console.log('[Collab] Lazy-loading Yjs...');
-        const Y = (await import('yjs')) as unknown as YModule;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const Y: any = await import('yjs');
         console.log('[Collab] ✅ Yjs loaded');
 
         // Fetch current user
