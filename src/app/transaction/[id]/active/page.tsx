@@ -418,7 +418,7 @@ export default function TransactionActive({
 
       // Refresh the page to get the latest data from the server
       // This ensures both users see the updated status
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error('Error confirming deliverable:', error);
     }
