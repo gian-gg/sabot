@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 
 import { signOut } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -96,11 +97,11 @@ export default function HeaderAction({ user }: { user: User }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() => router.push(ROUTES.PROFILE.VIEW(user.id))}
-          >
-            <BadgeCheck />
-            Account
+          <DropdownMenuItem asChild>
+            <Link href={ROUTES.HOME.PROFILE}>
+              <BadgeCheck />
+              Account
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(ROUTES.WALLET)}>
             <CreditCard />
