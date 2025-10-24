@@ -28,6 +28,7 @@ export default function VerifyPage() {
   const user = useUserStore();
 
   const [step, setStep] = useState<VerificationStep>('PERMISSION_CONSENT');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [userID, setUserID] = useState<UserIDType | null>(null); // step 1
   const [userData, setUserData] = useState<GovernmentIdInfo | null>(null); // step 2
   const [livenessCheckCaptures, setLivenessCheckCaptures] = useState<
@@ -90,34 +91,49 @@ export default function VerifyPage() {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      // 1) Submit verification request (upload file + insert row)
-      await submitVerificationRequest({
-        userID: user.id,
-        userName: user.name,
-        userEmail: user.email,
-        idType: userID.type,
-        govIdFile: userID.file,
-        governmentIdInfo: userData,
-        faceMatchConfidence,
-      });
+    const retryCount = 3;
+    let attempt = 0;
 
-      // 2) Update user status to pending in DB and store
-      await updateUserVerificationStatus(user.id, 'pending');
-      user.setVerificationStatus('pending');
+    while (attempt < retryCount) {
+      try {
+        setIsSubmitting(true);
+        setUploadProgress(0);
 
-      // 3) Navigate to pending screen
-      setStep('SUBMISSION_PENDING');
-      toast.success(
-        'Verification submitted. We will notify you once reviewed.'
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Submission failed';
-      toast.error(msg);
-    } finally {
-      setIsSubmitting(false);
+        // Submit verification request with progress tracking
+        await submitVerificationRequest({
+          userID: user.id,
+          userName: user.name,
+          userEmail: user.email,
+          idType: userID.type,
+          govIdFile: userID.file,
+          governmentIdInfo: userData,
+          faceMatchConfidence,
+        });
+
+        user.setVerificationStatus('pending');
+        setStep('SUBMISSION_PENDING');
+        toast.success(
+          'Verification submitted. We will notify you once reviewed.'
+        );
+        break;
+      } catch (e) {
+        attempt++;
+        if (attempt === retryCount) {
+          const msg = e instanceof Error ? e.message : 'Submission failed';
+          toast.error(`${msg} - Please try again`);
+        } else {
+          // Wait before retry with exponential backoff
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * Math.pow(2, attempt))
+          );
+          toast.info(
+            `Retrying submission... (Attempt ${attempt + 1}/${retryCount})`
+          );
+        }
+      }
     }
+    setIsSubmitting(false);
+    setUploadProgress(0);
   };
 
   const isPending = user.verificationStatus === 'pending';

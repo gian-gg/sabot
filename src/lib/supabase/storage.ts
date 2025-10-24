@@ -21,6 +21,39 @@ export type UploadResult = {
   publicUrl: string | null;
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+async function compressImage(file: File | Blob): Promise<Blob> {
+  // Return original if not an image
+  if (!file.type.startsWith('image/')) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      // Scale down if too large
+      if (width > 1920) {
+        height = (height * 1920) / width;
+        width = 1920;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.8);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 function sanitizeSegment(segment: string): string {
   return segment.replace(/\\/g, '/').replace(/[^a-zA-Z0-9._/-]/g, '_');
 }
@@ -39,6 +72,16 @@ export async function uploadToBucket(
 ): Promise<UploadResult> {
   const supabase = await createClient();
   const { bucket, content, fileName, pathPrefix, contentType, upsert } = input;
+
+  let processedContent = content;
+
+  // Compress images before upload if they're too large
+  if (
+    (content instanceof File || content instanceof Blob) &&
+    content.size > MAX_FILE_SIZE
+  ) {
+    processedContent = await compressImage(content);
+  }
 
   const path = joinPath(pathPrefix, fileName);
 

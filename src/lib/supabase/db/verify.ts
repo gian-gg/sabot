@@ -25,9 +25,20 @@ interface VerificationRequestRow {
   created_at: string;
 }
 
+const CACHE_DURATION = 60 * 1000; // 1 minute
+let requestCache: {
+  data: VerificationRequests[];
+  timestamp: number;
+} | null = null;
+
 export async function getVerificationRequests(): Promise<
   VerificationRequests[]
 > {
+  // Return cached data if fresh
+  if (requestCache && Date.now() - requestCache.timestamp < CACHE_DURATION) {
+    return requestCache.data;
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -72,6 +83,12 @@ export async function getVerificationRequests(): Promise<
     createdAt: item.created_at,
   }));
 
+  // Update cache
+  requestCache = {
+    data: mappedData,
+    timestamp: Date.now(),
+  };
+
   return mappedData;
 }
 
@@ -91,19 +108,22 @@ export async function submitVerificationRequest(
 ): Promise<VerificationRequests> {
   const supabase = await createClient();
 
-  // 1) Upload file to storage bucket (folder per user)
+  // Run file upload and status update in parallel
   const fileName =
     typeof File !== 'undefined' && input.govIdFile instanceof File
       ? input.govIdFile.name
       : 'government-id';
 
-  const { storagePath } = await uploadToBucket({
-    bucket: 'verification-ids',
-    content: input.govIdFile,
-    fileName,
-    pathPrefix: `${input.userID}/`,
-    upsert: false,
-  });
+  const [{ storagePath }, _] = await Promise.all([
+    uploadToBucket({
+      bucket: 'verification-ids',
+      content: input.govIdFile,
+      fileName,
+      pathPrefix: `${input.userID}/`,
+      upsert: false,
+    }),
+    updateUserVerificationStatus(input.userID, 'pending'),
+  ]);
 
   // 3) Insert row
   const { data, error } = await supabase
