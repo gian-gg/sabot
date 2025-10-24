@@ -19,12 +19,6 @@ export async function GET(
     }
 
     const { id: agreementId } = await params;
-    console.log(
-      'Status - Fetching agreement:',
-      agreementId,
-      'for user:',
-      user.id
-    );
 
     // Get agreement
     const { data: agreement, error: agreementError } = await supabase
@@ -34,26 +28,26 @@ export async function GET(
       .single();
 
     if (agreementError || !agreement) {
-      console.error('Status - Agreement not found:', agreementError);
+      console.error('Finalized - Agreement not found:', agreementError);
       return NextResponse.json(
         { error: 'Agreement not found' },
         { status: 404 }
       );
     }
 
-    // Get participants with their profile data
+    // Get all participants with their profile data
     const { data: participants, error: participantsError } = await supabase
       .from('agreement_participants')
       .select(
         `
         id,
-        agreement_id,
         user_id,
         role,
         name,
         email,
         avatar,
         has_confirmed,
+        signed_at,
         joined_at
       `
       )
@@ -61,7 +55,7 @@ export async function GET(
 
     if (participantsError) {
       console.error(
-        'Status - Failed to fetch participants:',
+        'Finalized - Failed to fetch participants:',
         participantsError
       );
       return NextResponse.json(
@@ -70,8 +64,8 @@ export async function GET(
       );
     }
 
-    // Enrich participants with data from agreement table
-    const participantsData = (participants || []).map((participant) => {
+    // Format participants with data from agreement table
+    const formattedParticipants = (participants || []).map((participant) => {
       if (participant.role === 'creator') {
         // Use creator data from agreement table
         return {
@@ -92,30 +86,12 @@ export async function GET(
       };
     });
 
-    // Determine current user's role
-    const currentUserParticipant = participants?.find(
-      (p) => p.user_id === user.id
-    );
-    const currentUserRole = currentUserParticipant?.role;
-
-    // Check if ready for next step (both joined)
-    const isReadyForNextStep = participantsData?.length === 2;
-
-    console.log('Status - Response:', {
-      agreementId,
-      status: agreement.status,
-      participantCount: participantsData?.length,
-      isReadyForNextStep,
-    });
-
     return NextResponse.json({
       agreement,
-      participants: participantsData,
-      current_user_role: currentUserRole,
-      is_ready_for_next_step: isReadyForNextStep,
+      participants: formattedParticipants,
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('Finalized - Unexpected error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

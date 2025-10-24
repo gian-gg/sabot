@@ -12,17 +12,35 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Disclaimer } from '@/components/ui/disclaimer';
+import { Button } from '@/components/ui/button';
 import { ShieldCheck, FileText, Scan, Lock } from 'lucide-react';
 import NavigationButtons from '../components/navigation-buttons';
 import type { StepNavProps } from '@/types/verify';
+import { useUserStore } from '@/store/user/userStore';
+import { updateUserVerificationStatus } from '@/lib/supabase/db/user';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export function PermissionConsent({ onNext }: StepNavProps) {
+  const router = useRouter();
+  const user = useUserStore();
   const [hasConsented, setHasConsented] = useState(false);
 
   const handleNext = () => {
     if (hasConsented) {
       onNext();
     }
+  };
+
+  // Update user verification status to 'complete'
+  const handleSkipVerificationFlow = () => {
+    updateUserVerificationStatus(user.id, 'complete')
+      .then(() => {
+        router.refresh();
+      })
+      .catch((error) => {
+        toast.error('Failed to skip verification flow:', error);
+      });
   };
 
   return (
@@ -126,6 +144,27 @@ export function PermissionConsent({ onNext }: StepNavProps) {
           isLoading={false}
           disableNext={!hasConsented}
         />
+
+        {/* Hackathon judges shortcut */}
+        <div className="text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              toast('Are you sure you want to skip verification?', {
+                action: {
+                  label: 'Skip',
+                  onClick: handleSkipVerificationFlow,
+                },
+              });
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Skip permission consent (Hackathon Judges)"
+          >
+            Skip verification flow (for Hackathon Judges)
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -35,7 +35,7 @@ export function Header() {
 
       {/* Mouse-Reactive Border */}
       <div
-        className="pointer-events-none absolute right-0 bottom-0 left-0 h-[1px]"
+        className="pointer-events-none absolute right-0 bottom-0 left-0 h-px"
         style={{
           background: `linear-gradient(90deg,
             rgba(255,255,255,0.1) 0%,

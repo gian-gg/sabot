@@ -85,7 +85,7 @@ export function PublicLedger({ transactions }: PublicLedgerProps) {
   const recentTransactions = transactions.slice(0, 10);
 
   return (
-    <Card className="gap-0 border border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60 p-0 shadow-2xl backdrop-blur-sm">
+    <Card className="gap-0 border border-neutral-800/60 bg-linear-to-b from-neutral-900/40 to-neutral-950/60 p-0 shadow-2xl backdrop-blur-sm">
       <CardHeader className="flex w-full items-center justify-between gap-0 border-b border-neutral-800/50 bg-neutral-900/30 p-4">
         <div className="flex items-center gap-2.5">
           <div className="flex gap-1.5">

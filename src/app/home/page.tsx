@@ -30,8 +30,8 @@ export default function Page() {
             </div>
           </>
         ) : (
-          <Alert className="border-primary/30 from-primary/10 border-2 border-dashed bg-gradient-to-br to-transparent p-4">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <Alert className="border-primary/30 from-primary/10 border-2 border-dashed bg-linear-to-br to-transparent p-4">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             <AlertTitle>Complete verification</AlertTitle>
             <AlertDescription>
               Verify your identity to unlock full access to transactions and
