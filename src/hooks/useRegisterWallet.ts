@@ -7,17 +7,13 @@ let hasAttemptedRegistration = false;
 export const useRegisterWallet = (shouldRun: boolean) => {
   useEffect(() => {
     if (!shouldRun) return;
-
     if (!hasAttemptedRegistration) {
       hasAttemptedRegistration = true;
-
       const checkAndRegister = async () => {
         try {
           const response = await fetch('/api/register-wallet', {
             method: 'POST',
-            credentials: 'include',
           });
-
           if (!response.ok) {
             console.error(
               'Wallet registration failed on the server:',
@@ -34,7 +30,6 @@ export const useRegisterWallet = (shouldRun: boolean) => {
           );
         }
       };
-
       checkAndRegister();
     }
   }, [shouldRun]);
