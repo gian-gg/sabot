@@ -19,9 +19,14 @@ import { ShieldAlert } from 'lucide-react';
 interface SignatureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onApplySignature?: (signatureData: string) => void;
 }
 
-export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
+export function SignatureModal({
+  open,
+  onOpenChange,
+  onApplySignature,
+}: SignatureModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
@@ -90,6 +95,12 @@ export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
 
     const dataUrl = canvas.toDataURL();
     setSavedSignature(dataUrl);
+
+    // Apply signature to document if callback is provided
+    if (onApplySignature) {
+      onApplySignature(dataUrl);
+    }
+
     onOpenChange(false);
   };
 
@@ -156,7 +167,12 @@ export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
                 </div>
                 <Button
                   className="mt-4 w-full"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    if (onApplySignature && savedSignature) {
+                      onApplySignature(savedSignature);
+                    }
+                    onOpenChange(false);
+                  }}
                 >
                   Use This Signature
                 </Button>
