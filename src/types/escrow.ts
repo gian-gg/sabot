@@ -28,13 +28,25 @@ export type PartyResponsible = 'initiator' | 'participant';
 
 export interface Deliverable {
   id: string;
+  escrow_id: string;
   type: EscrowType;
   description: string;
   quantity?: number;
   value?: number; // Amount (only for cash/digital_transfer types)
   currency?: string; // Currency (only for cash/digital_transfer types)
   party_responsible: PartyResponsible; // Which party is responsible for this deliverable
+  status: DeliverableStatus;
+  created_at: string;
+  updated_at: string;
 }
+
+export type DeliverableStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'submitted'
+  | 'verified'
+  | 'completed'
+  | 'failed';
 
 export type PartyRole = 'initiator' | 'participant';
 
@@ -59,7 +71,7 @@ export interface Escrow {
   description: string;
 
   // Deliverable details (separated by party, payment types have amounts)
-  deliverables: Deliverable[]; // Array of deliverables with party responsibility
+  deliverables?: Deliverable[]; // Array of deliverables with party responsibility
   expected_completion_date?: string;
 
   // Confirmation tracking
@@ -86,6 +98,14 @@ export interface Escrow {
   // Metadata
   terms_hash?: string; // Hash of agreement terms (for blockchain)
   blockchain_tx_id?: string; // Future blockchain transaction ID
+  ai_analysis_data?: Array<{
+    user_id: string;
+    analysis_data: {
+      confidence: number;
+      extracted_data: Record<string, unknown>;
+    };
+    created_at: string;
+  }>; // AI analysis data from transaction screenshots
 }
 
 /**
@@ -111,6 +131,48 @@ export interface EscrowWithParticipants extends Escrow {
     name: string;
     email: string;
   };
+}
+
+/**
+ * Escrow with deliverables and their status
+ */
+export interface EscrowWithDeliverables extends EscrowWithParticipants {
+  deliverables: Deliverable[];
+}
+
+/**
+ * Deliverable with verification status
+ */
+export interface DeliverableWithStatus extends Deliverable {
+  verification?: OracleVerification;
+  proofs?: EscrowProof[];
+}
+
+/**
+ * Oracle verification result
+ */
+export interface OracleVerification {
+  id: string;
+  escrow_id: string;
+  oracle_type: 'ipfs' | 'ai';
+  verified: boolean;
+  confidence_score?: number;
+  proof_hash: string;
+  notes?: string;
+  created_at: string;
+}
+
+/**
+ * Escrow proof submission
+ */
+export interface EscrowProof {
+  id: string;
+  escrow_id: string;
+  deliverable_id: string;
+  proof_hash: string;
+  proof_description?: string;
+  submitted_by: string;
+  submitted_at: string;
 }
 
 /**
