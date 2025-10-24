@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ShieldAlert } from 'lucide-react';
 
 interface SignatureModalProps {
   open: boolean;
@@ -31,7 +33,12 @@ export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.strokeStyle = '#1DB954';
+    // Set white background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Set black pen stroke
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
   }, [open]);
@@ -93,6 +100,15 @@ export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
           <DialogTitle>Add Signature</DialogTitle>
         </DialogHeader>
 
+        <Alert className="border-amber-500/30 bg-amber-500/10">
+          <ShieldAlert className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700">
+            <strong>Important:</strong> Signatures will not be visible in the
+            draft version to prevent forgery. Signatures will only appear in the
+            final document when you click &quot;Finalize&quot; and download it.
+          </AlertDescription>
+        </Alert>
+
         <Tabs defaultValue="draw" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="draw">Draw Signature</TabsTrigger>
@@ -105,7 +121,8 @@ export function SignatureModal({ open, onOpenChange }: SignatureModalProps) {
                 ref={canvasRef}
                 width={600}
                 height={200}
-                className="border-border bg-background w-full cursor-crosshair rounded-lg border"
+                className="w-full cursor-crosshair rounded-lg border border-gray-300"
+                style={{ backgroundColor: '#FFFFFF' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
