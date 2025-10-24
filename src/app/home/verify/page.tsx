@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BiometricCapture,
   IdCapture,
@@ -120,10 +120,22 @@ export default function VerifyPage() {
     }
   };
 
-  if (user.verificationStatus === 'pending') {
+  const isPending = user.verificationStatus === 'pending';
+  const isComplete = user.verificationStatus === 'complete';
+
+  // Navigate away after verification is complete
+  useEffect(() => {
+    if (isComplete) {
+      router.replace(ROUTES.HOME.ROOT);
+    }
+  }, [isComplete, router]);
+
+  if (isComplete) {
+    // Render nothing while redirecting to avoid state updates during render
+    return null;
+  }
+  if (isPending) {
     return <SubmissionPending />;
-  } else if (user.verificationStatus === 'complete') {
-    router.push(ROUTES.HOME.ROOT);
   }
 
   const renderStep = () => {
