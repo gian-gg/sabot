@@ -67,6 +67,8 @@ export async function POST(
       .select()
       .single();
 
+    console.log('Updated participant:', updatedParticipant, updateError);
+
     if (updateError) {
       console.error('Error confirming deliverable:', updateError);
       return NextResponse.json(
@@ -75,6 +77,30 @@ export async function POST(
       );
     }
 
+    // Also mark the other participant(s) as confirmed for this deliverable
+    // This ensures the other party's record is updated in the DB as requested.
+    try {
+      const { data: otherUpdated, error: otherUpdateError } = await supabase
+        .from('transaction_participants')
+        .update({
+          [updateField]: true,
+          [timestampField]: new Date().toISOString(),
+        })
+        .neq('user_id', user.id)
+        .eq('transaction_id', id)
+        .select();
+
+      if (otherUpdateError) {
+        console.error(
+          'Error confirming other participant deliverable:',
+          otherUpdateError
+        );
+      } else {
+        console.log('Also updated other participant(s):', otherUpdated);
+      }
+    } catch (err) {
+      console.error('Error updating other participant deliverable:', err);
+    }
     // Check if all deliverables are confirmed by both parties
     const { data: allParticipants, error: participantsError } = await supabase
       .from('transaction_participants')
