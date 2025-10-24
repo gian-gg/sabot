@@ -2,15 +2,12 @@
 
 Welcome to the Sabot documentation. This collection explains how the project is structured, the technology choices, and how to get started developing and deploying the app.
 
-Contents
+## Table of Contents
 
-- [Architecture](content/architecture.md)
-- [Tech Stack](content/tech-stack.md)
-- [Design System](content/design-system.md)
-- [Setup & Local Development](content/setup.md)
-- [Development Workflow](content/development.md)
-- [UI Components & Patterns](content/components.md)
-- [Routes & Pages](content/routes.md)
-- [Contributing](content/contributing.md)
+- **[User Guide](user-guide)**: Detailed information for end-users on how to use the application.
+- **[Developer Guide](developer-guide)**: Comprehensive guides for developers, covering setup, architecture, and contribution guidelines.
+- **[Architecture](architecture)**: Documentation related to the application's architecture and design.
+- **[API Reference](api-reference)**: Detailed information about the API.
+- **[ADRs](adr)**: Architecture Decision Records.
 
 If something is missing or out-of-date, open a PR — documentation is code.
