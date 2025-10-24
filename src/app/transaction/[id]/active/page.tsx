@@ -142,7 +142,7 @@ export default function TransactionActive({
   }
 
   // Helper functions
-  const getTransactionTypeIcon = (type: string) => {
+  const getTransactionTypeIcon = (type: string | undefined) => {
     switch (type) {
       case 'meetup':
         return MapPin;
@@ -155,7 +155,7 @@ export default function TransactionActive({
     }
   };
 
-  const getTransactionTypeLabel = (type: string) => {
+  const getTransactionTypeLabel = (type: string | undefined) => {
     switch (type) {
       case 'meetup':
         return 'Meet Up';
@@ -309,7 +309,7 @@ export default function TransactionActive({
 
   // Transform transaction data for display
   const transformedTransaction = {
-    price: parseFloat(transaction.price || '0'),
+    price: transaction.price || 0,
     location: getTransactionLocation(),
     type: transaction.transaction_type,
     time: getTransactionTime(),
