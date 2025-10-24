@@ -58,3 +58,18 @@ export function decryptPrivateKey(encrypted: string, secret: string): string {
 
   return decrypted;
 }
+
+export function sortObjectKeys(obj: any): any {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys);
+  }
+  return Object.keys(obj)
+    .sort()
+    .reduce((acc: any, key) => {
+      acc[key] = sortObjectKeys(obj[key]);
+      return acc;
+    }, {});
+}
