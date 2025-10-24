@@ -9,6 +9,7 @@ export interface PDFExportOptions {
   includePageNumbers?: boolean;
   includeTimestamp?: boolean;
   documentId?: string;
+  signatureImage?: string;
 }
 
 /**
@@ -25,6 +26,7 @@ export async function exportAgreementToPDF(
     includePageNumbers = true,
     includeTimestamp = true,
     documentId,
+    signatureImage,
   } = options;
 
   try {
@@ -85,7 +87,12 @@ export async function exportAgreementToPDF(
     }
 
     // Parse HTML and convert to PDF content
-    const contentLines = parseHTMLToPDFContent(htmlContent, pdf, contentWidth);
+    const contentLines = parseHTMLToPDFContent(
+      htmlContent,
+      pdf,
+      contentWidth,
+      signatureImage
+    );
 
     // Add content to PDF
     for (const line of contentLines) {
@@ -178,7 +185,8 @@ interface PDFLine {
 function parseHTMLToPDFContent(
   htmlContent: string,
   pdf: jsPDF,
-  contentWidth: number
+  contentWidth: number,
+  signatureImage?: string
 ): PDFLine[] {
   const lines: PDFLine[] = [];
 
@@ -191,7 +199,8 @@ function parseHTMLToPDFContent(
     const lines_from_element = parseElement(
       element as HTMLElement,
       pdf,
-      contentWidth
+      contentWidth,
+      signatureImage
     );
     lines.push(...lines_from_element);
   });
@@ -205,7 +214,8 @@ function parseHTMLToPDFContent(
 function parseElement(
   element: HTMLElement,
   _pdf: jsPDF,
-  _contentWidth: number
+  _contentWidth: number,
+  signatureImage?: string
 ): PDFLine[] {
   const lines: PDFLine[] = [];
   const tagName = element.tagName.toLowerCase();
