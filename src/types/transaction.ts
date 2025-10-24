@@ -48,6 +48,12 @@ export interface DBTransaction {
   price?: number;
   meeting_location?: string;
   meeting_time?: string;
+  delivery_address?: string;
+  delivery_method?: string;
+  online_platform?: string;
+  online_contact?: string;
+  online_instructions?: string;
+  transaction_type?: 'meetup' | 'delivery' | 'online';
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +91,12 @@ export interface CreateTransactionPayload {
   price?: number;
   meeting_location?: string;
   meeting_time?: string;
+  delivery_address?: string;
+  delivery_method?: string;
+  online_platform?: string;
+  online_contact?: string;
+  online_instructions?: string;
+  transaction_type?: 'meetup' | 'delivery' | 'online';
 }
 
 export interface JoinTransactionPayload {
