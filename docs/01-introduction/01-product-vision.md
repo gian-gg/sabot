@@ -27,9 +27,7 @@ Empower individuals and businesses to create professional, legally sound agreeme
 
 ### 1. User Onboarding & Verification
 
-**Authentication**
-
-- Email-based authentication via better-auth
+- **Authentication**: Supabase Auth
 - Secure session management
 
 **Homepage - Public Transaction Ledger**
@@ -225,10 +223,10 @@ Users can:
 ## Technology Stack
 
 - **Framework**: Next.js 15 with App Router
-- **Authentication**: better-auth with email/password
-- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Supabase Auth with email/password
+- **Database**: PostgreSQL with Supabase
 - **UI**: shadcn/ui with Tailwind CSS v4
-- **AI Integration**: (To be specified - likely OpenAI/Anthropic for conversation analysis)
+- **AI Integration**: Google Generative AI for conversation analysis
 
 ---
 
@@ -554,13 +552,13 @@ Similar to transaction confirmation:
 **Existing Infrastructure**:
 
 - Next.js 15 with App Router
-- PostgreSQL with Drizzle ORM
-- Authentication via better-auth
+- PostgreSQL with Supabase
+- Authentication via Supabase Auth
 - Tailwind CSS v4 with shadcn/ui
 
 **Future Dependencies** (Phase 2):
 
-- **BlockNote**: Block-based editor (built on Tiptap/ProseMirror)
+- **Tiptap**: Block-based editor (built on ProseMirror)
 - **Yjs**: CRDT for real-time collaboration
 - **y-websocket**: WebSocket server for sync
 - **Liveblocks** (optional): Managed real-time infrastructure
@@ -569,7 +567,7 @@ Similar to transaction confirmation:
 **Current Implementation** (Phase 1 - Frontend Only):
 
 - Mock data for agreements, parties, sections, AI suggestions
-- Placeholder components ready for v0-generated UI
+- Placeholder components ready for UI generation
 - Static blocks (no real-time sync yet)
 - Mock cursor positions and typing indicators
 

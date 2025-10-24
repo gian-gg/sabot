@@ -676,7 +676,7 @@ export const ROUTES = {
 
 ### Step 5: Visual Testing
 
-- [ ] Quick visual check on all pages (Playwright screenshots)
+- [ ] Quick visual check on all pages
 - [ ] Comprehensive design review (if needed)
 - [ ] Cross-browser testing (Chrome, Firefox, Safari)
 
