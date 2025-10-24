@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
@@ -39,11 +39,17 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
+    "@tiptap/extension-blockquote": "^3.7.2",
+    "@tiptap/extension-bullet-list": "^3.7.2",
+    "@tiptap/extension-code": "^3.7.2",
     "@tiptap/extension-collaboration": "^3.7.2",
-    "@tiptap/extension-collaboration-cursor": "^3.0.0",
     "@tiptap/extension-highlight": "^3.7.2",
+    "@tiptap/extension-list-item": "^3.7.2",
+    "@tiptap/extension-ordered-list": "^3.7.2",
     "@tiptap/extension-placeholder": "^3.7.2",
+    "@tiptap/extension-strike": "^3.7.2",
     "@tiptap/extension-typography": "^3.7.2",
+    "@tiptap/extension-underline": "^3.7.2",
     "@tiptap/react": "^3.7.2",
     "@tiptap/starter-kit": "^3.7.2",
     "class-variance-authority": "^0.7.1",
@@ -67,7 +73,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "y-protocols": "^1.0.6",
-    "yjs": "^13.6.27",
+    "yjs": "^13.5.42",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -98,5 +104,8 @@
     "*.{css,scss,md,html,json}": [
       "prettier --write"
     ]
+  },
+  "resolutions": {
+    "yjs": "13.5.42"
   }
 }

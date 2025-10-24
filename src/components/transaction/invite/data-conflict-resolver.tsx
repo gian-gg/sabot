@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as Y from 'yjs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import type { AnalysisData } from '@/types/analysis';
 
 interface AnalysisWithSource extends AnalysisData {
@@ -19,18 +22,75 @@ interface DataConflictResolverProps {
   analyses: AnalysisWithSource[];
   onResolve: (resolvedData: AnalysisData) => void;
   onCancel?: () => void;
+  transactionId?: string; // For collaborative sync
 }
 
 type FieldKey = keyof AnalysisData;
 
-export function DataConflictResolver({
+// Comparison fields for collaborative resolution
+const COMPARISON_FIELDS: FieldKey[] = [
+  'productType',
+  'productModel',
+  'productCondition',
+  'proposedPrice',
+  'quantity',
+  'transactionType',
+  'meetingLocation',
+  'meetingSchedule',
+  'deliveryAddress',
+  'deliveryMethod',
+];
+
+export default function DataConflictResolver({
   analyses,
   onResolve,
   onCancel,
+  transactionId,
 }: DataConflictResolverProps) {
   const [selectedValues, setSelectedValues] = useState<Partial<AnalysisData>>(
     {}
   );
+  const [ymap, setYmap] = useState<Y.Map<unknown> | null>(null);
+  const [agreementStatus, setAgreementStatus] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Initialize Y.js collaboration when there are 2 analyses (buyer + seller)
+  const isCollaborative = analyses.length === 2;
+  const { ydoc, isConnected } = useCollaboration({
+    documentId: transactionId
+      ? `transaction-${transactionId}`
+      : 'conflict-resolver',
+    enabled: isCollaborative,
+  });
+
+  // Initialize Y.js shared map for tracking agreements
+  useEffect(() => {
+    if (!ydoc || !isCollaborative) return;
+
+    const collaborativeMap = ydoc.getMap('field-agreements');
+    setYmap(collaborativeMap);
+
+    const updateHandler = () => {
+      const agreements: Record<string, boolean> = {};
+      COMPARISON_FIELDS.forEach((field) => {
+        const fieldMap = collaborativeMap.get(String(field)) as
+          | Y.Map<unknown>
+          | undefined;
+        // Check if field Y.Map exists and has an agreedValue
+        const isAgreed: boolean =
+          fieldMap instanceof Y.Map &&
+          fieldMap.get('agreedValue') !== undefined;
+        agreements[String(field)] = isAgreed;
+      });
+      setAgreementStatus(agreements);
+    };
+
+    collaborativeMap.observe(updateHandler);
+    return () => {
+      collaborativeMap.unobserve(updateHandler);
+    };
+  }, [ydoc, isCollaborative]);
 
   if (analyses.length === 0) {
     return (
@@ -139,6 +199,29 @@ export function DataConflictResolver({
     value: NonNullable<AnalysisData[FieldKey]>
   ) => {
     setSelectedValues((prev) => ({ ...prev, [field]: value }));
+
+    // Sync to Y.js if collaborative
+    if (ymap && isCollaborative) {
+      try {
+        // Serialize the value to JSON string for Y.Map compatibility
+        const serializedValue =
+          typeof value === 'object' ? JSON.stringify(value) : String(value);
+
+        // Get or create a Y.Map for this field
+        let fieldMap = ymap.get(String(field)) as Y.Map<unknown> | undefined;
+        if (!fieldMap || !(fieldMap instanceof Y.Map)) {
+          fieldMap = new Y.Map();
+          ymap.set(String(field), fieldMap);
+        }
+
+        // Store the agreed value and who agreed
+        fieldMap.set('agreedValue', serializedValue);
+        fieldMap.set('agreedBy', 'buyer');
+        fieldMap.set('timestamp', Date.now());
+      } catch (error) {
+        console.error('Error syncing field to Y.js:', error);
+      }
+    }
   };
 
   const handleResolve = () => {
@@ -277,8 +360,47 @@ export function DataConflictResolver({
     return String(value);
   };
 
+  // Calculate agreement progress for collaborative mode
+  const agreedFields = isCollaborative
+    ? conflicts.filter((fc) => agreementStatus[String(fc.field)])
+    : [];
+  const agreementPercentage = isCollaborative
+    ? Math.round((agreedFields.length / conflicts.length) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
+      {/* Collaborative Header (when 2 analyses) */}
+      {isCollaborative && (
+        <Card className="border-blue-500/30 bg-blue-500/10 p-4">
+          <div className="space-y-3">
+            {/* Connection Status */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}
+              />
+              <span className="text-sm font-medium">
+                {isConnected ? 'Real-time sync active' : 'Connecting...'}
+              </span>
+            </div>
+
+            {/* Agreement Progress */}
+            {conflicts.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Field Agreement</span>
+                  <span className="text-sm font-medium">
+                    {agreedFields.length} of {conflicts.length} (
+                    {agreementPercentage}%)
+                  </span>
+                </div>
+                <Progress value={agreementPercentage} className="h-2" />
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Header */}
       <Alert>
         <AlertTriangle className="h-4 w-4" />
@@ -321,16 +443,41 @@ export function DataConflictResolver({
             confidence: a.confidence,
           }));
 
+          const isAgreed = agreementStatus[String(field)];
+
           return (
-            <Card key={field} className="space-y-3 p-4">
+            <Card
+              key={field}
+              className={`space-y-3 p-4 ${
+                isCollaborative && isAgreed
+                  ? 'border-green-500/30 bg-green-500/5'
+                  : ''
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <Label className="text-base font-semibold">
                   {getFieldLabel(field)}
                 </Label>
                 {hasConflict && (
-                  <Badge variant="outline">
-                    <AlertTriangle className="mr-1 h-3 w-3" />
-                    Conflict
+                  <Badge
+                    variant="outline"
+                    className={
+                      isCollaborative && isAgreed
+                        ? 'border-green-500/50 text-green-600'
+                        : 'border-yellow-500/50 text-yellow-600'
+                    }
+                  >
+                    {isCollaborative && isAgreed ? (
+                      <>
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        Agreed
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="mr-1 h-3 w-3" />
+                        Conflict
+                      </>
+                    )}
                   </Badge>
                 )}
                 {hasNoData && (

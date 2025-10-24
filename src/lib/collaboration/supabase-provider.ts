@@ -40,9 +40,19 @@ export class SupabaseProvider {
       this.channel.on(
         'broadcast',
         { event: 'update' },
-        ({ payload }: { payload: { update: Uint8Array } }) => {
+        ({ payload }: { payload: { update: string } }) => {
           if (payload.update) {
-            Y.applyUpdate(this.ydoc, payload.update);
+            try {
+              // Decode base64 string to Uint8Array
+              const binaryString = atob(payload.update);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              Y.applyUpdate(this.ydoc, bytes);
+            } catch (error) {
+              console.error('Error decoding Yjs update:', error);
+            }
           }
         }
       );
@@ -73,11 +83,21 @@ export class SupabaseProvider {
 
       const updateHandler = (update: Uint8Array) => {
         if (this.channel) {
-          this.channel.send({
-            type: 'broadcast',
-            event: 'update',
-            payload: { update },
-          });
+          try {
+            // Encode Uint8Array to base64 string for JSON serialization
+            let binaryString = '';
+            for (let i = 0; i < update.length; i++) {
+              binaryString += String.fromCharCode(update[i]);
+            }
+            const base64Update = btoa(binaryString);
+            this.channel.send({
+              type: 'broadcast',
+              event: 'update',
+              payload: { update: base64Update },
+            });
+          } catch (error) {
+            console.error('Error encoding Yjs update:', error);
+          }
         }
       };
 

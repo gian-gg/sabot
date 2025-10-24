@@ -45,7 +45,7 @@ import {
 } from '@/components/agreement/finalize/escrow-protection-enhanced';
 import { ArbiterSelection } from '@/components/agreement/finalize/arbiter-selection';
 import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
-import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
+import { DataConflictResolverNoSsr } from './data-conflict-resolver-no-ssr';
 import { GitMerge } from 'lucide-react';
 import type { AnalysisData } from '@/types/analysis';
 
@@ -589,7 +589,7 @@ export function CreateTransactionForm({
 
         // Show conflict resolver
         return (
-          <DataConflictResolver
+          <DataConflictResolverNoSsr
             analyses={multipleAnalyses}
             onResolve={handleConflictsResolved}
           />

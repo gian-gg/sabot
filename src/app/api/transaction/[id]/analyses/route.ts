@@ -63,7 +63,19 @@ export async function GET(
       }) || []
     );
 
-    return NextResponse.json({ analyses: analysesWithUrls || [] });
+    // Separate buyer and seller analyses for collaborative resolver
+    const buyerAnalysis = analysesWithUrls?.find(
+      (a) => a.user_id === analyses?.[0]?.transaction_screenshots?.user_id
+    );
+    const sellerAnalysis = analysesWithUrls?.find(
+      (a) => a.user_id !== analyses?.[0]?.transaction_screenshots?.user_id
+    );
+
+    return NextResponse.json({
+      analyses: analysesWithUrls || [],
+      buyerAnalysis: buyerAnalysis?.extracted_data || null,
+      sellerAnalysis: sellerAnalysis?.extracted_data || null,
+    });
   } catch (_error) {
     return NextResponse.json(
       { error: 'Internal server error' },
