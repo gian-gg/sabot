@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, use } from 'react';
+import { useState, useMemo, use, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -24,11 +25,13 @@ interface Party {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
   color: string;
   verified?: boolean;
   hasConfirmed?: boolean;
   trustScore?: number;
   role?: string;
+  user_id?: string;
 }
 
 interface DetailItem {
@@ -78,35 +81,101 @@ export default function FinalizePage({
   const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
   const [escrowEnabled, setEscrowEnabled] = useState(false);
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - replace with real data from API/database
-  const agreementData: AgreementData = {
+  // Agreement data state
+  const [agreementData, setAgreementData] = useState<AgreementData>({
     id: id,
-    title: storedTitle || 'Partnership Agreement',
-    content: storedContent || '',
-    parties: [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        color: '#1DB954',
-        verified: true,
-        hasConfirmed: false,
-        trustScore: 95,
-        role: 'Creator',
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        color: '#FF6B6B',
-        verified: true,
-        hasConfirmed: false,
-        trustScore: 88,
-        role: 'Invitee',
-      },
-    ],
-  };
+    title: 'Loading...',
+    content: '',
+    parties: [],
+  });
+
+  // Fetch real agreement data from API
+  useEffect(() => {
+    const fetchAgreement = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/agreement/${id}/status`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch agreement');
+        }
+
+        const data = await response.json();
+
+        // Map API response to component state
+        // Generate colors for parties if not present
+        const colors = ['#1DB954', '#FF6B6B', '#4A90E2', '#F5A623'];
+        const fetchedParties: Party[] = (data.participants || []).map(
+          (
+            participant: {
+              id: string;
+              user_id: string;
+              name: string;
+              email: string;
+              avatar?: string;
+              role: string;
+              has_confirmed?: boolean;
+            },
+            index: number
+          ) => ({
+            id: participant.id,
+            user_id: participant.user_id,
+            name: participant.name,
+            email: participant.email,
+            avatar: participant.avatar,
+            color: colors[index % colors.length],
+            role: participant.role,
+            verified: true,
+            hasConfirmed: participant.has_confirmed || false,
+            trustScore: 85,
+          })
+        );
+
+        setAgreementData({
+          id: data.agreement.id,
+          title: storedTitle || data.agreement.title || 'Agreement',
+          content: storedContent || data.agreement.content || '',
+          parties: fetchedParties,
+        });
+      } catch (error) {
+        console.error('Error fetching agreement:', error);
+        // Fall back to mock data
+        setAgreementData({
+          id: id,
+          title: storedTitle || 'Partnership Agreement',
+          content: storedContent || '',
+          parties: [
+            {
+              id: '1',
+              name: 'John Doe',
+              email: 'john@example.com',
+              color: '#1DB954',
+              verified: true,
+              hasConfirmed: false,
+              trustScore: 95,
+              role: 'Creator',
+            },
+            {
+              id: '2',
+              name: 'Jane Smith',
+              email: 'jane@example.com',
+              color: '#FF6B6B',
+              verified: true,
+              hasConfirmed: false,
+              trustScore: 88,
+              role: 'Invitee',
+            },
+          ],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgreement();
+  }, [id, storedTitle, storedContent]);
 
   const currentUserId = '1'; // This should come from auth context
   const participantId = '2'; // This should be determined dynamically
@@ -229,15 +298,32 @@ export default function FinalizePage({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex flex-1 items-center gap-3">
-                      <div
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                        style={{ backgroundColor: party.color }}
-                      >
-                        {party.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </div>
+                      {party.avatar ? (
+                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                          <Image
+                            src={party.avatar}
+                            alt={party.name}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                            onError={(result) => {
+                              // If image fails to load, hide it and show fallback
+                              result.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                      {!party.avatar && (
+                        <div
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: party.color }}
+                        >
+                          {party.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <p className="text-foreground truncate text-sm font-semibold">
                           {party.name}
