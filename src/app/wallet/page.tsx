@@ -21,6 +21,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CopyAddressButton } from '@/components/wallet/copy-address-button';
+import { WalletBalance } from '@/components/wallet/wallet-balance';
 
 export default async function WalletPage() {
   const supabase = await createClient();
@@ -87,6 +88,10 @@ export default async function WalletPage() {
                 </div>
                 <CopyAddressButton address={userWallet.address} />
               </div>
+              <div className="bg-muted/50 mt-4 rounded-lg border p-4">
+                <h4 className="mb-2 text-sm font-semibold">Current Balance</h4>
+                <WalletBalance variant="large" />
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -110,7 +115,7 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p className="text-xs leading-relaxed">
+            <p className="text-sm leading-relaxed">
               A blockchain wallet is a digital wallet that functions like a bank
               account but operates without central control. It is{' '}
               <span className="text-primary font-medium">decentralized</span>,
@@ -135,7 +140,7 @@ export default async function WalletPage() {
             </div>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-3">
-            <p className="text-xs leading-relaxed">
+            <p className="text-sm leading-relaxed">
               Sabot uses blockchain technology to provide trust and safety for
               peer-to-peer transactions. It ensures{' '}
               <span className="text-primary font-medium">

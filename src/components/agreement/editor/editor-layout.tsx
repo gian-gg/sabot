@@ -38,6 +38,7 @@ export function EditorLayout({
   );
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
   const [isConnected, setIsConnected] = useState(false);
+  const [signatureImage, setSignatureImage] = useState<string | null>(null);
 
   // Document store
   const { setDocumentId, setTitle, setContent, setIdeaBlocks } =
@@ -139,6 +140,12 @@ export function EditorLayout({
     }
   };
 
+  const handleApplySignature = (signatureData: string) => {
+    // Store the signature image
+    setSignatureImage(signatureData);
+    toast.success('Signature applied to document!');
+  };
+
   const handleExportFromCommand = async () => {
     if (isExportingRef.current) return;
 
@@ -157,6 +164,7 @@ export function EditorLayout({
         includePageNumbers: true,
         includeTimestamp: true,
         documentId,
+        signatureImage: signatureImage || undefined,
       });
 
       toast.success('Agreement exported successfully!');
@@ -205,6 +213,7 @@ export function EditorLayout({
       <SignatureModal
         open={isSignatureOpen}
         onOpenChange={setIsSignatureOpen}
+        onApplySignature={handleApplySignature}
       />
       <CommandPalette
         open={commandOpen}
