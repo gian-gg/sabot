@@ -34,7 +34,7 @@ export async function GET(
       );
     }
 
-    // Get participants
+    // Get participants with basic data first
     const { data: participants, error: participantsError } = await supabase
       .from('transaction_participants')
       .select('*')
@@ -43,17 +43,49 @@ export async function GET(
     if (participantsError) {
       console.error('Failed to fetch participants:', participantsError);
       return NextResponse.json(
-        { error: 'Failed to fetch participants' },
+        {
+          error: 'Failed to fetch participants',
+          details: participantsError.message,
+          code: participantsError.code,
+        },
         { status: 500 }
       );
     }
 
+    // Enrich participants with profile data
+    const enrichedParticipants =
+      participants?.map((p) => {
+        if (p.role === 'creator') {
+          return {
+            ...p,
+            name: transaction.creator_name || 'Creator',
+            email: transaction.creator_email || '',
+            avatar: transaction.creator_avatar_url,
+          };
+        } else {
+          // For invitee, use stored participant data
+          return {
+            ...p,
+            name: p.participant_name || 'Participant',
+            email: p.participant_email || '',
+            avatar: p.participant_avatar_url,
+          };
+        }
+      }) || [];
+
     // Check if current user is a participant
-    const currentUserParticipant = participants?.find(
+    const currentUserParticipant = enrichedParticipants.find(
       (p) => p.user_id === user.id
     );
 
     if (!currentUserParticipant) {
+      console.log('Current user not found in participants:', {
+        userId: user.id,
+        participants: enrichedParticipants.map((p) => ({
+          id: p.user_id,
+          role: p.role,
+        })),
+      });
       return NextResponse.json(
         { error: 'Not a participant of this transaction' },
         { status: 403 }
@@ -61,10 +93,11 @@ export async function GET(
     }
 
     // Determine if ready for next step
-    const participantCount = participants?.length || 0;
+    const participantCount = enrichedParticipants.length;
     const bothJoined = participantCount === 2;
     const bothUploaded =
-      bothJoined && participants?.every((p) => p.screenshot_uploaded === true);
+      bothJoined &&
+      enrichedParticipants.every((p) => p.screenshot_uploaded === true);
 
     let is_ready_for_next_step = false;
 
@@ -77,6 +110,53 @@ export async function GET(
       is_ready_for_next_step = true;
     }
 
+    // Fetch escrow data if it exists
+    const { data: escrowData, error: escrowError } = await supabase
+      .from('escrows')
+      .select(
+        `
+        *,
+        deliverables(*)
+      `
+      )
+      .eq('transaction_id', id)
+      .single();
+
+    if (escrowError && escrowError.code !== 'PGRST116') {
+      console.error('Error fetching escrow data:', escrowError);
+    }
+
+    // Fetch oracle verifications if escrow exists
+    let oracleVerifications = [];
+    if (escrowData) {
+      const { data: verifications, error: verificationsError } = await supabase
+        .from('oracle_verifications')
+        .select('*')
+        .eq('escrow_id', escrowData.id);
+
+      if (verificationsError) {
+        console.error(
+          'Error fetching oracle verifications:',
+          verificationsError
+        );
+      }
+      oracleVerifications = verifications || [];
+    }
+
+    // Calculate deliverable statuses with verifications
+    const deliverableStatuses =
+      escrowData?.deliverables?.map(
+        (deliverable: { id: string; [key: string]: unknown }) => ({
+          ...deliverable,
+          verification: oracleVerifications.find((verification) =>
+            escrowData.deliverables?.some(
+              (d: { id: string; [key: string]: unknown }) =>
+                d.id === deliverable.id
+            )
+          ),
+        })
+      ) || [];
+
     console.log(`📊 Status API [${id.slice(0, 8)}]:`, {
       status: transaction.status,
       participantCount,
@@ -84,13 +164,18 @@ export async function GET(
       bothUploaded,
       is_ready_for_next_step,
       user: user.id.slice(0, 8),
+      hasEscrow: !!escrowData,
+      deliverableCount: deliverableStatuses.length,
     });
 
     const response: TransactionStatusResponse = {
       transaction,
-      participants: participants || [],
+      participants: enrichedParticipants,
       current_user_role: currentUserParticipant.role,
       is_ready_for_next_step,
+      escrow: escrowData,
+      deliverable_statuses: deliverableStatuses,
+      oracle_verifications: oracleVerifications,
     };
 
     return NextResponse.json(response);
