@@ -112,9 +112,10 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, ListItemProps>(
             {...props}
           >
             <div className="flex items-start gap-3">
-              {Icon && (
-                <Icon className="text-primary mt-0.5 h-5 w-5 flex-shrink-0" />
-              )}
+              {Icon &&
+                React.createElement(Icon, {
+                  className: 'text-primary mt-0.5 h-5 w-5 flex-shrink-0',
+                })}
               <div className="space-y-1">
                 <div className="text-sm leading-none font-medium">{title}</div>
                 {description && (

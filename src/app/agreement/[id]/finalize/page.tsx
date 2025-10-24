@@ -230,7 +230,7 @@ export default function FinalizePage({
   return (
     <div className="bg-background min-h-screen">
       {/* Main Content with top padding for fixed header from root layout */}
-      <div className="container mx-auto max-w-4xl px-6 py-8 pt-24 pb-12">
+      <div className="container mx-auto max-w-7xl px-4 py-6 pt-20 pb-8">
         {/* Status Banner */}
         {waitingForOthers && (
           <Card className="bg-primary/5 border-primary/20 mb-8 p-6">

@@ -72,10 +72,11 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
     escrow.participant_confirmation === 'confirmed';
 
   // Extract deliverable info from deliverables array
-  const primaryDeliverable = escrow.deliverables[0];
-  const totalAmount = escrow.deliverables
-    .filter((d) => d.value)
-    .reduce((sum, d) => sum + (d.value || 0), 0);
+  const primaryDeliverable = escrow.deliverables?.[0];
+  const totalAmount =
+    escrow.deliverables
+      ?.filter((d) => d.value)
+      .reduce((sum, d) => sum + (d.value || 0), 0) || 0;
   const currency = primaryDeliverable?.currency || 'USD';
 
   return (
@@ -292,14 +293,14 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
         </div>
 
         {/* Deliverables List */}
-        {escrow.deliverables.length > 1 && (
+        {escrow.deliverables && escrow.deliverables.length > 1 && (
           <div className="space-y-3">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <Package className="h-4 w-4" />
               All Deliverables
             </h3>
             <div className="space-y-2">
-              {escrow.deliverables.map((deliverable, index) => (
+              {escrow.deliverables?.map((deliverable, index) => (
                 <div
                   key={deliverable.id}
                   className="bg-muted/50 rounded-lg p-3"

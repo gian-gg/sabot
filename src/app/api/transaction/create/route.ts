@@ -45,8 +45,17 @@ export async function POST(request: NextRequest) {
         item_name: payload.item_name,
         item_description: payload.item_description,
         price: payload.price,
+        transaction_type: payload.transaction_type,
         meeting_location: payload.meeting_location,
         meeting_time: payload.meeting_time,
+        delivery_address: payload.delivery_address,
+        delivery_method: payload.delivery_method,
+        online_platform: payload.online_platform,
+        online_contact: payload.online_contact,
+        online_instructions: payload.online_instructions,
+        category: payload.category,
+        condition: payload.condition,
+        quantity: payload.quantity || 1,
       })
       .select()
       .single();

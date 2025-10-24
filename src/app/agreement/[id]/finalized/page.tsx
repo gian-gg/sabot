@@ -175,23 +175,11 @@ export default function FinalizedPage({
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      {/* Main Content with top padding for fixed header from root layout */}
-      <div className="container mx-auto max-w-4xl px-6 py-8 pt-24 pb-12">
-        {/* Success State Banner */}
-        <div className="mb-12 text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="bg-primary/20 rounded-full p-4">
-              <CheckCircle2 className="text-primary h-16 w-16" />
-            </div>
-          </div>
-          <h1 className="text-foreground mb-2 text-3xl font-bold">
-            Agreement Finalized
-          </h1>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            All parties have confirmed and signed the agreement. Your
-            transaction has been securely stored on the blockchain.
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-neutral-950">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Agreement Finalized</h1>
+          <p className="text-neutral-400">Agreement {id} has been finalized</p>
         </div>
 
         {/* Main Content Card */}

@@ -48,6 +48,15 @@ export interface DBTransaction {
   price?: number;
   meeting_location?: string;
   meeting_time?: string;
+  delivery_address?: string;
+  delivery_method?: string;
+  online_platform?: string;
+  online_contact?: string;
+  online_instructions?: string;
+  transaction_type?: 'meetup' | 'delivery' | 'online';
+  category?: string;
+  condition?: string;
+  quantity?: number;
   created_at: string;
   updated_at: string;
 }
@@ -64,6 +73,17 @@ export interface TransactionParticipant {
   name?: string;
   email?: string;
   avatar?: string;
+  // Confirmation fields
+  has_confirmed?: boolean;
+  confirmed_at?: string;
+  participant_name?: string;
+  participant_email?: string;
+  participant_avatar_url?: string;
+  // Deliverable confirmation fields
+  item_confirmed?: boolean;
+  payment_confirmed?: boolean;
+  item_confirmed_at?: string;
+  payment_confirmed_at?: string;
 }
 
 export interface TransactionScreenshot {
@@ -85,6 +105,15 @@ export interface CreateTransactionPayload {
   price?: number;
   meeting_location?: string;
   meeting_time?: string;
+  delivery_address?: string;
+  delivery_method?: string;
+  online_platform?: string;
+  online_contact?: string;
+  online_instructions?: string;
+  transaction_type?: 'meetup' | 'delivery' | 'online';
+  category?: string;
+  condition?: string;
+  quantity?: number;
 }
 
 export interface JoinTransactionPayload {
@@ -96,9 +125,19 @@ export interface UploadScreenshotPayload {
   file: File;
 }
 
+// Import types from escrow module
+import type {
+  EscrowWithDeliverables,
+  DeliverableWithStatus,
+  OracleVerification,
+} from './escrow';
+
 export interface TransactionStatusResponse {
   transaction: DBTransaction;
   participants: TransactionParticipant[];
   current_user_role?: ParticipantRole;
   is_ready_for_next_step: boolean;
+  escrow?: EscrowWithDeliverables;
+  deliverable_statuses?: DeliverableWithStatus[];
+  oracle_verifications?: OracleVerification[];
 }
