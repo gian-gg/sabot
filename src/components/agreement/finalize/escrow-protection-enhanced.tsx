@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,12 @@ import {
   AlertTriangle,
   CheckCircle,
 } from 'lucide-react';
-import type { EscrowType, Deliverable, PartyResponsible } from '@/types/escrow';
+import type {
+  EscrowType,
+  Deliverable,
+  PartyResponsible,
+  Escrow,
+} from '@/types/escrow';
 
 interface ItemDetails {
   name: string;
@@ -130,59 +135,110 @@ function shouldRequireArbiter(deliverables: Deliverable[]): boolean {
   );
 }
 
-function isDigitalAsset(itemDetails: ItemDetails): boolean {
-  const digitalKeywords = [
-    'digital',
-    'online',
-    'virtual',
-    'electronic',
-    'software',
-    'app',
-    'game',
-    'ebook',
-    'pdf',
-    'download',
-    'streaming',
-    'subscription',
-    'license',
-    'art',
-    'artwork',
-    'portrait',
-    'illustration',
-    'design',
-    'graphic',
-    'image',
-    'photo',
-    'picture',
-  ];
+async function inferDeliverableType(
+  itemDetails: ItemDetails
+): Promise<EscrowType> {
+  try {
+    const response = await fetch('/api/ai/infer-deliverable-type', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        itemName: itemDetails.name,
+        itemDescription: itemDetails.description,
+        category: itemDetails.category,
+      }),
+    });
 
-  const text =
-    `${itemDetails.name} ${itemDetails.description} ${itemDetails.category}`.toLowerCase();
-  return digitalKeywords.some((keyword) => text.includes(keyword));
+    if (!response.ok) {
+      throw new Error('Failed to infer deliverable type');
+    }
+
+    const data = await response.json();
+    return data.deliverableType as EscrowType;
+  } catch (error) {
+    console.error('Error inferring deliverable type:', error);
+    // Fallback to basic keyword matching if AI fails
+    const text =
+      `${itemDetails.name} ${itemDetails.description} ${itemDetails.category}`.toLowerCase();
+
+    if (
+      text.includes('cash') ||
+      text.includes('money') ||
+      text.includes('peso')
+    ) {
+      return 'cash';
+    }
+    if (
+      text.includes('payment') ||
+      text.includes('transfer') ||
+      text.includes('gcash')
+    ) {
+      return 'digital_transfer';
+    }
+    if (
+      text.includes('document') ||
+      text.includes('certificate') ||
+      text.includes('license')
+    ) {
+      return 'document';
+    }
+    if (
+      text.includes('digital') ||
+      text.includes('software') ||
+      text.includes('app')
+    ) {
+      return 'digital';
+    }
+    if (
+      text.includes('service') ||
+      text.includes('repair') ||
+      text.includes('cleaning')
+    ) {
+      return 'service';
+    }
+
+    // Default to item for physical goods
+    return 'item';
+  }
 }
 
-function parseDeliverablesFromItemDetails(
+async function isDigitalAsset(itemDetails: ItemDetails): Promise<boolean> {
+  const type = await inferDeliverableType(itemDetails);
+  return type === 'digital';
+}
+
+async function parseDeliverablesFromItemDetails(
   itemDetails: ItemDetails
-): Deliverable[] {
+): Promise<Deliverable[]> {
   const deliverables: Deliverable[] = [];
 
-  const itemType = isDigitalAsset(itemDetails) ? 'digital' : 'item';
+  const itemType = await inferDeliverableType(itemDetails);
   deliverables.push({
     id: `item-${Date.now()}`,
+    escrow_id: '', // Will be set when creating escrow
     type: itemType,
     description: itemDetails.name,
     party_responsible: 'initiator',
     value: itemDetails.price,
     currency: 'PHP',
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   deliverables.push({
     id: `payment-${Date.now() + 1}`,
+    escrow_id: '', // Will be set when creating escrow
     type: 'digital_transfer',
     description: `Payment of ₱${itemDetails.price}`,
     party_responsible: 'participant',
     value: itemDetails.price,
     currency: 'PHP',
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   return deliverables;
@@ -199,19 +255,27 @@ function parseDeliverablesFromAgreement(
     const amount = parseFloat(paymentMatch[1]);
     deliverables.push({
       id: `payment-${Date.now()}`,
+      escrow_id: '', // Will be set when creating escrow
       type: 'digital_transfer',
       description: `Payment of ₱${amount}`,
       party_responsible: 'participant',
       value: amount,
       currency: 'PHP',
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
   }
 
   deliverables.push({
     id: `deliverable-${Date.now()}`,
+    escrow_id: '', // Will be set when creating escrow
     type: 'service',
     description: agreementTitle || 'Service as specified in agreement',
     party_responsible: 'initiator',
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   return deliverables;
@@ -229,14 +293,28 @@ export function EscrowProtectionEnhanced({
   initiatorName,
   participantName,
 }: EscrowProtectionEnhancedProps) {
-  const inferredDeliverables = useMemo(() => {
-    if (itemDetails && itemDetails.name && itemDetails.price > 0) {
-      return parseDeliverablesFromItemDetails(itemDetails);
-    }
-    if (agreementTerms) {
-      return parseDeliverablesFromAgreement(agreementTerms, agreementTitle);
-    }
-    return [];
+  const [inferredDeliverables, setInferredDeliverables] = useState<
+    Deliverable[]
+  >([]);
+
+  useEffect(() => {
+    const loadInferredDeliverables = async () => {
+      if (itemDetails && itemDetails.name && itemDetails.price > 0) {
+        const deliverables =
+          await parseDeliverablesFromItemDetails(itemDetails);
+        setInferredDeliverables(deliverables);
+      } else if (agreementTerms) {
+        const deliverables = parseDeliverablesFromAgreement(
+          agreementTerms,
+          agreementTitle
+        );
+        setInferredDeliverables(deliverables);
+      } else {
+        setInferredDeliverables([]);
+      }
+    };
+
+    loadInferredDeliverables();
   }, [itemDetails, agreementTerms, agreementTitle]);
 
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData>({
@@ -272,12 +350,33 @@ export function EscrowProtectionEnhanced({
     onEscrowDataChange(newData);
   };
 
-  const addDeliverable = (party: PartyResponsible) => {
+  const addDeliverable = async (
+    party: PartyResponsible,
+    type: EscrowType = 'service'
+  ) => {
+    // Use intelligent type inference if itemDetails is available
+    let inferredType = type;
+    if (itemDetails && party === 'initiator') {
+      try {
+        inferredType = await inferDeliverableType(itemDetails);
+      } catch (error) {
+        console.error('Error inferring type:', error);
+        // Keep the default type if AI inference fails
+      }
+    }
+
     const newDeliverable: Deliverable = {
       id: `deliverable-${Date.now()}`,
-      type: 'service',
-      description: '',
+      escrow_id: '', // Will be set when creating escrow
+      type: inferredType,
+      description: itemDetails?.name || '',
       party_responsible: party,
+      value:
+        party === 'participant' && itemDetails ? itemDetails.price : undefined,
+      currency: party === 'participant' && itemDetails ? 'PHP' : undefined,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     handleDataChange({
       deliverables: [...escrowData.deliverables, newDeliverable],
@@ -403,7 +502,9 @@ export function EscrowProtectionEnhanced({
                                     <Badge
                                       className={`${typeInfo.color} text-sm`}
                                     >
-                                      <typeInfo.icon className="mr-1 h-3 w-3" />
+                                      {React.createElement(typeInfo.icon, {
+                                        className: 'mr-1 h-3 w-3',
+                                      })}
                                       {typeInfo.label}
                                     </Badge>
                                   )}
@@ -427,6 +528,42 @@ export function EscrowProtectionEnhanced({
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`type-${deliverable.id}`}
+                                  className="text-xs"
+                                >
+                                  Deliverable Type *
+                                </Label>
+                                <Select
+                                  value={deliverable.type}
+                                  onValueChange={(value) =>
+                                    updateDeliverable(deliverable.id, {
+                                      type: value as EscrowType,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {DELIVERABLE_TYPES.map((type) => (
+                                      <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          {React.createElement(type.icon, {
+                                            className: 'h-4 w-4',
+                                          })}
+                                          <span>{type.label}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
 
                               <div className="space-y-2">
@@ -567,7 +704,9 @@ export function EscrowProtectionEnhanced({
                                     <Badge
                                       className={`${typeInfo.color} text-sm`}
                                     >
-                                      <typeInfo.icon className="mr-1 h-3 w-3" />
+                                      {React.createElement(typeInfo.icon, {
+                                        className: 'mr-1 h-3 w-3',
+                                      })}
                                       {typeInfo.label}
                                     </Badge>
                                   )}
@@ -591,6 +730,42 @@ export function EscrowProtectionEnhanced({
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor={`type-${deliverable.id}`}
+                                  className="text-xs"
+                                >
+                                  Deliverable Type *
+                                </Label>
+                                <Select
+                                  value={deliverable.type}
+                                  onValueChange={(value) =>
+                                    updateDeliverable(deliverable.id, {
+                                      type: value as EscrowType,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {DELIVERABLE_TYPES.map((type) => (
+                                      <SelectItem
+                                        key={type.value}
+                                        value={type.value}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          {React.createElement(type.icon, {
+                                            className: 'h-4 w-4',
+                                          })}
+                                          <span>{type.label}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
 
                               <div className="space-y-2">

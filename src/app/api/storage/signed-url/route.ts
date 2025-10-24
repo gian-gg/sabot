@@ -1,30 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { bucket, path, expiresIn = 3600 } = await req.json();
-    if (!bucket || !path) {
+    const supabase = await createClient();
+    const { fileName, fileType, bucket } = await request.json();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Generate signed URL for file upload
+    const { data, error } = await supabase.storage
+      .from(bucket || 'documents')
+      .createSignedUploadUrl(fileName);
+
+    if (error) {
       return NextResponse.json(
-        { error: 'bucket and path are required' },
-        { status: 400 }
+        { error: 'Failed to create signed URL' },
+        { status: 500 }
       );
     }
 
-    const supabase = await createClient();
-
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .createSignedUrl(path, expiresIn);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ signedUrl: data?.signedUrl ?? null });
-  } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : 'Failed to create signed URL';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ signedUrl: data.signedUrl, path: data.path });
+  } catch (error) {
+    console.error('Error creating signed URL:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
