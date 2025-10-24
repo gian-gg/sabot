@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import type * as Y from 'yjs';
 import { SupabaseProvider } from './supabase-provider';
 import { createAwareness, type UserPresence } from './presence';
 import { createClient } from '@/lib/supabase/client';
@@ -182,7 +183,7 @@ export function useCollaboration({
         providerRef.current.disconnect();
       }
       if (ydocRef.current) {
-        ydocRef.current.destroy();
+        (ydocRef.current as unknown as Y.Doc).destroy();
       }
       cleanupPromise?.then((fn) => fn?.());
     };

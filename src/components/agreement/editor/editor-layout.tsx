@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
 import { MinimalRightSidebar } from '@/components/agreement/editor/minimal-right-sidebar';
-import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
+import { QuillEditor } from '@/components/agreement/editor/quill-editor';
 import { SignatureModal } from '@/components/agreement/editor/signature-modal';
 import { CommandPalette } from '@/components/agreement/editor/command-palette';
 import { TemplateSelector } from '@/components/agreement/editor/template-selector';
@@ -51,6 +51,12 @@ export function EditorLayout({
     setTitle(editorTitle);
     setContent(editorContent);
     setIdeaBlocks(currentIdeaBlocks);
+
+    if (editorContent && editorContent.length > 0) {
+      console.log(
+        `[EditorLayout] 📝 Document state synced - Title: ${editorTitle.length}c, Content: ${editorContent.length}c, Blocks: ${currentIdeaBlocks.length}`
+      );
+    }
   }, [
     documentId,
     editorTitle,
@@ -185,8 +191,8 @@ export function EditorLayout({
 
       {/* Main Layout: Editor + Right Sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Center: TipTap Editor */}
-        <TiptapEditor
+        {/* Center: Quill Editor */}
+        <QuillEditor
           documentId={documentId}
           isReviewing={false}
           onContentChange={setEditorContent}

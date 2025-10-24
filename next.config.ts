@@ -1,5 +1,14 @@
 import type { NextConfig } from 'next';
 
+/**
+ * Next.js 15 Configuration with Turbopack
+ *
+ * Key settings:
+ * - Turbopack: Default bundler (enabled automatically)
+ * - transpilePackages: ESM packages that need transpilation
+ * - images: Remote image patterns for Supabase and OAuth providers
+ * - serverActions: Configuration for Server Actions
+ */
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -19,17 +28,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  // ESM packages that require transpilation for compatibility
   transpilePackages: ['yjs', 'lib0'],
-  webpack: (config) => {
-    // Handle lib0 submodule imports (lib0/observable, lib0/random, etc.)
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      'lib0/observable': require.resolve('lib0/observable'),
-      'lib0/error': require.resolve('lib0/error'),
-      'lib0/random': require.resolve('lib0/random'),
-    };
-    return config;
-  },
 };
 
 export default nextConfig;

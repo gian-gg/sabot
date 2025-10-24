@@ -19,7 +19,6 @@ import ListItem from '@tiptap/extension-list-item';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { type UserPresence } from '@/lib/collaboration/presence';
 import { Loader } from 'lucide-react';
-import { EditorToolbar } from './editor-toolbar';
 
 interface TiptapEditorProps {
   documentId: string;
@@ -37,7 +36,6 @@ export function TiptapEditor({
   onContentChange,
   onConnectionStatusChange,
   onActiveUsersChange,
-  onOpenSignature,
   editorRef,
 }: TiptapEditorProps) {
   const { ydoc, isConnected, activeUsers, awareness } = useCollaboration({
@@ -271,7 +269,7 @@ export function TiptapEditor({
 
       {/* Formatting Toolbar - Fixed at Bottom */}
 
-      <EditorToolbar editor={editor} onInsertSignature={onOpenSignature} />
+      {/* EditorToolbar now expects quill prop, not editor. This component is deprecated. */}
 
       {/* Editor Styles */}
       <style jsx>{`
