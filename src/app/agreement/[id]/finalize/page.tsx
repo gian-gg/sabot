@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, use, useEffect } from 'react';
+import { useState, use, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,6 +20,8 @@ import { AgreementDetails } from '@/components/agreement/id/agreement-details';
 import { DocumentStructure } from '@/components/agreement/id/document-structure';
 import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
 import { useDocumentStore } from '@/store/document/documentStore';
+import { useAgreementRealtime } from '@/hooks/use-agreement-realtime';
+import { createClient } from '@/lib/supabase/client';
 
 interface Party {
   id: string;
@@ -73,15 +75,30 @@ export default function FinalizePage({
   const { id } = use(params);
   const router = useRouter();
 
+  console.log('[FinalizePage] Rendered with agreementId:', id);
+
   // Get document from store
   const { title: storedTitle, content: storedContent } = useDocumentStore();
 
-  // State for parties confirmation
-  const [parties, setParties] = useState<Party[]>([]);
-  const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
+  // Use realtime hook for live confirmation updates
+  console.log('[FinalizePage] About to call useAgreementRealtime with id:', id);
+  const {
+    participants: realtimeParticipants,
+    allConfirmed: realtimeAllConfirmed,
+    refetch: refetchParticipants,
+  } = useAgreementRealtime({ agreementId: id });
+  console.log('[FinalizePage] useAgreementRealtime hook returned:', {
+    participantCount: realtimeParticipants.length,
+    allConfirmed: realtimeAllConfirmed,
+  });
+
+  // State
   const [escrowEnabled, setEscrowEnabled] = useState(false);
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Agreement data state
   const [agreementData, setAgreementData] = useState<AgreementData>({
@@ -91,11 +108,26 @@ export default function FinalizePage({
     parties: [],
   });
 
+  // Get current user from auth
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        console.log('[FinalizePage] Current user:', user.id);
+        setCurrentUserId(user.id);
+      }
+    };
+    getCurrentUser();
+  }, []);
+
   // Fetch real agreement data from API
   useEffect(() => {
     const fetchAgreement = async () => {
       try {
-        setIsLoading(true);
+        setIsInitialLoading(true);
         const response = await fetch(`/api/agreement/${id}/status`);
 
         if (!response.ok) {
@@ -170,42 +202,136 @@ export default function FinalizePage({
           ],
         });
       } finally {
-        setIsLoading(false);
+        setIsInitialLoading(false);
       }
     };
 
     fetchAgreement();
   }, [id, storedTitle, storedContent]);
 
-  const currentUserId = '1'; // This should come from auth context
-  const participantId = '2'; // This should be determined dynamically
-
-  // Initialize parties from agreement data
+  // Map realtime participants to display format
   const displayParties =
-    parties.length > 0
-      ? parties
-      : agreementData.parties?.map((p) => ({ ...p, hasConfirmed: false })) ||
-        [];
+    realtimeParticipants.length > 0
+      ? realtimeParticipants.map((p) => ({
+          id: p.user_id,
+          user_id: p.user_id,
+          name: p.name || 'Unknown',
+          email: p.email || '',
+          avatar: p.avatar,
+          color:
+            agreementData.parties?.find((party) => party.user_id === p.user_id)
+              ?.color || '#666',
+          verified: true,
+          hasConfirmed: p.has_confirmed,
+          trustScore: 85,
+          role: p.role,
+        }))
+      : agreementData.parties || [];
 
-  const handleConfirm = () => {
+  // Determine current user's confirmation status
+  const currentUserConfirmed = realtimeParticipants.some(
+    (p) => p.user_id === currentUserId && p.has_confirmed
+  );
+
+  // Get the other party's ID for UI display
+  const participantId = realtimeParticipants.find(
+    (p) => p.user_id !== currentUserId
+  )?.user_id;
+
+  const handleConfirm = async () => {
+    if (!currentUserId) {
+      alert('Please log in to confirm the agreement.');
+      return;
+    }
+
     if (escrowEnabled && escrowData) {
       console.log('Creating escrow with data:', escrowData);
       // API call to create escrow will be added
     }
 
-    setCurrentUserConfirmed(true);
-    setParties(
-      displayParties.map((party) =>
-        party.id === currentUserId ? { ...party, hasConfirmed: true } : party
-      )
-    );
+    setIsConfirming(true);
+    try {
+      const supabase = createClient();
+
+      // Find current user's participant record
+      const currentParticipant = realtimeParticipants.find(
+        (p) => p.user_id === currentUserId
+      );
+
+      if (!currentParticipant) {
+        throw new Error('Participant record not found');
+      }
+
+      console.log(
+        '[handleConfirm] Updating participant:',
+        currentParticipant.id
+      );
+
+      // Update database directly (like transaction active page)
+      const { error } = await supabase
+        .from('agreement_participants')
+        .update({ has_confirmed: true })
+        .eq('id', currentParticipant.id);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('[handleConfirm] Database updated successfully');
+
+      // Trigger refetch to update the realtime hook's state
+      // The refetch function now returns the updated data immediately
+      console.log('[handleConfirm] Triggering refetch of participants...');
+      const freshParticipants = await refetchParticipants();
+
+      console.log(
+        '[handleConfirm] Participants refetched, fresh data:',
+        freshParticipants.map((p) => ({
+          id: p.id,
+          user_id: p.user_id,
+          has_confirmed: p.has_confirmed,
+          name: p.name,
+        }))
+      );
+
+      // Check if ALL participants now confirmed using the fresh data
+      const allNowConfirmed = freshParticipants.every((p) => p.has_confirmed);
+
+      console.log(
+        '[handleConfirm] All participants confirmed:',
+        allNowConfirmed
+      );
+
+      if (allNowConfirmed) {
+        // Update agreement status to finalized
+        const { error: statusError } = await supabase
+          .from('agreements')
+          .update({ status: 'finalized' })
+          .eq('id', id);
+
+        if (statusError) throw statusError;
+
+        console.log('[handleConfirm] Agreement finalized');
+
+        // Show success and navigate
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          router.push(`/agreement/${id}/finalized`);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('[handleConfirm] Error:', error);
+      alert('Failed to confirm. Please try again.');
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   const handleCancel = () => {
     router.push(`/agreement/${id}/active`);
   };
 
-  const allConfirmed = displayParties.every((party) => party.hasConfirmed);
+  const allConfirmed = realtimeAllConfirmed;
   const waitingForOthers = currentUserConfirmed && !allConfirmed;
 
   // Validation for escrow
@@ -397,8 +523,8 @@ export default function FinalizePage({
             onEscrowDataChange={setEscrowData}
             agreementTitle={agreementData.title}
             agreementTerms="Review agreement terms before finalizing."
-            initiatorId={currentUserId}
-            participantId={participantId}
+            initiatorId={currentUserId || ''}
+            participantId={participantId || ''}
             initiatorName={
               displayParties.find((p) => p.id === currentUserId)?.name
             }

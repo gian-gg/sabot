@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+// Assuming this is the type for the response body
 import { TransactionStatusResponse } from '@/types/transaction';
+// NOTE: This helper function must be defined and imported separately.
+import { pushTransactionToBlockchain } from '@/lib/blockchain/writeFunctions';
+
+// 💡 REMOVED the incomplete 'TransactionWithPushStatus' type definition
 
 export async function GET(
   request: NextRequest,
@@ -20,12 +25,16 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get transaction
+    // 💡 FIX: Renamed 'transactionData' to 'transaction' and removed the 'pushToBlock' from select
+    // 'select(*)' already fetches all columns, including 'pushToBlock'.
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
-      .select('*')
+      .select('*') // This fetches ALL columns
       .eq('id', id)
       .single();
+
+    // 💡 REMOVED the unsafe type assertion:
+    // const transaction = transactionData as TransactionWithPushStatus;
 
     if (transactionError || !transaction) {
       return NextResponse.json(
@@ -33,6 +42,44 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // =========================================================
+    // 🚀 BLOCKCHAIN FINALIZATION LOGIC 🚀
+    // This logic is now correct, as 'transaction' is the full, inferred type
+    if (
+      transaction.status === 'completed' &&
+      transaction.pushToBlock === null
+    ) {
+      console.log(`[BLOCKCHAIN] Finalizing transaction ${id.slice(0, 8)}...`);
+
+      const success = await pushTransactionToBlockchain(transaction.id);
+
+      if (success) {
+        // Upsert the transaction table to mark it as pushed
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update({ pushToBlock: 'done' })
+          .eq('id', transaction.id);
+
+        if (updateError) {
+          console.error(
+            '[BLOCKCHAIN] Failed to update pushToBlock:',
+            updateError
+          );
+        } else {
+          // Update the local object so the response reflects the new status
+          transaction.pushToBlock = 'done';
+          console.log(
+            `[BLOCKCHAIN] Successfully pushed and updated for ${id.slice(0, 8)}.`
+          );
+        }
+      } else {
+        console.error(
+          `[BLOCKCHAIN] Push failed for transaction ${transaction.id.slice(0, 8)}.`
+        );
+      }
+    }
+    // =========================================================
 
     // Get participants with basic data first
     const { data: participants, error: participantsError } = await supabase
@@ -117,7 +164,7 @@ export async function GET(
         `
         *,
         deliverables(*)
-      `
+        `
       )
       .eq('transaction_id', id)
       .single();
@@ -166,10 +213,13 @@ export async function GET(
       user: user.id.slice(0, 8),
       hasEscrow: !!escrowData,
       deliverableCount: deliverableStatuses.length,
+      pushToBlock: transaction.pushToBlock, // Log the new status
     });
 
+    // 💡 This is now correct. 'transaction' is the full, inferred type
+    // which matches the 'DBTransaction' type required by 'TransactionStatusResponse'.
     const response: TransactionStatusResponse = {
-      transaction,
+      transaction: transaction,
       participants: enrichedParticipants,
       current_user_role: currentUserParticipant.role,
       is_ready_for_next_step,

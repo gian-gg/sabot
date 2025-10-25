@@ -1,9 +1,13 @@
 import React from 'react';
-import { PublicLedger } from '@/components/root/public-ledger';
+import { AgreementLedger } from '@/components/root/agreement-ledger';
 import { MarketplaceCarousel } from '@/components/root/marketplace-carousel';
 import GetStartedButton from '@/components/user/get-started-button';
+import { getAgreements } from '@/lib/blockchain/readFunctions';
 
 export default async function Home() {
+  // Fetch agreements from blockchain
+  const agreements = await getAgreements();
+
   // Sort transactions by timestamp (newest first)
   // const transactions = [...mockTransactions].sort(
   //   (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
@@ -41,10 +45,10 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Transaction Ledger Preview */}
+        {/* Agreement Ledger Preview */}
         <section className="px-4 pb-16 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1100px]">
-            {/* <PublicLedger transactions={transactions} /> */}
+            <AgreementLedger agreements={agreements} />
           </div>
         </section>
 

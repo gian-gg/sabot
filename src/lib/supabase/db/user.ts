@@ -2,6 +2,7 @@
 
 import { createClient } from '../server';
 import type { UserVerificationData, VerificationStatus } from '@/types/user';
+import type { UserRole, DBTransaction } from '@/types/transaction';
 
 export async function getUserVerificationData(
   userId: string
@@ -152,4 +153,87 @@ export async function postNewUserWallet(
   if (error) return false;
 
   return true;
+}
+
+export async function getTransactionDetails(
+  transactionId: string
+): Promise<DBTransaction[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', transactionId);
+
+    if (error) {
+      console.error(
+        'getTransactionDetails: Failed to fetch transaction details:',
+        error
+      );
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('getTransactionDetails: Unexpected error:', error);
+    return [];
+  }
+}
+
+export async function postHashTransaction(
+  hash: string,
+  transaction_id: string
+): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('transactions')
+      .update([{ hash }])
+      .eq('id', transaction_id);
+
+    if (error) {
+      console.error(
+        'postHashTransaction: Failed to insert hash transaction:',
+        error
+      );
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(
+      'postHashTransaction: Failed to post hash transaction:',
+      error
+    );
+    return false;
+  }
+}
+
+export async function getAllUserIds(
+  transaction_id: string
+): Promise<UserRole[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('transaction_participants')
+      .select('user_id, role')
+      .eq('transaction_id', transaction_id);
+
+    if (error || !data) {
+      console.error('getAllUserIds: Failed to fetch user IDs:', error);
+      return [];
+    }
+
+    // 💡 EDITED LINE: Map the returned rows to the desired UserRole object structure
+    return data.map((row: { user_id: string; role: string }) => ({
+      user_id: row.user_id,
+      role: row.role,
+    }));
+  } catch (error) {
+    console.error('getAllUserIds: Unexpected error:', error);
+    return [];
+  }
 }
