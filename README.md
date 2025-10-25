@@ -1,11 +1,13 @@
-<h1 align="center">Sabot 🛡️</h1>
+<h1 align="center">Sabot ✅</h1>
 <a id="readme-top"></a>
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![GitHub](https://img.shields.io/github/license/gian-gg/sabot?style=for-the-badge)](https://github.com/gian-gg/sabot/blob/main/LICENSE)
+<a href="https://github.com/gian-gg/sabot/blob/main/LICENSE">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-002D72?style=for-the-badge" />
+</a>
 
 <!-- PROJECT LOGO -->
 <div align="center">
@@ -16,22 +18,16 @@
   <br />
   <p align="center">
     <br />
-    Let's make trust automatic!
-    <br />
-    <br />
     <p align="center">
       <a href="#"><img alt="Status" src="https://img.shields.io/badge/status-Beta-yellow?style=flat&color=yellow" /></a>
-<a href="https://nextjs.org/">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.4-2B2B2B?logo=nextdotjs&logoColor=white&style=flat" />
-</a>
-      <a href="https://github.com/gian-gg/sabot/commits/main"><img alt="Last commit" src="https://proxy.cyb3rko.de/shields/github/last-commit/gian-gg/sabot?color=coral&logo=git&logoColor=white"/</a>
+      <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-15.5.4-2B2B2B?logo=nextdotjs&logoColor=white&style=flat" /></a>
+      <a href="https://github.com/gian-gg/sabot/commits/main"><img alt="Last commit" src="https://proxy.cyb3rko.de/shields/github/last-commit/gian-gg/sabot?color=coral&logo=git&logoColor=white" /></a>
     </p>
     <a href="https://github.com/gian-gg/sabot/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
     <a href="https://github.com/gian-gg/sabot/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -65,22 +61,39 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
 
 ### 🆕 Latest Features
 
-- **🔗 Blockchain Escrow Integration**: Comprehensive smart contract integration for secure fund management
-- **🔮 Oracle Verification System**: Decentralized dispute resolution with oracle-based verification
-- **⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows
-- **📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking
-- **🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection
-- **📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality
+**🔗 Blockchain Escrow Integration**: Comprehensive smart contract integration for secure fund management  
+**🔮 Oracle Verification System**: Decentralized dispute resolution with oracle-based verification  
+**⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows  
+**📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking  
+**🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection  
+**📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality  
+
 
 ### 📚 Built With
 
 <p align="left">
-  <!-- Syvixor icons -->
-  <img src="https://skills.syvixor.com/api/icons?i=googlegemini,nextjs,typescript,supabase,tailwindcss,shadcnui,zustand" height="40" alt="Tech Stack" />
-  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Ethereum_logo.svg" height="40" width="40" alt="Ethereum" />
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" height="40" width="40" alt="Ethers.js" />
-  <img src="https://coin-images.coingecko.com/coins/images/385/large/Lisk_logo.png?1722338450" height="40" width="40" alt="Lisk" style="border-radius:8px;"  />
+  <!-- Vercel -->
+  <a href="https://vercel.com/"><img alt="Vercel" src="https://img.shields.io/badge/Vercel-232323?logo=vercel&logoColor=white&style=flat" /></a>
+  <!-- Next.js -->
+  <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-2B2B2B?logo=nextdotjs&logoColor=white&style=flat" /></a>
+  <!-- TypeScript -->
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=flat" /></a>
+  <!-- JavaScript -->
+  <a href="https://developer.mozilla.org/docs/Web/JavaScript"><img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&style=flat" /></a>
+  <!-- Ethereum -->
+  <a href="https://ethereum.org/"><img alt="Ethereum" src="https://img.shields.io/badge/Ethereum-3C3C3D?logo=ethereum&logoColor=white&style=flat" /></a>
+  <!-- Lisk -->
+  <a href="https://lisk.com/"><img alt="Lisk" src="https://img.shields.io/badge/Lisk-0055FF?logo=lisk&logoColor=white&style=flat" /></a>
+  <!-- ShadCN/UI -->
+  <a href="https://ui.shadcn.com/"><img alt="shadcn/ui" src="https://img.shields.io/badge/shadcn/ui-111111?logo=shadcnui&logoColor=white&style=flat" /></a>
+  <!-- Tailwind CSS -->
+  <a href="https://tailwindcss.com/"><img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-0EA5E9?logo=tailwindcss&logoColor=white&style=flat" /></a>
+  <!-- Lucide Icons -->
+  <a href="https://lucide.dev/"><img alt="Lucide Icons" src="https://img.shields.io/badge/Lucide_Icons-18181B?logo=lucide&logoColor=white&style=flat" /></a>
+  <!-- Google Gemini -->
+  <a href="https://gemini.google.com/"><img alt="Google Gemini" src="https://img.shields.io/badge/Google_Gemini-4285F4?logo=googlegemini&logoColor=white&style=flat" /></a>
 </p>
+
 
 <!-- SCREENSHOTS -->
 
@@ -99,6 +112,10 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
 Follow these steps to get Sabot running on your local machine.
 
 ### 🔧 Prerequisites
+
+- Node.js (version 16.0 or higher)
+- Bun
+- Metamask
 
 ### 🛠️ Installation
 
@@ -189,7 +206,7 @@ cd ../SabotBlockchain/transaction-smart-contract
 npx hardhat test
 ```
 
-## Transaction Smart Contract
+## 💱 Transaction Smart Contract
 
 The smart contract code for this project is hosted in its own repository: [transaction-smart-contract](https://github.com/eliseoalcaraz/transaction-smart-contract).
 
