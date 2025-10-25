@@ -1,19 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { getBestValue, hasConflict } from '@/lib/utils/conflict-resolution';
 import type { AnalysisData } from '@/types/analysis';
-import {
-  hasConflict,
-  getBestValue,
-  areValuesSimilar,
-} from '@/lib/utils/conflict-resolution';
+import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { useState } from 'react';
 
 interface AnalysisWithSource extends AnalysisData {
   source: string;

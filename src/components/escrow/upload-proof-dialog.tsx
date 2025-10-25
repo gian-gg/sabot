@@ -18,8 +18,8 @@ import { Progress } from '@/components/ui/progress';
 import {
   Upload,
   FileText,
-  Image,
-  Video,
+  Image as ImageIcon,
+  Video as VideoIcon,
   X,
   CheckCircle2,
   AlertCircle,
@@ -110,8 +110,8 @@ export function UploadProofDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
+    if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    if (type.startsWith('video/')) return <VideoIcon className="h-4 w-4" />;
     return <FileText className="h-4 w-4" />;
   };
 

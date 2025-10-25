@@ -1,16 +1,16 @@
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
-  CardHeader,
-  CardTitle,
   CardContent,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
-import { User, AlertTriangle, CheckCircle } from 'lucide-react';
-import Image from 'next/image';
-import type { AnalysisData } from '@/types/analysis';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import type { AnalysisData } from '@/types/analysis';
+import { AlertTriangle, CheckCircle, User } from 'lucide-react';
+import Image from 'next/image';
 
 interface AnalysisCompleteProps {
   analyses: AnalysisData[];
@@ -117,9 +117,11 @@ export function AnalysisComplete({
                     className="bg-muted/50 relative overflow-hidden rounded-lg border"
                     style={{ maxHeight: 400 }}
                   >
-                    <img
+                    <Image
                       src={analysis.screenshot_url || ''}
                       alt="Conversation screenshot"
+                      width={800}
+                      height={400}
                       className="h-auto w-full object-contain"
                       style={{ objectFit: 'contain' }}
                       sizes="(max-width: 768px) 100vw, 50vw"

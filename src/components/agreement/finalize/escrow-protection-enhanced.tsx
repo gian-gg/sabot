@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -13,30 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import type { Deliverable, EscrowType, PartyResponsible } from '@/types/escrow';
 import {
-  Shield,
-  Plus,
-  X,
-  Package,
-  Wrench,
-  FileText,
-  CreditCard,
-  Smartphone,
-  Monitor,
   Calendar,
-  Users,
-  AlertTriangle,
   CheckCircle,
+  CreditCard,
+  FileText,
+  Monitor,
+  Package,
+  Plus,
+  Shield,
+  Smartphone,
+  Users,
+  Wrench,
+  X,
 } from 'lucide-react';
-import type {
-  EscrowType,
-  Deliverable,
-  PartyResponsible,
-  Escrow,
-} from '@/types/escrow';
+import React, { useEffect, useState } from 'react';
 
 interface ItemDetails {
   name: string;
@@ -282,8 +275,6 @@ export function EscrowProtectionEnhanced({
   agreementTitle,
   agreementTerms,
   itemDetails,
-  initiatorId: _initiatorId,
-  participantId: _participantId,
   initiatorName,
   participantName,
 }: EscrowProtectionEnhancedProps) {

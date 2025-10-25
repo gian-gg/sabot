@@ -1,11 +1,9 @@
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scan } from 'lucide-react';
-import { FetchingAnalyses } from './analysis-steps/fetching-analyses';
-import { NoAnalyses } from './analysis-steps/no-analyses';
-import { AnalysisInProgress } from './analysis-steps/analysis-in-progress';
+import type { AnalysisData, AnalysisStep } from '@/types/analysis';
 import { AnalysisComplete } from './analysis-steps/analysis-complete';
 import { AnalysisError } from './analysis-steps/analysis-error';
-import type { AnalysisStep, AnalysisData } from '@/types/analysis';
+import { AnalysisInProgress } from './analysis-steps/analysis-in-progress';
+import { FetchingAnalyses } from './analysis-steps/fetching-analyses';
+import { NoAnalyses } from './analysis-steps/no-analyses';
 
 interface AnalysisContainerProps {
   step: AnalysisStep;

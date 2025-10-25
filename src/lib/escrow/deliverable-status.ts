@@ -5,9 +5,8 @@
 import type {
   Deliverable,
   DeliverableWithStatus,
-  OracleVerification,
   EscrowProof,
-  PartyRole,
+  OracleVerification,
 } from '@/types/escrow';
 
 /**
@@ -212,8 +211,6 @@ export function getOracleTypeForDeliverable(
       return 'ipfs';
     case 'service':
       return 'ai';
-    case 'product':
-    case 'payment':
     case 'item':
     case 'cash':
     case 'digital_transfer':
@@ -262,17 +259,6 @@ export function getDeliverableTypeConfig(type: Deliverable['type']) {
       icon: 'Layers',
       label: 'Mixed',
       color: 'text-indigo-600',
-    },
-    // Add missing types that are used in the database
-    product: {
-      icon: 'Package',
-      label: 'Product',
-      color: 'text-orange-600',
-    },
-    payment: {
-      icon: 'DollarSign',
-      label: 'Payment',
-      color: 'text-green-600',
     },
   };
 

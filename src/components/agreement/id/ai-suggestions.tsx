@@ -1,8 +1,8 @@
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, Info, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import React from 'react';
 
 interface Suggestion {
   id: string;

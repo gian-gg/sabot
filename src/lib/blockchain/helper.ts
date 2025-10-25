@@ -58,3 +58,21 @@ export function decryptPrivateKey(encrypted: string, secret: string): string {
 
   return decrypted;
 }
+
+export function sortObjectKeys<T>(obj: T): T {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectKeys) as T;
+  }
+  return Object.keys(obj)
+    .sort()
+    .reduce(
+      (acc: Record<string, unknown>, key) => {
+        acc[key] = sortObjectKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      },
+      {} as Record<string, unknown>
+    ) as T;
+}
