@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
 import { TransactionsSection } from '@/components/home/transactions-section';
 import { ActiveContractsSection } from '@/components/home/active-contracts-section';
+import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { useUserStore } from '@/store/user/userStore';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -18,6 +19,7 @@ export default function Page() {
 
   return (
     <>
+      <GasFeeWarningDialog />
       <HeroSection />
 
       <div className="mt-16">
