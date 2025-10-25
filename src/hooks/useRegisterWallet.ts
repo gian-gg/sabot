@@ -15,7 +15,14 @@ export const useRegisterWallet = (shouldRun: boolean) => {
         try {
           const response = await fetch('/api/register-wallet', {
             method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
             credentials: 'include',
+            body: JSON.stringify({
+              walletAddress: 'placeholder-address',
+              walletType: 'ethereum',
+            }),
           });
 
           if (!response.ok) {
