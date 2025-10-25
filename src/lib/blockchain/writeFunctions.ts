@@ -79,7 +79,7 @@ export async function pushTransactionToBlockchain(
     const bytes = toUtf8Bytes(sortedData);
     const detailsHash = keccak256(bytes);
 
-    const saveSuccess = await postHashTransaction(detailsHash);
+    const saveSuccess = await postHashTransaction(detailsHash, transactionId);
     if (!saveSuccess) {
       console.error(
         'pushTransactionToBlockchain: Failed to save transaction hash to database'
@@ -93,7 +93,7 @@ export async function pushTransactionToBlockchain(
     }
 
     const creatorUser = allUserIds.find((user) => user.role === 'creator');
-    const invitedUser = allUserIds.find((user) => user.role === 'invite');
+    const invitedUser = allUserIds.find((user) => user.role === 'invitee');
 
     if (!creatorUser || !invitedUser) {
       console.error(
