@@ -19,6 +19,7 @@ export const ROUTES = {
   },
   WALLET: '/wallet',
   BUY_TOKENS: '/buy-tokens',
+  COLLAB_TEST: '/collab-test',
   EMERGENCY: '/emergency',
   REPORTS: '/reports',
   LEGAL: {
