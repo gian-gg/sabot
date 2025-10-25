@@ -45,7 +45,13 @@ interface DeliverableStatus {
   name: string;
   description: string;
   party: 'initiator' | 'participant';
-  status: 'pending' | 'in_progress' | 'completed' | 'verified' | 'failed';
+  status:
+    | 'pending'
+    | 'in_progress'
+    | 'completed'
+    | 'verified'
+    | 'confirmed'
+    | 'failed';
   progress: number;
   submittedAt?: string;
   verifiedAt?: string;

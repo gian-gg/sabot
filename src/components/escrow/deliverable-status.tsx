@@ -143,6 +143,7 @@ export function DeliverableStatus({
     switch (deliverable.status) {
       case 'completed':
       case 'verified':
+      case 'confirmed':
         return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950';
       case 'in_progress':
         return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950';
