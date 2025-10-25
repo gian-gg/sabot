@@ -733,12 +733,16 @@ export default function TransactionActive({
                     <div className="text-right">
                       <Badge
                         className={
-                          status?.participants?.every((p) => p.item_confirmed)
+                          status?.participants?.find(
+                            (p) => p.user_id === currentUserId
+                          )?.item_confirmed
                             ? 'border-green-500/30 bg-green-500/20 text-green-300'
                             : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
                         }
                       >
-                        {status?.participants?.every((p) => p.item_confirmed)
+                        {status?.participants?.find(
+                          (p) => p.user_id === currentUserId
+                        )?.item_confirmed
                           ? 'Confirmed'
                           : 'Pending'}
                       </Badge>
@@ -750,15 +754,16 @@ export default function TransactionActive({
                       </p>
                     </div>
                     {(() => {
-                      const allItemConfirmed = status?.participants?.every(
-                        (p) => p.item_confirmed
-                      );
+                      const currentUserItemConfirmed =
+                        status?.participants?.find(
+                          (p) => p.user_id === currentUserId
+                        )?.item_confirmed;
                       const canConfirm = canConfirmDeliverable('item');
 
                       // If escrow is active, show file upload instead of manual confirmation
                       if (escrowData) {
                         return (
-                          !allItemConfirmed &&
+                          !currentUserItemConfirmed &&
                           canConfirm && (
                             <UploadProofDialog
                               deliverableId={`item-${id}`}
@@ -783,7 +788,7 @@ export default function TransactionActive({
 
                       // Manual confirmation for non-escrow transactions
                       return (
-                        !allItemConfirmed &&
+                        !currentUserItemConfirmed &&
                         canConfirm && (
                           <Button
                             onClick={() => handleConfirmDeliverable('item')}
@@ -796,7 +801,9 @@ export default function TransactionActive({
                         )
                       );
                     })()}
-                    {!status?.participants?.every((p) => p.item_confirmed) &&
+                    {!status?.participants?.find(
+                      (p) => p.user_id === currentUserId
+                    )?.item_confirmed &&
                       !canConfirmDeliverable('item') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
                           {escrowData
@@ -824,14 +831,16 @@ export default function TransactionActive({
                     <div className="text-right">
                       <Badge
                         className={
-                          status?.participants?.every(
-                            (p) => p.payment_confirmed
-                          )
+                          status?.participants?.find(
+                            (p) => p.user_id === currentUserId
+                          )?.payment_confirmed
                             ? 'border-green-500/30 bg-green-500/20 text-green-300'
                             : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
                         }
                       >
-                        {status?.participants?.every((p) => p.payment_confirmed)
+                        {status?.participants?.find(
+                          (p) => p.user_id === currentUserId
+                        )?.payment_confirmed
                           ? 'Confirmed'
                           : 'Pending'}
                       </Badge>
@@ -844,15 +853,16 @@ export default function TransactionActive({
                       </p>
                     </div>
                     {(() => {
-                      const allPaymentConfirmed = status?.participants?.every(
-                        (p) => p.payment_confirmed
-                      );
+                      const currentUserPaymentConfirmed =
+                        status?.participants?.find(
+                          (p) => p.user_id === currentUserId
+                        )?.payment_confirmed;
                       const canConfirm = canConfirmDeliverable('payment');
 
                       // If escrow is active, show file upload instead of manual confirmation
                       if (escrowData) {
                         return (
-                          !allPaymentConfirmed &&
+                          !currentUserPaymentConfirmed &&
                           canConfirm && (
                             <UploadProofDialog
                               deliverableId={`payment-${id}`}
@@ -877,7 +887,7 @@ export default function TransactionActive({
 
                       // Manual confirmation for non-escrow transactions
                       return (
-                        !allPaymentConfirmed &&
+                        !currentUserPaymentConfirmed &&
                         canConfirm && (
                           <Button
                             onClick={() => handleConfirmDeliverable('payment')}
@@ -890,7 +900,9 @@ export default function TransactionActive({
                         )
                       );
                     })()}
-                    {!status?.participants?.every((p) => p.payment_confirmed) &&
+                    {!status?.participants?.find(
+                      (p) => p.user_id === currentUserId
+                    )?.payment_confirmed &&
                       !canConfirmDeliverable('payment') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
                           {escrowData

@@ -55,6 +55,12 @@ export function useTransactionStatus(transactionId: string | null) {
         // Refetch status when broadcast received
         fetchStatus();
       })
+      .on('broadcast', { event: 'deliverable_confirmed' }, (payload) => {
+        console.log('Deliverable confirmed via AI verification:', payload);
+        console.log('Refetching transaction status...');
+        // Refetch status when deliverable is confirmed
+        fetchStatus();
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           // console.log('Subscribed to transaction updates');

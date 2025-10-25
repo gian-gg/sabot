@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('deliverables')
           .update({
-            status: 'completed',
+            status: 'confirmed',
             confirmed_by: user.id,
             confirmed_at: new Date().toISOString(),
           })
@@ -301,6 +301,14 @@ export async function POST(request: NextRequest) {
         // The user who uploaded the proof should be marked as confirmed
         const targetUserId = user.id;
 
+        console.log('Updating transaction participant for AI verification:', {
+          transactionId: escrow.transaction_id,
+          userId: targetUserId,
+          confirmField,
+          confirmAtField,
+        });
+
+        // Update the participant who uploaded the proof
         const { error: participantUpdateError } = await supabase
           .from('transaction_participants')
           .update({
@@ -323,16 +331,87 @@ export async function POST(request: NextRequest) {
             confirmAtField,
           });
         }
+
+        // Note: We only update the current user's confirmation status
+        // The other participant must confirm their own deliverable separately
+
+        // Check if all deliverables are confirmed by both parties
+        const { data: allParticipants, error: participantsError } =
+          await supabase
+            .from('transaction_participants')
+            .select('item_confirmed, payment_confirmed')
+            .eq('transaction_id', escrow.transaction_id);
+
+        if (participantsError) {
+          console.error('Error checking participants:', participantsError);
+        } else {
+          const allItemConfirmed =
+            allParticipants?.every((p) => p.item_confirmed) || false;
+          const allPaymentConfirmed =
+            allParticipants?.every((p) => p.payment_confirmed) || false;
+          const allDeliverablesConfirmed =
+            allItemConfirmed && allPaymentConfirmed;
+
+          if (allDeliverablesConfirmed) {
+            // Update transaction status to indicate all deliverables are confirmed
+            const { error: transactionUpdateError } = await supabase
+              .from('transactions')
+              .update({
+                status: 'active', // Ready for final confirmation
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', escrow.transaction_id);
+
+            if (transactionUpdateError) {
+              console.error(
+                'Error updating transaction status:',
+                transactionUpdateError
+              );
+            }
+          }
+        }
+
+        // Broadcast update to all clients subscribed to this transaction
+        const channel = supabase.channel(
+          `transaction:${escrow.transaction_id}`
+        );
+        await channel.send({
+          type: 'broadcast',
+          event: 'deliverable_confirmed',
+          payload: {
+            deliverable_type: deliverable_id.startsWith('item-')
+              ? 'item'
+              : 'payment',
+            user_id: user.id,
+            transaction_id: escrow.transaction_id,
+            verified: true,
+            confidence: verificationResult.confidence,
+          },
+        });
       } else {
         // For real deliverables, update directly
         await supabase
           .from('deliverables')
           .update({
-            status: 'completed',
+            status: 'confirmed',
             confirmed_by: user.id,
             confirmed_at: new Date().toISOString(),
           })
           .eq('id', deliverable_id);
+
+        // Broadcast update for real deliverables
+        const channel = supabase.channel(`escrow:${escrow.id}`);
+        await channel.send({
+          type: 'broadcast',
+          event: 'deliverable_confirmed',
+          payload: {
+            deliverable_id: deliverable_id,
+            user_id: user.id,
+            escrow_id: escrow.id,
+            verified: true,
+            confidence: verificationResult.confidence,
+          },
+        });
       }
     }
 
