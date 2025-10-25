@@ -166,6 +166,12 @@ export async function GET(
       user: user.id.slice(0, 8),
       hasEscrow: !!escrowData,
       deliverableCount: deliverableStatuses.length,
+      participants: enrichedParticipants.map((p) => ({
+        userId: p.user_id.slice(0, 8),
+        role: p.role,
+        itemConfirmed: p.item_confirmed,
+        paymentConfirmed: p.payment_confirmed,
+      })),
     });
 
     const response: TransactionStatusResponse = {

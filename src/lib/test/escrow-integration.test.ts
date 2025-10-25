@@ -225,7 +225,10 @@ describe('Escrow Integration Tests', () => {
 
       // Mock progress calculation
       const completedCount = deliverables.filter(
-        (d) => d.status === 'completed' || d.status === 'verified'
+        (d) =>
+          d.status === 'completed' ||
+          d.status === 'verified' ||
+          d.status === 'confirmed'
       ).length;
       const progress = Math.round((completedCount / deliverables.length) * 100);
 
@@ -239,7 +242,10 @@ describe('Escrow Integration Tests', () => {
           ? 0
           : Math.round(
               (deliverables.filter(
-                (d) => d.status === 'completed' || d.status === 'verified'
+                (d) =>
+                  d.status === 'completed' ||
+                  d.status === 'verified' ||
+                  d.status === 'confirmed'
               ).length /
                 deliverables.length) *
                 100
@@ -256,7 +262,10 @@ describe('Escrow Integration Tests', () => {
       ];
 
       const completedCount = deliverables.filter(
-        (d) => d.status === 'completed' || d.status === 'verified'
+        (d) =>
+          d.status === 'completed' ||
+          d.status === 'verified' ||
+          d.status === 'confirmed'
       ).length;
       const progress = Math.round((completedCount / deliverables.length) * 100);
 

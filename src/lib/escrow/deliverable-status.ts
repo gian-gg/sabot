@@ -60,7 +60,10 @@ export function getOverallProgress(
   if (deliverables.length === 0) return 0;
 
   const completedCount = deliverables.filter(
-    (d) => d.status === 'completed' || d.status === 'verified'
+    (d) =>
+      d.status === 'completed' ||
+      d.status === 'verified' ||
+      d.status === 'confirmed'
   ).length;
 
   return Math.round((completedCount / deliverables.length) * 100);
@@ -142,6 +145,12 @@ export function getDeliverableStatusConfig(status: Deliverable['status']) {
     },
     verified: {
       label: 'Verified',
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      icon: 'CheckCircle',
+    },
+    confirmed: {
+      label: 'Confirmed',
       color: 'text-green-600',
       bgColor: 'bg-green-100',
       icon: 'CheckCircle',

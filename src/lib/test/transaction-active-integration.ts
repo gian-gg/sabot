@@ -226,7 +226,7 @@ export class TransactionActiveIntegrationTest {
         mockOracleVerifications
       );
 
-      return status === 'verified';
+      return status === 'verified' || status === 'confirmed';
     } catch (error) {
       console.error('Deliverable status tracking test failed:', error);
       return false;
