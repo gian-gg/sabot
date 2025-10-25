@@ -48,7 +48,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/product#features"
+                  href="/#features"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Features
@@ -56,7 +56,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/product#how-it-works"
+                  href="/#how-it-works"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   How It Works
@@ -64,7 +64,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/product#reports"
+                  href="/#reports"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Reports
@@ -72,10 +72,18 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/tokens"
+                  href="/#tokens"
                   className="text-sm text-neutral-400 transition-colors hover:text-white"
                 >
                   Tokens
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/#docs"
+                  className="text-sm text-neutral-400 transition-colors hover:text-white"
+                >
+                  Documentation
                 </Link>
               </li>
             </ul>
