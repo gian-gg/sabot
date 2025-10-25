@@ -83,6 +83,19 @@ export default function TransactionActive({
     }
   }, [status, error]);
 
+  // Handle automatic redirect when both parties confirm
+  useEffect(() => {
+    if (
+      status?.participants?.every((p) => p.has_confirmed) &&
+      status?.transaction?.id
+    ) {
+      console.log('Both parties confirmed! Redirecting to homepage...');
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+    }
+  }, [status?.participants, status?.transaction?.id, router]);
+
   // Get participant profiles from status
   const buyer = status?.participants.find((p) => p.role === 'invitee');
   const seller = status?.participants.find((p) => p.role === 'creator');
@@ -388,8 +401,9 @@ export default function TransactionActive({
           router.push('/');
         }, 2000);
       } else {
-        // Refresh the page to show updated status
-        window.location.reload();
+        // Just wait for the real-time update to handle the UI change
+        // The useTransactionStatus hook will automatically refetch and update the UI
+        console.log('Waiting for other party to confirm...');
       }
     } catch (error) {
       console.error('Error confirming transaction:', error);
@@ -1033,14 +1047,40 @@ export default function TransactionActive({
                 </div>
               )}
 
+              {/* Waiting for other party */}
+              {status?.participants?.find((p) => p.user_id === currentUserId)
+                ?.has_confirmed &&
+                !status?.participants?.every((p) => p.has_confirmed) && (
+                  <div className="mt-4 rounded-lg border border-yellow-800/50 bg-yellow-900/20 p-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 animate-pulse text-yellow-400" />
+                      <div>
+                        <p className="text-sm font-medium text-yellow-200">
+                          Waiting for other party to confirm
+                        </p>
+                        <p className="text-xs text-yellow-300/70">
+                          You have confirmed. Waiting for the other participant
+                          to complete their confirmation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               {/* Both Confirmed Status */}
               {status?.participants?.every((p) => p.has_confirmed) && (
                 <div className="mt-4 rounded-lg border border-green-800/50 bg-green-900/20 p-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-400" />
-                    <p className="text-sm font-medium text-green-200">
-                      Both parties confirmed! Transaction is confirmed.
-                    </p>
+                    <CheckCircle2 className="h-5 w-5 animate-pulse text-green-400" />
+                    <div>
+                      <p className="text-sm font-medium text-green-200">
+                        Both parties confirmed! Transaction completed
+                        successfully.
+                      </p>
+                      <p className="text-xs text-green-300/70">
+                        Redirecting to homepage...
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
