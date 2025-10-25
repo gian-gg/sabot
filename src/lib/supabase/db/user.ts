@@ -181,11 +181,17 @@ export async function getTransactionDetails(
   }
 }
 
-export async function postHashTransaction(hash: string): Promise<boolean> {
+export async function postHashTransaction(
+  hash: string,
+  transaction_id: string
+): Promise<boolean> {
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase.from('transactions').insert([{ hash }]);
+    const { error } = await supabase
+      .from('transactions')
+      .update([{ hash }])
+      .eq('id', transaction_id);
 
     if (error) {
       console.error(
@@ -212,9 +218,9 @@ export async function getAllUserIds(
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from('transactions')
+      .from('transaction_participants')
       .select('user_id, role')
-      .eq('id', transaction_id);
+      .eq('transaction_id', transaction_id);
 
     if (error || !data) {
       console.error('getAllUserIds: Failed to fetch user IDs:', error);

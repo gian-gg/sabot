@@ -140,6 +140,7 @@ export interface TransactionStatusResponse {
   escrow?: EscrowWithDeliverables;
   deliverable_statuses?: DeliverableWithStatus[];
   oracle_verifications?: OracleVerification[];
+  pushToBlock?: string | null; // Added property
 }
 
 export interface UserRole {
