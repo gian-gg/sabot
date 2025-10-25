@@ -2,7 +2,7 @@
 
 import { createClient } from '../server';
 import type { UserVerificationData, VerificationStatus } from '@/types/user';
-import type { UserRole } from '@/types/transaction';
+import type { UserRole, DBTransaction } from '@/types/transaction';
 
 export async function getUserVerificationData(
   userId: string
@@ -157,7 +157,7 @@ export async function postNewUserWallet(
 
 export async function getTransactionDetails(
   transactionId: string
-): Promise<any[]> {
+): Promise<DBTransaction[]> {
   try {
     const supabase = await createClient();
 
