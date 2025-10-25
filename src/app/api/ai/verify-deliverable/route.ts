@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { verifyDeliverableCompletion } from '@/lib/gemini/deliverable-verification';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { proof_id, deliverable_id, deliverable_type } = body;
+    const { proof_id, deliverable_id } = body;
 
     if (!proof_id || !deliverable_id) {
       return NextResponse.json(
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create oracle verification record
-    const { data: oracleVerification, error: oracleError } = await supabase
+    const { error: oracleError } = await supabase
       .from('oracle_verifications')
       .insert({
         escrow_id: escrow.id,

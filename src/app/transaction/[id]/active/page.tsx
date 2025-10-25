@@ -1,52 +1,36 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/core/page-header';
+import { UploadProofDialog } from '@/components/escrow/upload-proof-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserAvatar } from '@/components/user/user-avatar';
+import { ROUTES } from '@/constants/routes';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { createClient } from '@/lib/supabase/client';
+import type { Escrow } from '@/types/escrow';
 import {
-  Radio,
-  MapPin,
-  Clock,
   AlertCircle,
   CheckCircle2,
-  Phone,
-  Truck,
-  Globe,
-  Shield,
-  Package,
-  CreditCard,
-  // Smartphone, // Removed unused import
-  FileText,
-  Wrench,
-  Users,
+  Clock,
   // Calendar, // Removed unused import
   DollarSign,
+  Globe,
+  MapPin,
+  Package,
+  Phone,
+  Radio,
+  Shield,
+  Truck,
   // CheckCircle, // Removed unused import
   // XCircle, // Removed unused import
   // AlertTriangle, // Removed unused import
   Upload,
 } from 'lucide-react';
-import { useTransactionStatus } from '@/hooks/useTransactionStatus';
-import { createClient } from '@/lib/supabase/client';
-import type {
-  Escrow,
-  Deliverable,
-  DeliverableWithStatus,
-  OracleVerification,
-} from '@/types/escrow';
-import { DeliverableStatus } from '@/components/escrow/deliverable-status';
-import { UploadProofDialog } from '@/components/escrow/upload-proof-dialog';
-import {
-  getOverallProgress,
-  getOracleVerificationSummary,
-} from '@/lib/escrow/deliverable-status';
-import { pushTransactionToBlockchain } from '@/lib/blockchain/writeFunctions';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { use, useEffect, useState } from 'react';
 
 export default function TransactionActive({
   params,
@@ -54,15 +38,8 @@ export default function TransactionActive({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [buyerConfirmed, setBuyerConfirmed] = useState(false);
   // const [sellerConfirmed] = useState(false); // Removed unused variable
   const [escrowData, setEscrowData] = useState<Escrow | null>(null);
-  const [deliverableStatuses, setDeliverableStatuses] = useState<
-    DeliverableWithStatus[]
-  >([]);
-  const [oracleVerifications, setOracleVerifications] = useState<
-    OracleVerification[]
-  >([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const router = useRouter();
 
@@ -150,54 +127,8 @@ export default function TransactionActive({
           deliverablesCount: escrow.deliverables?.length || 0,
         });
         setEscrowData(escrow);
-
-        // Fetch oracle verifications for this escrow
-        const { data: verifications } = await supabase
-          .from('oracle_verifications')
-          .select('*')
-          .eq('escrow_id', escrow.id);
-
-        if (verifications) {
-          setOracleVerifications(verifications);
-        }
       } else {
         console.log('No escrow data found for transaction:', id);
-      }
-
-      // Calculate deliverable statuses with verifications (only if escrow exists)
-      if (escrow) {
-        // Fetch verifications if not already fetched
-        let verifications: Array<{
-          id: string;
-          escrow_id: string;
-          deliverable_id: string;
-          oracle_type: string;
-          verification_data: Record<string, unknown>;
-          confidence_score: number;
-          status: string;
-          created_at: string;
-          updated_at: string;
-        }> = [];
-        const { data: verificationsData } = await supabase
-          .from('oracle_verifications')
-          .select('*')
-          .eq('escrow_id', escrow.id);
-        verifications = verificationsData || [];
-
-        const enrichedDeliverables =
-          escrow.deliverables?.map(
-            (deliverable: { id: string; [key: string]: unknown }) => ({
-              ...deliverable,
-              verification: verifications?.find(
-                (v) =>
-                  // Match verification to deliverable through proofs
-                  v.escrow_id === escrow.id
-              ),
-              proofs: [], // Will be populated by API
-            })
-          ) || [];
-
-        setDeliverableStatuses(enrichedDeliverables);
       }
     };
 

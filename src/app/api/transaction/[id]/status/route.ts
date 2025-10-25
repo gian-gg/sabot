@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 // Assuming this is the type for the response body
 import { TransactionStatusResponse } from '@/types/transaction';
 // NOTE: This helper function must be defined and imported separately.
@@ -195,7 +195,7 @@ export async function GET(
       escrowData?.deliverables?.map(
         (deliverable: { id: string; [key: string]: unknown }) => ({
           ...deliverable,
-          verification: oracleVerifications.find((verification) =>
+          verification: oracleVerifications.find(() =>
             escrowData.deliverables?.some(
               (d: { id: string; [key: string]: unknown }) =>
                 d.id === deliverable.id

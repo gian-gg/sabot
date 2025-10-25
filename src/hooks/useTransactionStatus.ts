@@ -50,7 +50,7 @@ export function useTransactionStatus(transactionId: string | null) {
     // Subscribe to Supabase Broadcast channel (works without database replication)
     const channel = supabase
       .channel(`transaction:${transactionId}`)
-      .on('broadcast', { event: 'transaction_update' }, (payload) => {
+      .on('broadcast', { event: 'transaction_update' }, () => {
         // console.log('Received broadcast:', payload);
         // Refetch status when broadcast received
         fetchStatus();

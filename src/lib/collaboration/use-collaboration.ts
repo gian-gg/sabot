@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as Y from 'yjs';
 import { WebrtcProvider } from 'y-webrtc';
+import * as Y from 'yjs';
 
 export interface UseCollaborationOptions {
   documentId: string;
@@ -174,7 +174,7 @@ export function useCollaboration({
         '[useCollaboration] Cleanup - keeping doc and provider alive'
       );
     };
-  }, [documentId, enabled]);
+  }, [documentId, enabled, localUser.color, localUser.id, localUser.name]);
 
   // Update awareness whenever localUser changes
   useEffect(() => {

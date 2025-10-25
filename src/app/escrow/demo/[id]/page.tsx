@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { BackButton } from '@/components/core/back-button';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,35 +10,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PageHeader } from '@/components/core/page-header';
-import { BackButton } from '@/components/core/back-button';
+import { createClient } from '@/lib/supabase/client';
 import {
-  Shield,
+  ArrowRight,
+  Bot,
+  CheckCircle,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  Bot,
   FileText,
-  DollarSign,
   Package,
-  User,
-  Calendar,
-  ArrowRight,
-  Play,
   Pause,
+  Play,
   RotateCcw,
-  Star,
+  Shield,
+  User,
   Users,
-  CheckCircle,
-  XCircle,
-  Upload,
-  Download,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 // Define a type for person data instead of using 'any'
 interface PersonSummary {
@@ -460,7 +451,7 @@ export default function EscrowDemoPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {escrowData.deliverables.map((deliverable, index) => {
+              {escrowData.deliverables.map((deliverable) => {
                 const isCompleted = completedDeliverables.has(deliverable.id);
                 const isInProgress = currentStep >= 1 && !isCompleted;
 

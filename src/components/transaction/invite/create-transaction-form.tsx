@@ -1,23 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
+import { ArbiterSelection } from '@/components/agreement/finalize/arbiter-selection';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
-import { ROUTES } from '@/constants/routes';
-import { mapConditionToOption } from '@/lib/utils/condition-mapping';
+  EscrowProtectionEnhanced,
+  type EnhancedEscrowData,
+} from '@/components/agreement/finalize/escrow-protection-enhanced';
+import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
+import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -25,32 +16,40 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  CheckCircle2,
-  Package,
-  MapPin,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { ROUTES } from '@/constants/routes';
+import { createClient } from '@/lib/supabase/client';
+import { mapConditionToOption } from '@/lib/utils/condition-mapping';
+import type { AnalysisData } from '@/types/analysis';
+import {
   Calendar,
-  Shield,
-  Loader2,
-  Truck,
-  Globe,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  GitMerge,
+  Globe,
+  Loader2,
   Lock,
+  MapPin,
+  Package,
+  Shield,
+  Truck,
   Unlock,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import {
-  EscrowProtectionEnhanced,
-  type EnhancedEscrowData,
-} from '@/components/agreement/finalize/escrow-protection-enhanced';
-import { ArbiterSelection } from '@/components/agreement/finalize/arbiter-selection';
-import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
-import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
-import { GitMerge } from 'lucide-react';
-import type { AnalysisData } from '@/types/analysis';
 
 const STEPS = [
   { id: 1, name: 'Screenshot Analysis', icon: Shield },

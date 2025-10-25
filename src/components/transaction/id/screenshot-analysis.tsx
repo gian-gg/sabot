@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnalysisContainer } from './analysis-container';
 import type { AnalysisStep, AnalysisData } from '@/types/analysis';
 
@@ -29,6 +29,14 @@ export function ScreenshotAnalysis({
   const [error, setError] = useState<string>();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Use ref to avoid re-creating fetchAnalyses when onAnalysisComplete changes
+  const onAnalysisCompleteRef = useRef(onAnalysisComplete);
+
+  // Keep ref up to date
+  useEffect(() => {
+    onAnalysisCompleteRef.current = onAnalysisComplete;
+  }, [onAnalysisComplete]);
+
   const fetchAnalyses = useCallback(async () => {
     try {
       setStep('FETCHING_ANALYSES');
@@ -49,12 +57,12 @@ export function ScreenshotAnalysis({
           setStep('ANALYSIS_COMPLETE');
 
           // Call the callback with analysis data
-          if (onAnalysisComplete && fetchedAnalyses.length > 0) {
+          if (onAnalysisCompleteRef.current && fetchedAnalyses.length > 0) {
             if (fetchedAnalyses.length === 1) {
               // Single analysis - pass the extracted data directly
               const analysis = fetchedAnalyses[0];
               if (analysis.extracted_data) {
-                onAnalysisComplete(analysis.extracted_data);
+                onAnalysisCompleteRef.current(analysis.extracted_data);
               }
             } else {
               // Multiple analyses - pass all with source information
@@ -65,7 +73,7 @@ export function ScreenshotAnalysis({
                   screenshotId: analysis.screenshot_id || analysis.id,
                 })
               );
-              onAnalysisComplete(analysesWithSource);
+              onAnalysisCompleteRef.current(analysesWithSource);
             }
           }
         }

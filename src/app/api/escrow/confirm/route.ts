@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { escrowId, userId, confirmation } = await request.json();
+    const { escrowId, confirmation } = await request.json();
 
     // Update escrow confirmation
     const { data, error } = await supabase
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { error: 'Failed to confirm escrow' },
+        { error: 'Failed to confirm escrow: ' + error.message },
         { status: 500 }
       );
     }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, escrow: data });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + error },
       { status: 500 }
     );
   }
