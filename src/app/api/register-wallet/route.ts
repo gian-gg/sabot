@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { registerUser } from '@/lib/blockchain/writeFunctions';
 import { isRegistered } from '@/lib/blockchain/readFunctions';
 
-export async function POST(request: Request) {
+export async function POST() {
   const registeredStatus = await isRegistered();
   if (registeredStatus === null) {
     console.error(

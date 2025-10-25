@@ -1,17 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import { ProjectQuestionnaire } from '@/components/agreement/invite/project-questionnaire';
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 function ConfigureContent() {
   const searchParams = useSearchParams();

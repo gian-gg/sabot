@@ -1,50 +1,36 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/core/page-header';
+import { UploadProofDialog } from '@/components/escrow/upload-proof-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserAvatar } from '@/components/user/user-avatar';
-import {
-  Radio,
-  MapPin,
-  Clock,
-  AlertCircle,
-  CheckCircle2,
-  Phone,
-  Truck,
-  Globe,
-  Shield,
-  Package,
-  CreditCard,
-  Smartphone,
-  FileText,
-  Wrench,
-  Users,
-  Calendar,
-  DollarSign,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-} from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { createClient } from '@/lib/supabase/client';
-import type {
-  Escrow,
-  Deliverable,
-  DeliverableWithStatus,
-  OracleVerification,
-} from '@/types/escrow';
-import { DeliverableStatus } from '@/components/escrow/deliverable-status';
+import type { Escrow } from '@/types/escrow';
 import {
-  getOverallProgress,
-  getOracleVerificationSummary,
-} from '@/lib/escrow/deliverable-status';
-import { pushTransactionToBlockchain } from '@/lib/blockchain/writeFunctions';
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  // Calendar, // Removed unused import
+  DollarSign,
+  Globe,
+  MapPin,
+  Package,
+  Phone,
+  Radio,
+  Shield,
+  Truck,
+  // CheckCircle, // Removed unused import
+  // XCircle, // Removed unused import
+  // AlertTriangle, // Removed unused import
+  Upload,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { use, useEffect, useState } from 'react';
 
 export default function TransactionActive({
   params,
@@ -52,20 +38,13 @@ export default function TransactionActive({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [buyerConfirmed, setBuyerConfirmed] = useState(false);
-  const [sellerConfirmed] = useState(false);
+  // const [sellerConfirmed] = useState(false); // Removed unused variable
   const [escrowData, setEscrowData] = useState<Escrow | null>(null);
-  const [deliverableStatuses, setDeliverableStatuses] = useState<
-    DeliverableWithStatus[]
-  >([]);
-  const [oracleVerifications, setOracleVerifications] = useState<
-    OracleVerification[]
-  >([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const router = useRouter();
 
   // Use real data instead of mock data
-  const { status, setStatus, loading, error } = useTransactionStatus(id);
+  const { status, loading, error } = useTransactionStatus(id);
 
   // Debug logging
   useEffect(() => {
@@ -82,6 +61,34 @@ export default function TransactionActive({
       });
     }
   }, [status, error]);
+
+  // Debug escrow data
+  useEffect(() => {
+    if (escrowData) {
+      console.log('Escrow data set in component:', {
+        id: escrowData.id,
+        title: escrowData.title,
+        status: escrowData.status,
+        hasDeliverables: !!escrowData.deliverables,
+        deliverablesCount: escrowData.deliverables?.length || 0,
+      });
+    } else {
+      console.log('No escrow data in component state');
+    }
+  }, [escrowData]);
+
+  // Handle automatic redirect when both parties confirm
+  useEffect(() => {
+    if (
+      status?.participants?.every((p) => p.has_confirmed) &&
+      status?.transaction?.id
+    ) {
+      console.log('Both parties confirmed! Redirecting to homepage...');
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
+    }
+  }, [status?.participants, status?.transaction?.id, router]);
 
   // Get participant profiles from status
   const buyer = status?.participants.find((p) => p.role === 'invitee');
@@ -113,33 +120,15 @@ export default function TransactionActive({
         .single();
 
       if (escrow) {
+        console.log('Escrow data found:', {
+          id: escrow.id,
+          title: escrow.title,
+          status: escrow.status,
+          deliverablesCount: escrow.deliverables?.length || 0,
+        });
         setEscrowData(escrow);
-
-        // Fetch oracle verifications for this escrow
-        const { data: verifications } = await supabase
-          .from('oracle_verifications')
-          .select('*')
-          .eq('escrow_id', escrow.id);
-
-        if (verifications) {
-          setOracleVerifications(verifications);
-        }
-
-        // Calculate deliverable statuses with verifications
-        const enrichedDeliverables =
-          escrow.deliverables?.map(
-            (deliverable: { id: string; [key: string]: unknown }) => ({
-              ...deliverable,
-              verification: verifications?.find(
-                (v) =>
-                  // Match verification to deliverable through proofs
-                  v.escrow_id === escrow.id
-              ),
-              proofs: [], // Will be populated by API
-            })
-          ) || [];
-
-        setDeliverableStatuses(enrichedDeliverables);
+      } else {
+        console.log('No escrow data found for transaction:', id);
       }
     };
 
@@ -260,105 +249,105 @@ export default function TransactionActive({
     }
   };
 
-  const getDeliverableIcon = (type: string) => {
-    switch (type) {
-      case 'item':
-        return Package;
-      case 'cash':
-        return DollarSign;
-      case 'digital_transfer':
-        return CreditCard;
-      case 'service':
-        return Wrench;
-      case 'document':
-        return FileText;
-      default:
-        return Package;
-    }
-  };
+  // const getDeliverableIcon = (type: string) => { // Removed unused function
+  //   switch (type) {
+  //     case 'item':
+  //       return Package;
+  //     case 'cash':
+  //       return DollarSign;
+  //     case 'digital_transfer':
+  //       return CreditCard;
+  //     case 'service':
+  //       return Wrench;
+  //     case 'document':
+  //       return FileText;
+  //     default:
+  //       return Package;
+  //   }
+  // };
 
-  const getDeliverableStatus = (
-    deliverable: Deliverable,
-    partyResponsible: string
-  ) => {
-    if (escrowData) {
-      if (partyResponsible === 'initiator') {
-        return escrowData.initiator_confirmation === 'confirmed'
-          ? 'completed'
-          : 'pending';
-      } else {
-        return escrowData.participant_confirmation === 'confirmed'
-          ? 'completed'
-          : 'pending';
-      }
-    }
-    return 'pending';
-  };
+  // const getDeliverableStatus = ( // Removed unused function
+  //   deliverable: Deliverable,
+  //   partyResponsible: string
+  // ) => {
+  //   if (escrowData) {
+  //     if (partyResponsible === 'initiator') {
+  //       return escrowData.initiator_confirmation === 'confirmed'
+  //         ? 'completed'
+  //         : 'pending';
+  //     } else {
+  //       return escrowData.participant_confirmation === 'confirmed'
+  //         ? 'completed'
+  //         : 'pending';
+  //     }
+  //   }
+  //   return 'pending';
+  // };
 
-  const handleConfirmCompletion = async () => {
-    if (!currentUserId) return;
+  // const handleConfirmCompletion = async () => { // Removed unused function
+  //   if (!currentUserId) return;
 
-    try {
-      const supabase = createClient();
+  //   try {
+  //     const supabase = createClient();
 
-      if (escrowData) {
-        // Update escrow confirmation if escrow exists
-        const isInitiator = currentUserId === escrowData.initiator_id;
-        const updateField = isInitiator
-          ? 'initiator_confirmation'
-          : 'participant_confirmation';
-        const timestampField = isInitiator
-          ? 'initiator_confirmed_at'
-          : 'participant_confirmed_at';
+  //     if (escrowData) {
+  //       // Update escrow confirmation if escrow exists
+  //       const isInitiator = currentUserId === escrowData.initiator_id;
+  //       const updateField = isInitiator
+  //         ? 'initiator_confirmation'
+  //         : 'participant_confirmation';
+  //       const timestampField = isInitiator
+  //         ? 'initiator_confirmed_at'
+  //         : 'participant_confirmed_at';
 
-        const { error } = await supabase
-          .from('escrows')
-          .update({
-            [updateField]: 'confirmed',
-            [timestampField]: new Date().toISOString(),
-          })
-          .eq('id', escrowData.id);
+  //       const { error } = await supabase
+  //         .from('escrows')
+  //         .update({
+  //           [updateField]: 'confirmed',
+  //           [timestampField]: new Date().toISOString(),
+  //         })
+  //         .eq('id', escrowData.id);
 
-        if (error) {
-          console.error('Error confirming escrow completion:', error);
-          return;
-        }
+  //       if (error) {
+  //         console.error('Error confirming escrow completion:', error);
+  //         return;
+  //       }
 
-        // Update local state
-        setEscrowData((prev) =>
-          prev
-            ? {
-                ...prev,
-                [updateField]: 'confirmed',
-                [timestampField]: new Date().toISOString(),
-              }
-            : null
-        );
+  //       // Update local state
+  //       setEscrowData((prev) =>
+  //         prev
+  //           ? {
+  //               ...prev,
+  //               [updateField]: 'confirmed',
+  //               [timestampField]: new Date().toISOString(),
+  //             }
+  //           : null
+  //       );
 
-        // Check if both parties have confirmed
-        const otherPartyConfirmed = isInitiator
-          ? escrowData.participant_confirmation === 'confirmed'
-          : escrowData.initiator_confirmation === 'confirmed';
+  //       // Check if both parties have confirmed
+  //       const otherPartyConfirmed = isInitiator
+  //         ? escrowData.participant_confirmation === 'confirmed'
+  //         : escrowData.initiator_confirmation === 'confirmed';
 
-        if (otherPartyConfirmed) {
-          // Both parties confirmed - redirect to completion
-          setTimeout(() => {
-            router.push(ROUTES.TRANSACTION.VIEW(transaction.id));
-          }, 2000);
-        }
-      } else {
-        // No escrow - use simple confirmation logic
-        setBuyerConfirmed(true);
+  //       if (otherPartyConfirmed) {
+  //         // Both parties confirmed - redirect to completion
+  //         setTimeout(() => {
+  //           router.push(ROUTES.TRANSACTION.VIEW(transaction.id));
+  //         }, 2000);
+  //       }
+  //     } else {
+  //       // No escrow - use simple confirmation logic
+  //       setBuyerConfirmed(true);
 
-        // For now, simulate both parties confirming after a delay
-        setTimeout(() => {
-          router.push(ROUTES.TRANSACTION.VIEW(transaction.id));
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error confirming completion:', error);
-    }
-  };
+  //       // For now, simulate both parties confirming after a delay
+  //       setTimeout(() => {
+  //         router.push(ROUTES.TRANSACTION.VIEW(transaction.id));
+  //       }, 2000);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error confirming completion:', error);
+  //   }
+  // };
 
   const handleConfirmTransaction = async () => {
     if (!currentUserId) return;
@@ -388,8 +377,9 @@ export default function TransactionActive({
           router.push('/');
         }, 2000);
       } else {
-        // Refresh the page to show updated status
-        window.location.reload();
+        // Just wait for the real-time update to handle the UI change
+        // The useTransactionStatus hook will automatically refetch and update the UI
+        console.log('Waiting for other party to confirm...');
       }
     } catch (error) {
       console.error('Error confirming transaction:', error);
@@ -458,16 +448,16 @@ export default function TransactionActive({
       (p) => p.item_confirmed && p.payment_confirmed
     ) || false;
 
-  const bothConfirmed = escrowData
-    ? escrowData.initiator_confirmation === 'confirmed' &&
-      escrowData.participant_confirmation === 'confirmed'
-    : allDeliverablesConfirmed;
+  // const bothConfirmed = escrowData // Removed unused variable
+  //   ? escrowData.initiator_confirmation === 'confirmed' &&
+  //     escrowData.participant_confirmation === 'confirmed'
+  //   : allDeliverablesConfirmed;
 
-  const isCurrentUserConfirmed = escrowData
-    ? currentUserId === escrowData.initiator_id
-      ? escrowData.initiator_confirmation === 'confirmed'
-      : escrowData.participant_confirmation === 'confirmed'
-    : buyerConfirmed;
+  // const isCurrentUserConfirmed = escrowData // Removed unused variable
+  //   ? currentUserId === escrowData.initiator_id
+  //     ? escrowData.initiator_confirmation === 'confirmed'
+  //     : escrowData.participant_confirmation === 'confirmed'
+  //   : buyerConfirmed;
 
   // Transform transaction data for display
   const transformedTransaction = {
@@ -649,6 +639,14 @@ export default function TransactionActive({
               <CardTitle className="flex items-center gap-2 text-white">
                 <Package className="h-5 w-5 text-orange-400" />
                 Deliverable Status
+                {escrowData && (
+                  <>
+                    <Shield className="h-4 w-4 text-green-400" />
+                    <span className="text-sm font-medium text-green-400">
+                      Escrow Protected
+                    </span>
+                  </>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -694,6 +692,33 @@ export default function TransactionActive({
                       );
                       const canConfirm = canConfirmDeliverable('item');
 
+                      // If escrow is active, show file upload instead of manual confirmation
+                      if (escrowData) {
+                        return (
+                          !allItemConfirmed &&
+                          canConfirm && (
+                            <UploadProofDialog
+                              deliverableId={`item-${id}`}
+                              deliverableTitle={transaction.item_name || 'Item'}
+                              deliverableType="product"
+                              onProofSubmitted={() => {
+                                // Refresh data after proof submission
+                                window.location.reload();
+                              }}
+                            >
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 text-white hover:bg-blue-700"
+                              >
+                                <Upload className="mr-1 h-4 w-4" />
+                                Upload Proof
+                              </Button>
+                            </UploadProofDialog>
+                          )
+                        );
+                      }
+
+                      // Manual confirmation for non-escrow transactions
                       return (
                         !allItemConfirmed &&
                         canConfirm && (
@@ -711,7 +736,9 @@ export default function TransactionActive({
                     {!status?.participants?.every((p) => p.item_confirmed) &&
                       !canConfirmDeliverable('item') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
-                          Waiting for receiver
+                          {escrowData
+                            ? 'Upload proof for oracle verification'
+                            : 'Waiting for receiver'}
                         </div>
                       )}
                   </div>
@@ -759,6 +786,33 @@ export default function TransactionActive({
                       );
                       const canConfirm = canConfirmDeliverable('payment');
 
+                      // If escrow is active, show file upload instead of manual confirmation
+                      if (escrowData) {
+                        return (
+                          !allPaymentConfirmed &&
+                          canConfirm && (
+                            <UploadProofDialog
+                              deliverableId={`payment-${id}`}
+                              deliverableTitle="Payment"
+                              deliverableType="payment"
+                              onProofSubmitted={() => {
+                                // Refresh data after proof submission
+                                window.location.reload();
+                              }}
+                            >
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 text-white hover:bg-blue-700"
+                              >
+                                <Upload className="mr-1 h-4 w-4" />
+                                Upload Proof
+                              </Button>
+                            </UploadProofDialog>
+                          )
+                        );
+                      }
+
+                      // Manual confirmation for non-escrow transactions
                       return (
                         !allPaymentConfirmed &&
                         canConfirm && (
@@ -776,7 +830,9 @@ export default function TransactionActive({
                     {!status?.participants?.every((p) => p.payment_confirmed) &&
                       !canConfirmDeliverable('payment') && (
                         <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
-                          Waiting for receiver
+                          {escrowData
+                            ? 'Upload proof for oracle verification'
+                            : 'Waiting for receiver'}
                         </div>
                       )}
                   </div>
@@ -807,131 +863,14 @@ export default function TransactionActive({
                   <p className="mt-2 text-xs text-neutral-500">
                     {allDeliverablesConfirmed
                       ? 'All deliverables confirmed successfully'
-                      : 'Waiting for deliverable confirmations'}
+                      : escrowData
+                        ? 'Upload proof files for oracle verification'
+                        : 'Waiting for deliverable confirmations'}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Escrow Protection Status */}
-          {escrowData && (
-            <Card className="border-blue-500/30 bg-gradient-to-b from-blue-900/20 to-blue-950/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Shield className="h-5 w-5 text-blue-400" />
-                  Escrow Protection Active
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Overall Progress */}
-                  {deliverableStatuses.length > 0 && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-blue-300">
-                          Overall Progress
-                        </span>
-                        <span className="text-sm text-white">
-                          {getOverallProgress(deliverableStatuses)}%
-                        </span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-neutral-700">
-                        <div
-                          className="h-2 rounded-full bg-blue-500 transition-all duration-300"
-                          style={{
-                            width: `${getOverallProgress(deliverableStatuses)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Oracle Verification Summary */}
-                  {oracleVerifications.length > 0 && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-purple-400" />
-                        <span className="text-sm font-medium text-purple-300">
-                          Oracle Verification Summary
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="text-center">
-                          <div className="font-medium text-green-400">
-                            {
-                              oracleVerifications.filter((v) => v.verified)
-                                .length
-                            }
-                          </div>
-                          <div className="text-neutral-400">Verified</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-medium text-red-400">
-                            {
-                              oracleVerifications.filter((v) => !v.verified)
-                                .length
-                            }
-                          </div>
-                          <div className="text-neutral-400">Failed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-medium text-blue-400">
-                            {oracleVerifications.length}
-                          </div>
-                          <div className="text-neutral-400">Total</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Deliverables Status */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-medium text-blue-300">
-                      Deliverables Status
-                    </h4>
-                    <div className="space-y-3">
-                      {deliverableStatuses.map((deliverable, index) => (
-                        <DeliverableStatus
-                          key={deliverable.id || index}
-                          deliverable={deliverable}
-                          verification={deliverable.verification}
-                          proofs={deliverable.proofs}
-                          partyName={
-                            deliverable.party_responsible === 'initiator'
-                              ? seller?.name || 'Creator'
-                              : buyer?.name || 'Participant'
-                          }
-                          currentUserId={currentUserId || ''}
-                          escrow={escrowData}
-                          onProofSubmitted={() => {
-                            // Refresh data after proof submission
-                            window.location.reload();
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Arbiter Status */}
-                  {escrowData.arbiter_requested && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-amber-400" />
-                        <span className="text-sm text-amber-300">
-                          Arbiter Oversight Active
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-neutral-400">
-                        Independent third-party mediation is available for
-                        dispute resolution
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Participants Status */}
           <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
@@ -1011,7 +950,9 @@ export default function TransactionActive({
                       <p className="text-xs text-blue-300/70">
                         {allDeliverablesConfirmed
                           ? 'All deliverables confirmed. Ready to finalize transaction.'
-                          : 'Confirm all deliverables before proceeding'}
+                          : escrowData
+                            ? 'Upload proof files for oracle verification before proceeding'
+                            : 'Confirm all deliverables before proceeding'}
                       </p>
                     </div>
                     <Button
@@ -1027,20 +968,48 @@ export default function TransactionActive({
                       <CheckCircle2 className="mr-2 h-4 w-4" />
                       {allDeliverablesConfirmed
                         ? 'Confirm'
-                        : 'Complete Deliverables First'}
+                        : escrowData
+                          ? 'Upload Proof Files First'
+                          : 'Complete Deliverables First'}
                     </Button>
                   </div>
                 </div>
               )}
 
+              {/* Waiting for other party */}
+              {status?.participants?.find((p) => p.user_id === currentUserId)
+                ?.has_confirmed &&
+                !status?.participants?.every((p) => p.has_confirmed) && (
+                  <div className="mt-4 rounded-lg border border-yellow-800/50 bg-yellow-900/20 p-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 animate-pulse text-yellow-400" />
+                      <div>
+                        <p className="text-sm font-medium text-yellow-200">
+                          Waiting for other party to confirm
+                        </p>
+                        <p className="text-xs text-yellow-300/70">
+                          You have confirmed. Waiting for the other participant
+                          to complete their confirmation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               {/* Both Confirmed Status */}
               {status?.participants?.every((p) => p.has_confirmed) && (
                 <div className="mt-4 rounded-lg border border-green-800/50 bg-green-900/20 p-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-400" />
-                    <p className="text-sm font-medium text-green-200">
-                      Both parties confirmed! Transaction is confirmed.
-                    </p>
+                    <CheckCircle2 className="h-5 w-5 animate-pulse text-green-400" />
+                    <div>
+                      <p className="text-sm font-medium text-green-200">
+                        Both parties confirmed! Transaction completed
+                        successfully.
+                      </p>
+                      <p className="text-xs text-green-300/70">
+                        Redirecting to homepage...
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

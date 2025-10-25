@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  CheckCircle2,
-  Download,
-  Shield,
-  Lock,
-  Clock,
-  FileText,
-  Home,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useDocumentStore } from '@/store/document/documentStore';
 import {
   exportAgreementToPDF,
   generateFileName,
 } from '@/lib/pdf/export-agreement';
+import { useDocumentStore } from '@/store/document/documentStore';
+import {
+  CheckCircle2,
+  Clock,
+  Download,
+  FileText,
+  Home,
+  Lock,
+  Shield,
+} from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Party {
   id?: string;
@@ -51,7 +51,6 @@ export default function FinalizedPage({
   const { id } = use(params);
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [agreementData, setAgreementData] = useState<AgreementData>({
     id: id,
     title: 'Loading...',
@@ -65,7 +64,6 @@ export default function FinalizedPage({
   useEffect(() => {
     const fetchAgreement = async () => {
       try {
-        setIsLoading(true);
         const response = await fetch(`/api/agreement/${id}/finalized`);
 
         if (!response.ok) {
@@ -116,8 +114,6 @@ export default function FinalizedPage({
       } catch (error) {
         console.error('Error fetching agreement:', error);
         toast.error('Failed to load agreement details');
-      } finally {
-        setIsLoading(false);
       }
     };
 

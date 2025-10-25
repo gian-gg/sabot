@@ -5,9 +5,8 @@
 import type {
   Deliverable,
   DeliverableWithStatus,
-  OracleVerification,
   EscrowProof,
-  PartyRole,
+  OracleVerification,
 } from '@/types/escrow';
 
 /**

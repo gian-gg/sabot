@@ -1,27 +1,27 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import {
+  EscrowProtectionEnhanced,
+  type EnhancedEscrowData,
+} from '@/components/agreement/finalize/escrow-protection-enhanced';
+import { AgreementDetails } from '@/components/agreement/id/agreement-details';
+import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
+import { DocumentStructure } from '@/components/agreement/id/document-structure';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Check, X, Loader2, ChevronDown, Flag } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import {
-  EscrowProtectionEnhanced,
-  type EnhancedEscrowData,
-} from '@/components/agreement/finalize/escrow-protection-enhanced';
-import { AgreementDetails } from '@/components/agreement/id/agreement-details';
-import { DocumentStructure } from '@/components/agreement/id/document-structure';
-import { AISuggestions } from '@/components/agreement/id/ai-suggestions';
-import { useDocumentStore } from '@/store/document/documentStore';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useAgreementRealtime } from '@/hooks/use-agreement-realtime';
 import { createClient } from '@/lib/supabase/client';
+import { useDocumentStore } from '@/store/document/documentStore';
+import { Check, ChevronDown, Flag, Loader2, X } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
 
 interface Party {
   id: string;
@@ -95,9 +95,6 @@ export default function FinalizePage({
   // State
   const [escrowEnabled, setEscrowEnabled] = useState(false);
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Agreement data state
@@ -127,7 +124,6 @@ export default function FinalizePage({
   useEffect(() => {
     const fetchAgreement = async () => {
       try {
-        setIsInitialLoading(true);
         const response = await fetch(`/api/agreement/${id}/status`);
 
         if (!response.ok) {
@@ -201,8 +197,6 @@ export default function FinalizePage({
             },
           ],
         });
-      } finally {
-        setIsInitialLoading(false);
       }
     };
 
@@ -249,7 +243,6 @@ export default function FinalizePage({
       // API call to create escrow will be added
     }
 
-    setIsConfirming(true);
     try {
       const supabase = createClient();
 
@@ -313,8 +306,6 @@ export default function FinalizePage({
 
         console.log('[handleConfirm] Agreement finalized');
 
-        // Show success and navigate
-        setShowSuccessModal(true);
         setTimeout(() => {
           router.push(`/agreement/${id}/finalized`);
         }, 2000);
@@ -322,8 +313,6 @@ export default function FinalizePage({
     } catch (error) {
       console.error('[handleConfirm] Error:', error);
       alert('Failed to confirm. Please try again.');
-    } finally {
-      setIsConfirming(false);
     }
   };
 

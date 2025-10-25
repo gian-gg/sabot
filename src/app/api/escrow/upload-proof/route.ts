@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       escrowId: escrow.id,
     });
 
-    for (const [key, file] of fileEntries) {
+    for (const [, file] of fileEntries) {
       if (file instanceof File) {
         // Generate unique filename
         const fileExtension = file.name.split('.').pop();
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
           bucket: 'escrow-evidence',
         });
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('escrow-evidence')
           .upload(filePath, file, {
             cacheControl: '3600',

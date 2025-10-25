@@ -1,11 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Check, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { ArrowLeft, Check } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Party {
   id: string;

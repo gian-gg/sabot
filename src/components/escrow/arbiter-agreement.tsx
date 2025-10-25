@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,19 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Shield,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Users,
-  Star,
   AlertCircle,
+  CheckCircle2,
+  Clock,
   Info,
+  Shield,
+  Star,
+  Users,
+  XCircle,
 } from 'lucide-react';
 
 interface Arbiter {
@@ -56,8 +55,6 @@ export function ArbiterAgreement({
   proposerName,
   disabled = false,
 }: ArbiterAgreementProps) {
-  const [showDetails, setShowDetails] = useState(false);
-
   return (
     <div className="space-y-4">
       {/* Header */}

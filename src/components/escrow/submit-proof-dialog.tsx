@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,29 +11,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import {
-  Upload,
-  FileText,
-  Bot,
-  User,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  ExternalLink,
-  Copy,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import type { Deliverable } from '@/types/escrow';
-import {
-  getOracleTypeConfig,
   getDeliverableTypeConfig,
+  getOracleTypeConfig,
 } from '@/lib/escrow/deliverable-status';
+import type { Deliverable } from '@/types/escrow';
+import { AlertCircle, Loader2, Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 interface SubmitProofDialogProps {
   deliverable: Deliverable;

@@ -1,38 +1,21 @@
 import { Card } from '@/components/ui/card';
-import { Play } from 'lucide-react';
 import { useUserStore } from '@/store/user/userStore';
+import { Play } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import HeroAction from './hero-action';
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ROUTES } from '@/constants/routes';
 
 export function HeroSection() {
   const user = useUserStore();
-  const router = useRouter();
 
   // Create dropdown state & click-outside handler
-  const [createOpen, setCreateOpen] = useState(false);
   const createRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
+    function onDoc() {
       if (!createRef.current) return;
-      if (!createRef.current.contains(e.target as Node)) {
-        setCreateOpen(false);
-      }
     }
     document.addEventListener('click', onDoc);
     return () => document.removeEventListener('click', onDoc);
   }, []);
-
-  function goToTransactionNew() {
-    setCreateOpen(false);
-    router.push(ROUTES.TRANSACTION.INVITE);
-  }
-
-  function goToAgreementNew() {
-    setCreateOpen(false);
-    router.push(ROUTES.AGREEMENT.INVITE);
-  }
 
   // Removed goToEscrowNew - escrow is now part of agreement finalization
 

@@ -1,14 +1,12 @@
-import React from 'react';
-import Link from 'next/link';
-import { Shield, Mail, Calendar, TrendingUp } from 'lucide-react';
-import { ROUTES } from '@/constants/routes';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/core/page-header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { VerificationBadge } from '@/components/user/verification-badge';
+import { ROUTES } from '@/constants/routes';
 import { getUserById } from '@/lib/mock-data/users';
+import { Calendar, Mail, Shield, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 // import { mockTransactions } from '@/lib/mock-data/transactions';
 
 interface ProfilePageProps {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const { fileName, fileType, bucket } = await request.json();
+    const { fileName, bucket } = await request.json();
 
     // Check authentication
     const {
