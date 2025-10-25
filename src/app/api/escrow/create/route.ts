@@ -70,7 +70,6 @@ export async function POST(request: NextRequest) {
         initiator_id: user.id,
         title: body.title,
         description: body.description,
-        deliverables: body.deliverables, // JSON array with party_responsible
         expected_completion_date: body.expected_completion_date,
         transaction_id: body.transaction_id,
         agreement_id: body.agreement_id,
@@ -89,6 +88,56 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create escrow', details: createError.message },
         { status: 500 }
       );
+    }
+
+    // Create individual deliverable records
+    if (body.deliverables && body.deliverables.length > 0) {
+      const validTypes = ['product', 'service', 'payment', 'document'];
+      const validPartyRoles = ['initiator', 'participant', 'both'];
+
+      const deliverableRecords = body.deliverables.map(
+        (deliverable: {
+          description?: string;
+          title?: string;
+          type?: string;
+          party_responsible?: string;
+          value?: number;
+          amount?: number;
+        }) => {
+          // Validate and sanitize deliverable type
+          const sanitizedType = validTypes.includes(deliverable.type || '')
+            ? deliverable.type
+            : 'product';
+
+          // Validate and sanitize party responsible
+          const sanitizedParty = validPartyRoles.includes(
+            deliverable.party_responsible || ''
+          )
+            ? deliverable.party_responsible
+            : 'initiator';
+
+          return {
+            escrow_id: escrow.id,
+            title:
+              deliverable.description || deliverable.title || 'Deliverable',
+            description: deliverable.description,
+            type: sanitizedType,
+            party_responsible: sanitizedParty,
+            amount: deliverable.value || deliverable.amount,
+            status: 'pending',
+            due_date: body.expected_completion_date,
+          };
+        }
+      );
+
+      const { error: deliverablesError } = await supabase
+        .from('deliverables')
+        .insert(deliverableRecords);
+
+      if (deliverablesError) {
+        console.error('Error creating deliverables:', deliverablesError);
+        // Don't fail the entire request, just log the error
+      }
     }
 
     // If participant email provided, create invitation (placeholder for future)

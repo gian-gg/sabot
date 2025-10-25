@@ -203,6 +203,10 @@ export function getOracleTypeForDeliverable(
       return 'ipfs';
     case 'service':
       return 'ai';
+    case 'item':
+    case 'cash':
+    case 'digital_transfer':
+    case 'mixed':
     default:
       return 'manual';
   }
@@ -250,7 +254,13 @@ export function getDeliverableTypeConfig(type: Deliverable['type']) {
     },
   };
 
-  return configs[type];
+  return (
+    configs[type] || {
+      icon: 'Package',
+      label: 'Unknown',
+      color: 'text-gray-600',
+    }
+  );
 }
 
 /**

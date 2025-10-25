@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,13 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
   Shield,
   Plus,
   X,
-  Sparkles,
   Package,
   Wrench,
   FileText,
@@ -204,11 +203,6 @@ async function inferDeliverableType(
   }
 }
 
-async function isDigitalAsset(itemDetails: ItemDetails): Promise<boolean> {
-  const type = await inferDeliverableType(itemDetails);
-  return type === 'digital';
-}
-
 async function parseDeliverablesFromItemDetails(
   itemDetails: ItemDetails
 ): Promise<Deliverable[]> {
@@ -329,7 +323,10 @@ export function EscrowProtectionEnhanced({
     ) {
       setEscrowData((prev) => {
         const updated = { ...prev, deliverables: inferredDeliverables };
-        onEscrowDataChange(updated);
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+          onEscrowDataChange(updated);
+        }, 0);
         return updated;
       });
     }
@@ -347,7 +344,10 @@ export function EscrowProtectionEnhanced({
     }
 
     setEscrowData(newData);
-    onEscrowDataChange(newData);
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => {
+      onEscrowDataChange(newData);
+    }, 0);
   };
 
   const addDeliverable = async (
@@ -397,7 +397,6 @@ export function EscrowProtectionEnhanced({
     });
   };
 
-  const hasInferredData = inferredDeliverables.length > 0;
   const initiatorDeliverables = escrowData.deliverables.filter(
     (d) => d.party_responsible === 'initiator'
   );
