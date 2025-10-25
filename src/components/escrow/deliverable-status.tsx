@@ -83,6 +83,19 @@ export function DeliverableStatus({
   const oracleConfig = getOracleTypeConfig(oracleType);
   const deliverableConfig = getDeliverableTypeConfig(deliverable.type);
 
+  // Add null checks to prevent runtime errors
+  if (!statusConfig || !oracleConfig || !deliverableConfig) {
+    console.error('Missing configuration for deliverable:', {
+      status: deliverable.status,
+      type: deliverable.type,
+      oracleType,
+      statusConfig,
+      oracleConfig,
+      deliverableConfig,
+    });
+    return null;
+  }
+
   // Helper function to determine oracle type
   function getOracleTypeForDeliverable(
     deliverable: Deliverable

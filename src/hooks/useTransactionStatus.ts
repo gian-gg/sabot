@@ -28,17 +28,17 @@ export function useTransactionStatus(transactionId: string | null) {
           `/api/transaction/${transactionId}/status`
         );
         if (!response.ok) {
-          throw new Error('Failed to fetch transaction status');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              `HTTP ${response.status}: Failed to fetch transaction status`
+          );
         }
         const data = await response.json();
-        // console.log('Hook - Status fetched:', {
-        //   status: data.transaction?.status,
-        //   participantCount: data.participants?.length,
-        //   isReady: data.is_ready_for_next_step,
-        // });
         setStatus(data);
         setError(null);
       } catch (err) {
+        console.error('Transaction status fetch error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
