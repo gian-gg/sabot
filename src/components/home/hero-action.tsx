@@ -23,7 +23,6 @@ const HeroAction = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const createRef = useRef<HTMLDivElement>(null);
 
-  // Trigger wallet registration when user verification is complete
   useRegisterWallet(user.verificationStatus === 'complete');
 
   const goToTransactionNew = () => {
