@@ -299,7 +299,7 @@ export default async function WalletPage() {
               </div>
               <Button asChild className="w-full" size="lg">
                 <a
-                  href={`https://sepolia-blockscout.lisk.com/address/0x057C704c039e6DA3317886FF4998f9fC1CBdC181?tab=txs`}
+                  href={`https://sepolia-blockscout.lisk.com/address/0x1f5b3538E15b39546f31B51183dEe09ed71c300a?tab=txs`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"

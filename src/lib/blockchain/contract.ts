@@ -33,7 +33,6 @@ export async function getReadOnlyLedgerContract(): Promise<ethers.Contract> {
 
   const provider = new ethers.JsonRpcProvider(RPC_URL);
 
-  // Verify contract exists at address
   try {
     const code = await provider.getCode(CONTRACT_ADDRESS);
     if (code === '0x') {
@@ -57,4 +56,9 @@ export async function getReadOnlyLedgerContract(): Promise<ethers.Contract> {
   );
 
   return readOnlyLedgerContract;
+}
+
+export async function hostWritableLedgerContract(): Promise<ethers.Contract> {
+  const hostKey = process.env.HOST_SECRET_KEY!;
+  return getWritableLedgerContract(hostKey);
 }

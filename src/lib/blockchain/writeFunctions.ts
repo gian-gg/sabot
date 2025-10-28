@@ -1,4 +1,7 @@
-import { getWritableLedgerContract } from './contract';
+import {
+  getWritableLedgerContract,
+  hostWritableLedgerContract,
+} from './contract';
 import { createClient } from '@/lib/supabase/server';
 import {
   getAllUserIds,
@@ -7,14 +10,11 @@ import {
   getTransactionDetails,
   postHashTransaction,
 } from '@/lib/supabase/db/user';
-import { decryptPrivateKey } from './helper';
 
 import { keccak256, toUtf8Bytes } from 'ethers';
 import { sortObjectKeys } from '@/lib/blockchain/helper';
 
 export async function registerUser(): Promise<boolean> {
-  const secretKey = process.env.PRIVATE_KEY_SECRET!;
-
   try {
     const supabase = await createClient();
 
@@ -28,20 +28,13 @@ export async function registerUser(): Promise<boolean> {
       return false;
     }
 
-    console.log('registerUser: User authenticated:', user.id);
-
-    const encryptedKey = await getEncryptedKey(user.id);
-
-    if (!encryptedKey) {
-      console.error('registerUser: No encrypted key found for user');
+    const publicAddress = await getPublicAddress(user.id);
+    if (!publicAddress) {
+      console.error('registerUser: No public address found for user');
       return false;
     }
 
-    console.log('registerUser: Encrypted key found');
-
-    const privateKey = decryptPrivateKey(encryptedKey, secretKey);
-
-    const contract = await getWritableLedgerContract(privateKey);
+    const contract = await hostWritableLedgerContract();
 
     if (!contract) {
       console.error('registerUser: Failed to get writable contract');
@@ -49,9 +42,8 @@ export async function registerUser(): Promise<boolean> {
     }
 
     console.log('registerUser: Contract obtained, attempting registration...');
-    await contract.registerUser();
+    await contract.registerUser(publicAddress);
 
-    console.log('registerUser: Registration successful');
     return true;
   } catch (error) {
     console.error(
@@ -65,10 +57,7 @@ export async function registerUser(): Promise<boolean> {
 export async function pushTransactionToBlockchain(
   transactionId: string
 ): Promise<boolean> {
-  const secretKey = process.env.PRIVATE_KEY_SECRET!;
-
   try {
-    // Step 1: Fetch transaction details
     const transaction = await getTransactionDetails(transactionId);
     if (transaction.length === 0) {
       console.error(
@@ -76,8 +65,6 @@ export async function pushTransactionToBlockchain(
       );
       return false;
     }
-
-    // Step 2: Hash the transaction data
     const sortedData = JSON.stringify(transaction.map(sortObjectKeys));
     const bytes = toUtf8Bytes(sortedData);
     const detailsHash = keccak256(bytes);
@@ -104,26 +91,16 @@ export async function pushTransactionToBlockchain(
     }
 
     const invitedAddress = await getPublicAddress(invitedUser.user_id);
+    const creatorAddress = await getPublicAddress(creatorUser.user_id);
 
-    if (!invitedAddress) {
+    if (!invitedAddress || !creatorAddress) {
       console.error(
-        'pushTransactionToBlockchain: No public address found for invitee'
+        'pushTransactionToBlockchain: No public address found for invitee or creator'
       );
       return false;
     }
 
-    // Step 4: Get creator's encrypted key and contract instance
-    const encryptedKey = await getEncryptedKey(creatorUser.user_id);
-
-    if (!encryptedKey) {
-      console.error(
-        'pushTransactionToBlockchain: No encrypted key found for creator'
-      );
-      return false;
-    }
-
-    const privateKey = decryptPrivateKey(encryptedKey, secretKey);
-    const contract = await getWritableLedgerContract(privateKey);
+    const contract = await hostWritableLedgerContract();
 
     if (!contract) {
       console.error(
@@ -137,7 +114,11 @@ export async function pushTransactionToBlockchain(
       `pushTransactionToBlockchain: Sending transaction to blockchain...`
     );
 
-    const tx = await contract.createAgreement(invitedAddress, detailsHash);
+    const tx = await contract.createAgreement(
+      creatorAddress,
+      invitedAddress,
+      detailsHash
+    );
 
     console.log(
       `pushTransactionToBlockchain: Transaction sent! Waiting for confirmation... TX Hash: ${tx.hash}`
