@@ -98,7 +98,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
 
             {/* Lisk Blockchain Link */}
             <Link
-              href="https://sepolia-blockscout.lisk.com/address/0x057C704c039e6DA3317886FF4998f9fC1CBdC181?tab=txs"
+              href="https://sepolia-blockscout.lisk.com/address/0x1f5b3538E15b39546f31B51183dEe09ed71c300a?tab=txs"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-2 rounded-lg border border-neutral-700/50 bg-neutral-800/30 px-3 py-2 transition-all hover:border-purple-500/50 hover:bg-purple-500/10"
