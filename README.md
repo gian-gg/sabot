@@ -6,7 +6,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 <a href="https://github.com/gian-gg/sabot/blob/main/LICENSE">
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-002D72?style=for-the-badge" />
+<img alt="License" src="https://img.shields.io/badge/License-MIT-002D72?style=for-the-badge" />
 </a>
 
 <!-- PROJECT LOGO -->
@@ -66,8 +66,7 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
 **⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows  
 **📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking  
 **🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection  
-**📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality  
-
+**📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality
 
 ### 📚 Built With
 
@@ -93,7 +92,6 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
   <!-- Google Gemini -->
   <a href="https://gemini.google.com/"><img alt="Google Gemini" src="https://img.shields.io/badge/Google_Gemini-4285F4?logo=googlegemini&logoColor=white&style=flat" /></a>
 </p>
-
 
 <!-- SCREENSHOTS -->
 
