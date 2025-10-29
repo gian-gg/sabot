@@ -191,15 +191,16 @@ export async function GET(
     }
 
     // Calculate deliverable statuses with verifications (by id)
+    type DeliverableLite = { id: string; type?: string; status?: string };
+    type OracleVerificationLite = { deliverable_id?: string };
+
     const deliverableStatuses =
-      escrowData?.deliverables?.map(
-        (deliverable: { id: string; [key: string]: any }) => ({
-          ...deliverable,
-          verification: oracleVerifications.find(
-            (v: any) => v.deliverable_id === deliverable.id
-          ),
-        })
-      ) || [];
+      escrowData?.deliverables?.map((deliverable: DeliverableLite) => ({
+        ...deliverable,
+        verification: oracleVerifications.find(
+          (v: OracleVerificationLite) => v.deliverable_id === deliverable.id
+        ),
+      })) || [];
 
     // Mirror confirmations across both participants and cover all deliverable types
     if (enrichedParticipants.length > 0) {
@@ -224,10 +225,12 @@ export async function GET(
       );
 
       const anyItemDeliverableConfirmed = (deliverableStatuses || []).some(
-        (d: any) => isItemType(d.type) && d.status === 'confirmed'
+        (d: DeliverableLite) =>
+          isItemType(d.type || '') && d.status === 'confirmed'
       );
       const anyPaymentDeliverableConfirmed = (deliverableStatuses || []).some(
-        (d: any) => isPaymentType(d.type) && d.status === 'confirmed'
+        (d: DeliverableLite) =>
+          isPaymentType(d.type || '') && d.status === 'confirmed'
       );
 
       const unifiedItemConfirmed =
