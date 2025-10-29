@@ -190,19 +190,73 @@ export async function GET(
       oracleVerifications = verifications || [];
     }
 
-    // Calculate deliverable statuses with verifications
+    // Calculate deliverable statuses with verifications (by id)
     const deliverableStatuses =
       escrowData?.deliverables?.map(
-        (deliverable: { id: string; [key: string]: unknown }) => ({
+        (deliverable: { id: string; [key: string]: any }) => ({
           ...deliverable,
-          verification: oracleVerifications.find(() =>
-            escrowData.deliverables?.some(
-              (d: { id: string; [key: string]: unknown }) =>
-                d.id === deliverable.id
-            )
+          verification: oracleVerifications.find(
+            (v: any) => v.deliverable_id === deliverable.id
           ),
         })
       ) || [];
+
+    // Mirror confirmations across both participants and cover all deliverable types
+    if (enrichedParticipants.length > 0) {
+      const isItemType = (t: string) =>
+        t === 'item' ||
+        t === 'service' ||
+        t === 'digital' ||
+        t === 'document' ||
+        t === 'product' ||
+        t === 'mixed';
+      const isPaymentType = (t: string) =>
+        t === 'cash' ||
+        t === 'digital_transfer' ||
+        t === 'payment' ||
+        t === 'mixed';
+
+      const anyParticipantItemConfirmed = enrichedParticipants.some(
+        (p) => p.item_confirmed === true
+      );
+      const anyParticipantPaymentConfirmed = enrichedParticipants.some(
+        (p) => p.payment_confirmed === true
+      );
+
+      const anyItemDeliverableConfirmed = (deliverableStatuses || []).some(
+        (d: any) => isItemType(d.type) && d.status === 'confirmed'
+      );
+      const anyPaymentDeliverableConfirmed = (deliverableStatuses || []).some(
+        (d: any) => isPaymentType(d.type) && d.status === 'confirmed'
+      );
+
+      const unifiedItemConfirmed =
+        anyParticipantItemConfirmed || anyItemDeliverableConfirmed;
+      const unifiedPaymentConfirmed =
+        anyParticipantPaymentConfirmed || anyPaymentDeliverableConfirmed;
+
+      // Apply unified values to in-memory participants for response
+      for (const p of enrichedParticipants) {
+        p.item_confirmed = unifiedItemConfirmed;
+        p.payment_confirmed = unifiedPaymentConfirmed;
+      }
+
+      // Persist to DB if needed: set BOTH participants to unified values
+      try {
+        await supabase
+          .from('transaction_participants')
+          .update({
+            item_confirmed: unifiedItemConfirmed,
+            payment_confirmed: unifiedPaymentConfirmed,
+          })
+          .eq('transaction_id', id);
+      } catch (persistErr) {
+        console.error(
+          '[Status API] Mirror confirmations persist error:',
+          persistErr
+        );
+      }
+    }
 
     console.log(`📊 Status API [${id.slice(0, 8)}]:`, {
       status: transaction.status,

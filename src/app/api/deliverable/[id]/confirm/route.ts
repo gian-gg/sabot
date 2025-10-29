@@ -67,6 +67,38 @@ export async function POST(
       );
     }
 
+    // Mirror confirmations across BOTH participants based on deliverable type
+    if (deliverable.escrow?.transaction_id) {
+      const isItemType = (t: string) =>
+        t === 'item' ||
+        t === 'service' ||
+        t === 'digital' ||
+        t === 'document' ||
+        t === 'product' ||
+        t === 'mixed';
+      const isPaymentType = (t: string) =>
+        t === 'cash' ||
+        t === 'digital_transfer' ||
+        t === 'payment' ||
+        t === 'mixed';
+
+      const updates: Record<string, boolean> = {};
+      if (isItemType(deliverable.type)) updates.item_confirmed = true;
+      if (isPaymentType(deliverable.type)) updates.payment_confirmed = true;
+
+      try {
+        await supabase
+          .from('transaction_participants')
+          .update(updates)
+          .eq('transaction_id', deliverable.escrow.transaction_id);
+      } catch (e) {
+        console.error(
+          '[Deliverable Confirm] Error mirroring participant confirmations:',
+          e
+        );
+      }
+    }
+
     // Check if all deliverables are confirmed
     const { data: allDeliverables, error: deliverablesError } = await supabase
       .from('deliverables')
