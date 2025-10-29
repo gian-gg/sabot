@@ -104,6 +104,13 @@ export function CreateTransactionForm({
   >([]);
   const [hasConflicts, setHasConflicts] = useState(false);
 
+  // Scroll to top whenever the step changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
   // Track which fields are locked individually
   const [fieldLocks, setFieldLocks] = useState({
     item_name: false,
