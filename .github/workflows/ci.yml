@@ -25,6 +25,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      # Auto-format with Prettier (write changes to workspace)
+      - name: Format with Prettier
+        run: bun run format
+
       # Prettier check
       - name: Run Prettier check
         run: bun run format:check
