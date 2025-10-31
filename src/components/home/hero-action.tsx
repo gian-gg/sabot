@@ -63,7 +63,7 @@ const HeroAction = () => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="size-4" />
             Create
           </Button>
         </DropdownMenuTrigger>
