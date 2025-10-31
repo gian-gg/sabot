@@ -613,18 +613,22 @@ export function TransactionDetailsModal({
               </Button>
             )}
 
-            <Button variant="outline" className="flex-1">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              View on Blockchain
-            </Button>
-            <Button
-              onClick={handleExportPDF}
-              disabled={isExporting}
-              variant="outline"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Export
-            </Button>
+            {transaction.status === 'completed' && (
+              <>
+                <Button variant="outline" className="flex-1">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  View on Blockchain
+                </Button>
+                <Button
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                  variant="outline"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
