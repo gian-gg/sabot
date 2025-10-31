@@ -136,9 +136,21 @@ export default function TransactionsSection({
             .includes(searchLower)) ||
         transaction.id.toLowerCase().includes(searchLower);
 
-      // Status filter
-      const matchesStatus =
-        filters.status === 'all' || transaction.status === filters.status;
+      // Status filter - treat "pending" as a group of in-progress statuses
+      let matchesStatus = false;
+      if (filters.status === 'all') {
+        matchesStatus = true;
+      } else if (filters.status === 'pending') {
+        // Include all in-progress/pending-like statuses
+        matchesStatus = [
+          'pending',
+          'waiting_for_participant',
+          'both_joined',
+          'screenshots_uploaded',
+        ].includes(transaction.status);
+      } else {
+        matchesStatus = transaction.status === filters.status;
+      }
 
       // Type filter
       const matchesType =
