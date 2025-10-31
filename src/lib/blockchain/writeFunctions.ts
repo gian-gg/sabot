@@ -95,7 +95,7 @@ export async function pushTransactionToBlockchain(
 
     if (!invitedAddress || !creatorAddress) {
       console.error(
-        'pushTransactionToBlockchain: No public address found for invitee or creator'
+        `pushTransactionToBlockchain: No public address found for invitee or creator`
       );
       return false;
     }

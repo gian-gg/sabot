@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserAvatar } from '@/components/user/user-avatar';
 import { ROUTES } from '@/constants/routes';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
+import { pushTransactionToBlockchain } from '@/lib/blockchain/writeFunctions';
 import { createClient } from '@/lib/supabase/client';
 import type { Escrow } from '@/types/escrow';
 import {
@@ -84,6 +85,15 @@ export default function TransactionActive({
       status?.transaction?.id
     ) {
       console.log('Both parties confirmed! Redirecting to homepage...');
+      const blockchainSave = async () => {
+        const saveToBlockchain = await pushTransactionToBlockchain(id);
+
+        if (!saveToBlockchain) {
+          console.error('Failed to push transaction to blockchain.');
+          return;
+        }
+      };
+      blockchainSave();
       setTimeout(() => {
         router.push('/');
       }, 2000);
@@ -372,7 +382,6 @@ export default function TransactionActive({
       if (result.both_confirmed) {
         // Both parties confirmed - redirect to home after a short delay
 
-        console.log('Transaction pushed to blockchain successfully.');
         setTimeout(() => {
           router.push('/');
         }, 2000);
