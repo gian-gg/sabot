@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import * as Y from 'yjs';
-import { WebrtcProvider } from 'y-webrtc';
 import {
   Card,
   CardContent,
@@ -14,8 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Users, Wifi, WifiOff } from 'lucide-react';
 
 interface CollaborativeEditorProps {
   documentId: string;
@@ -24,7 +20,6 @@ interface CollaborativeEditorProps {
 }
 
 // Global singleton to prevent multiple instances across hot reloads
-const providerInstances = new Map<string, WebrtcProvider>();
 const ydocInstances = new Map<string, Y.Doc>();
 
 export default function CollaborativeEditor({
@@ -41,115 +36,14 @@ export default function CollaborativeEditor({
     return ydocInstances.get(documentId)!;
   }, [documentId]);
 
-  const providerRef = useRef<WebrtcProvider | null>(null);
-  const isMountedRef = useRef(true);
-  const [status, setStatus] = useState<
-    'connecting' | 'connected' | 'disconnected'
-  >('connecting');
-  const [connectedUsers, setConnectedUsers] = useState(0);
-  const [providerReady, setProviderReady] = useState(false);
-
-  // Initialize provider
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    // Check if we already have a provider
-    if (providerInstances.has(documentId)) {
-      console.log('♻️ Reusing existing provider');
-      providerRef.current = providerInstances.get(documentId)!;
-      setProviderReady(true);
-      setStatus(providerRef.current.connected ? 'connected' : 'connecting');
-
-      // Recount peers
-      const provider = providerRef.current;
-      const webrtcCount = provider.room?.webrtcConns?.size || 0;
-      const bcCount = provider.room?.bcConns?.size || 0;
-      setConnectedUsers(webrtcCount + bcCount + 1);
-
-      return;
-    }
-
-    // Create new provider
-    console.log('🚀 Creating new WebRTC provider for:', documentId);
-
-    const webrtcProvider = new WebrtcProvider(documentId, ydoc, {
-      signaling: ['wss://signaling.yjs.dev'],
-      maxConns: 20 + Math.floor(Math.random() * 15),
-      filterBcConns: false,
-      peerOpts: {},
-    });
-
-    providerRef.current = webrtcProvider;
-    providerInstances.set(documentId, webrtcProvider);
-    setProviderReady(true);
-
-    // Status handler
-    const statusHandler = (event: { connected: boolean }) => {
-      if (!isMountedRef.current) return;
-      const status = event.connected ? 'connected' : 'disconnected';
-      console.log('📡 WebRTC Status:', status);
-      setStatus(status);
-    };
-    webrtcProvider.on('status', statusHandler);
-
-    // Peers handler
-    const peersHandler = (event: {
-      webrtcPeers: unknown[];
-      bcPeers: unknown[];
-      added: unknown[];
-      removed: unknown[];
-    }) => {
-      if (!isMountedRef.current) return;
-
-      const webrtcCount = event.webrtcPeers?.length || 0;
-      const bcCount = event.bcPeers?.length || 0;
-      const totalPeers = webrtcCount + bcCount;
-
-      console.log('👥 Peers changed:', {
-        webrtcPeers: webrtcCount,
-        bcPeers: bcCount,
-        total: totalPeers,
-        added: event.added?.length || 0,
-        removed: event.removed?.length || 0,
-      });
-
-      setConnectedUsers(totalPeers + 1);
-    };
-    webrtcProvider.on('peers', peersHandler);
-
-    // Cleanup - just detach listeners
-    return () => {
-      console.log('🔄 Component cleanup - keeping provider alive');
-      webrtcProvider.off('status', statusHandler);
-      webrtcProvider.off('peers', peersHandler);
-    };
-  }, [documentId, ydoc]);
-
-  // Component mount tracking
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
   // Initialize editor
   const editor = useEditor(
     {
       extensions: [
-        // Use StarterKit but disable History since we're using Yjs
         StarterKit,
         Collaboration.configure({
           document: ydoc,
           field: 'default',
-        }),
-        CollaborationCursor.configure({
-          provider: providerRef.current || undefined,
-          user: {
-            name: userName,
-            color: userColor,
-          },
         }),
       ],
       editorProps: {
@@ -160,7 +54,7 @@ export default function CollaborativeEditor({
       },
       immediatelyRender: false,
     },
-    [providerReady, userName, userColor, ydoc]
+    [userName, userColor, ydoc]
   );
 
   return (
@@ -176,35 +70,6 @@ export default function CollaborativeEditor({
               </code>
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={status === 'connected' ? 'default' : 'secondary'}
-              className="gap-1.5"
-            >
-              {status === 'connected' ? (
-                <>
-                  <Wifi className="size-3" />
-                  Connected
-                </>
-              ) : status === 'connecting' ? (
-                <>
-                  <div className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Connecting
-                </>
-              ) : (
-                <>
-                  <WifiOff className="size-3" />
-                  Disconnected
-                </>
-              )}
-            </Badge>
-            {status === 'connected' && (
-              <Badge variant="outline" className="gap-1.5">
-                <Users className="size-3" />
-                {connectedUsers} {connectedUsers === 1 ? 'user' : 'users'}
-              </Badge>
-            )}
-          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -213,17 +78,12 @@ export default function CollaborativeEditor({
         </div>
         <div className="text-muted-foreground mt-4 space-y-1 text-xs">
           <p>
-            💡 Open this page in multiple tabs or share the URL to collaborate
-            in real-time
+            💡 Editor ready for collaboration - connect with PartyKit for
+            real-time sync
           </p>
-          <p>📝 Changes are synced automatically across all connected users</p>
-          {providerRef.current && (
-            <p className="text-primary">
-              🔍 Debug - WebRTC:{' '}
-              {providerRef.current.room?.webrtcConns?.size || 0} | Broadcast:{' '}
-              {providerRef.current.room?.bcConns?.size || 0} | Status: {status}
-            </p>
-          )}
+          <p>
+            📝 Yjs document is configured and ready for provider integration
+          </p>
         </div>
       </CardContent>
     </Card>
