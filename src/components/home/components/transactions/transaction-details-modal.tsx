@@ -26,6 +26,7 @@ import {
   MapPin,
   MessageSquare,
   Shield,
+  ArrowUpRight,
   User,
   Users,
   XCircle,
@@ -137,6 +138,19 @@ export function TransactionDetailsModal({
         </DialogHeader>
 
         <div className="space-y-8">
+          {/* Go to Transaction Page Button */}
+          {(transaction.status === 'active' ||
+            transaction.status === 'waiting_for_participant' ||
+            transaction.status === 'both_joined' ||
+            transaction.status === 'screenshots_uploaded') && (
+            <Button variant="default" className="w-full" size="lg" asChild>
+              <Link href={`/transaction/invite?id=${transaction.id}`}>
+                Go to Transaction
+                <ArrowUpRight className="mr-2 h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+
           {/* Key Metrics Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="border-border/50 bg-muted/20 border p-4">
@@ -687,8 +701,9 @@ export function TransactionDetailsModal({
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row">
+            {/* Contact Counterparty */}
             {transaction.transaction_participants.length > 1 && (
-              <Button variant="default" className="flex-1" asChild>
+              <Button variant="outline" className="flex-1" asChild>
                 <Link
                   href={`mailto:${transaction.transaction_participants[1].participant_email}`}
                 >
@@ -698,6 +713,7 @@ export function TransactionDetailsModal({
               </Button>
             )}
 
+            {/* Completed Transaction Actions */}
             {transaction.status === 'completed' && (
               <>
                 {transaction.hash && (
