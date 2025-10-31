@@ -1,7 +1,10 @@
 'use client';
 
 import jsPDF from 'jspdf';
-import type { TransactionStatus } from '@/types/transaction';
+import type {
+  TransactionStatus,
+  TransactionParticipant,
+} from '@/types/transaction';
 
 interface TransactionDetails {
   id: string;
@@ -27,6 +30,7 @@ interface TransactionDetails {
   hash: string | null | undefined;
   created_at: string;
   updated_at: string;
+  transaction_participants?: TransactionParticipant[];
 }
 
 /**
@@ -430,6 +434,228 @@ export async function exportTransactionToPDF(
       }
     }
 
+    checkPageBreak(40);
+
+    // Participants Section
+    if (
+      transaction.transaction_participants &&
+      transaction.transaction_participants.length > 0
+    ) {
+      pdf.setFont('Helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Participants', margin, currentY);
+      currentY += 8;
+
+      transaction.transaction_participants.forEach((participant) => {
+        checkPageBreak(20);
+
+        pdf.setFillColor(240, 249, 255);
+        pdf.rect(margin, currentY, contentWidth, 20, 'F');
+        pdf.setDrawColor(1, 208, 108);
+        pdf.setLineWidth(0.5);
+        pdf.rect(margin, currentY, contentWidth, 20);
+
+        // Role badge
+        const role = participant.role === 'creator' ? 'Creator' : 'Invitee';
+        const roleColor =
+          participant.role === 'creator' ? [59, 130, 246] : [168, 85, 247];
+
+        pdf.setFillColor(...(roleColor as [number, number, number]));
+        pdf.roundedRect(margin + 3, currentY + 3, 25, 6, 1, 1, 'F');
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(role, margin + 5, currentY + 7);
+
+        // Participant info
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        const name =
+          participant.participant_name || participant.name || 'Unknown User';
+        pdf.text(name, margin + 3, currentY + 14);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        const email =
+          participant.participant_email || participant.email || 'No email';
+        pdf.text(email, margin + 50, currentY + 14);
+
+        // Screenshot status
+        if (participant.screenshot_uploaded) {
+          pdf.setFont('Helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(1, 208, 108);
+          pdf.text('✓ Screenshot uploaded', contentWidth - 35, currentY + 14);
+        }
+
+        currentY += 25;
+      });
+
+      currentY += 5;
+    }
+
+    checkPageBreak(40);
+
+    // Timeline Section
+    pdf.setFont('Helvetica', 'bold');
+    pdf.setFontSize(14);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Transaction Timeline', margin, currentY);
+    currentY += 10;
+
+    // Transaction created
+    pdf.setFillColor(1, 208, 108);
+    pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+    pdf.setFont('Helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Transaction Created', margin + 10, currentY);
+
+    pdf.setFont('Helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(
+      new Date(transaction.created_at).toLocaleString(),
+      margin + 10,
+      currentY + 4
+    );
+
+    currentY += 12;
+
+    // Participants joined
+    if (transaction.transaction_participants) {
+      transaction.transaction_participants.forEach((participant) => {
+        if (participant.joined_at) {
+          checkPageBreak(12);
+
+          pdf.setDrawColor(200, 200, 200);
+          pdf.setLineWidth(0.5);
+          pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+          pdf.setFillColor(1, 208, 108);
+          pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+          pdf.setFont('Helvetica', 'bold');
+          pdf.setFontSize(10);
+          pdf.setTextColor(0, 0, 0);
+          const name =
+            participant.participant_name || participant.name || 'User';
+          pdf.text(`${name} joined`, margin + 10, currentY);
+
+          pdf.setFont('Helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(
+            new Date(participant.joined_at).toLocaleString(),
+            margin + 10,
+            currentY + 4
+          );
+
+          currentY += 12;
+        }
+      });
+
+      // Screenshots uploaded
+      const uploadedCount = transaction.transaction_participants.filter(
+        (p) => p.screenshot_uploaded
+      ).length;
+      if (uploadedCount > 0) {
+        checkPageBreak(12);
+
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+        pdf.setFillColor(1, 208, 108);
+        pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Screenshots Uploaded', margin + 10, currentY);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(
+          `${uploadedCount} of ${transaction.transaction_participants.length} participants`,
+          margin + 10,
+          currentY + 4
+        );
+
+        currentY += 12;
+      }
+    }
+
+    // Status milestone
+    if (transaction.status === 'completed') {
+      checkPageBreak(12);
+
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+      pdf.setFillColor(1, 208, 108);
+      pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+      pdf.setFont('Helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Transaction Completed', margin + 10, currentY);
+
+      pdf.setFont('Helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(
+        new Date(transaction.updated_at).toLocaleString(),
+        margin + 10,
+        currentY + 4
+      );
+
+      currentY += 12;
+    } else if (
+      transaction.status === 'pending' ||
+      transaction.status === 'active'
+    ) {
+      checkPageBreak(12);
+
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+      const statusColor =
+        transaction.status === 'pending' ? [245, 158, 11] : [59, 130, 246];
+      pdf.setFillColor(...(statusColor as [number, number, number]));
+      pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+      pdf.setFont('Helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(
+        transaction.status === 'pending'
+          ? 'Awaiting Action'
+          : 'Transaction Active',
+        margin + 10,
+        currentY
+      );
+
+      pdf.setFont('Helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(
+        transaction.status === 'pending' ? 'Pending' : 'In progress',
+        margin + 10,
+        currentY + 4
+      );
+
+      currentY += 12;
+    }
+
+    currentY += 5;
     checkPageBreak(40);
 
     // Blockchain Info Section

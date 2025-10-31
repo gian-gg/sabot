@@ -36,14 +36,6 @@ export default function Home() {
     }
   }, [user.id]);
 
-  if (loading) {
-    return (
-      <div className="flex h-[60vh] w-full items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
   return (
     <>
       <GasFeeWarningDialog />
@@ -52,13 +44,24 @@ export default function Home() {
       <div className="mt-16">
         {user.verificationStatus === 'complete' ? (
           <>
-            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-            <div className="mt-8">
-              {activeTab === 'transactions' && (
-                <TransactionsSection recentTransactions={transactions} />
-              )}
-              {activeTab === 'agreements' && <ActiveContractsSection />}
-            </div>
+            {loading ? (
+              <div className="flex w-full items-center justify-center py-20">
+                <Spinner className="text-primary h-8 w-8" />
+              </div>
+            ) : (
+              <>
+                <TabNavigation
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                />
+                <div className="mt-8">
+                  {activeTab === 'transactions' && (
+                    <TransactionsSection recentTransactions={transactions} />
+                  )}
+                  {activeTab === 'agreements' && <ActiveContractsSection />}
+                </div>
+              </>
+            )}
           </>
         ) : (
           <Alert className="border-primary/30 from-primary/10 border-2 border-dashed bg-linear-to-br to-transparent p-4">
