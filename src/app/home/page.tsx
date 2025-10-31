@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
-import { TransactionsSection } from '@/components/home/transactions-section';
+import TransactionsSection from '@/components/home/transactions-section';
 import { ActiveContractsSection } from '@/components/home/active-contracts-section';
 import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { useUserStore } from '@/store/user/userStore';
@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export default function Page() {
   const user = useUserStore();
 
-  const [activeTab, setActiveTab] = useState<'transactions' | 'contracts'>(
+  const [activeTab, setActiveTab] = useState<'transactions' | 'agreements'>(
     'transactions'
   );
 
@@ -28,7 +28,7 @@ export default function Page() {
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="mt-8">
               {activeTab === 'transactions' && <TransactionsSection />}
-              {activeTab === 'contracts' && <ActiveContractsSection />}
+              {activeTab === 'agreements' && <ActiveContractsSection />}
             </div>
           </>
         ) : (
