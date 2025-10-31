@@ -16,7 +16,8 @@ export async function getTransactionDetailsByUserID(
       transaction_participants (*)
     `
     )
-    .eq('creator_id', userId);
+    .eq('creator_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching transactions with details:', error.message);
