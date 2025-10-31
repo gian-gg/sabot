@@ -119,7 +119,7 @@ export function TransactionDetailsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-md overflow-y-auto md:min-w-xl lg:min-w-4xl xl:min-w-5xl">
-        <DialogHeader>
+        <DialogHeader className="items-center justify-center md:items-start md:justify-start">
           <div>
             <DialogTitle>{transaction.item_name}</DialogTitle>
             <DialogDescription>Transaction #{transaction.id}</DialogDescription>
@@ -148,7 +148,7 @@ export function TransactionDetailsModal({
                   <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                     Price
                   </p>
-                  <p className="font-bold">${transaction.price}</p>
+                  <p className="font-bold">${transaction.price ?? 0}</p>
                 </div>
               </div>
             </div>
@@ -231,14 +231,14 @@ export function TransactionDetailsModal({
                   Invitation Link
                 </p>
                 <div className="flex items-center gap-2">
-                  <div className="bg-muted/30 flex-1 overflow-hidden rounded-md border px-3 py-2">
+                  <div className="bg-muted/30 hidden flex-1 overflow-hidden rounded-md border px-3 py-2 lg:block">
                     <p className="text-foreground truncate font-mono text-sm">
                       {inviteLink}
                     </p>
                   </div>
                   <Button
                     size="sm"
-                    className="shrink-0 bg-purple-500 hover:bg-purple-600"
+                    className="w-full shrink-0 bg-purple-500 hover:bg-purple-600 lg:w-auto"
                     onClick={() => {
                       navigator.clipboard.writeText(inviteLink);
                       toast.success('Link copied to clipboard!');
@@ -506,7 +506,9 @@ export function TransactionDetailsModal({
                           <div className="relative z-10 mt-2 ml-2 flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-green-500 bg-green-500/10" />
                           <div className="flex-1 pt-0.5">
                             <p className="font-medium">
-                              {participant.participant_name || participant.name}{' '}
+                              {(participant.participant_name ||
+                                participant.name) ??
+                                user.name}{' '}
                               joined
                             </p>
                             <p className="text-muted-foreground text-sm">
