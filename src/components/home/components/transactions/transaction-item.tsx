@@ -1,18 +1,16 @@
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { TransactionStatus } from '@/types/transaction';
 import {
+  Activity,
   AlertCircle,
   CheckCircle2,
   Clock,
-  MoreVertical,
-  XCircle,
-  Activity,
   Shield,
   Users,
+  XCircle,
 } from 'lucide-react';
+import React from 'react';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -46,21 +44,24 @@ const TransactionItem = ({
 }: {
   transaction: {
     id: string;
-    item: string;
-    type: string;
-    amount: number;
+    item_name: string;
+    transaction_type: 'meetup' | 'delivery' | 'online';
+    price: number;
     status: TransactionStatus;
-    date: string;
-    counterparty: string;
+    created_at: string;
+    creator_name: string;
   };
   onClick?: () => void;
 }) => {
   const StatusIcon = statusIcons[transaction.status];
 
-  const handleMoreClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Handle more actions menu
-  };
+  // Format transaction type for display
+  const transactionTypeLabel =
+    transaction.transaction_type === 'meetup'
+      ? 'Meetup'
+      : transaction.transaction_type === 'delivery'
+        ? 'Delivery'
+        : 'Online';
 
   return (
     <div
@@ -78,23 +79,21 @@ const TransactionItem = ({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-medium">{transaction.item}</p>
+            <p className="font-medium">{transaction.item_name}</p>
             <Badge variant="outline" className="text-xs">
-              {transaction.type}
+              {transactionTypeLabel}
             </Badge>
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <span>{transaction.counterparty}</span>
+            <span>{transaction.creator_name}</span>
             <span>•</span>
-            <span>{transaction.date}</span>
+            <span>{new Date(transaction.created_at).toLocaleDateString()}</span>
           </div>
         </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="font-semibold">
-            ${transaction.amount.toLocaleString()}
-          </p>
+          <p className="font-semibold">${transaction.price.toLocaleString()}</p>
           <Badge
             variant="outline"
             className={cn('text-xs', statusColors[transaction.status])}
@@ -102,9 +101,6 @@ const TransactionItem = ({
             {transaction.status}
           </Badge>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleMoreClick}>
-          <MoreVertical className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   );
