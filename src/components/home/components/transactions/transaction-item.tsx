@@ -78,7 +78,11 @@ const TransactionItem = ({
             </Badge>
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <span>{transaction.creator_name}</span>
+            <span>
+              {transaction.transaction_participants.length > 1
+                ? transaction.transaction_participants[1].participant_name
+                : 'N/A'}
+            </span>
             <span>•</span>
             <span>{new Date(transaction.created_at).toLocaleDateString()}</span>
           </div>
@@ -86,7 +90,7 @@ const TransactionItem = ({
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="font-semibold">${transaction.price}</p>
+          <p className="font-semibold">$ {transaction.price ?? 0}</p>
           <Badge
             variant="outline"
             className={cn('text-xs', statusColors[transaction.status])}
