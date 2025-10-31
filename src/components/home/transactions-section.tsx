@@ -32,22 +32,6 @@ import {
   type TransactionFilters,
 } from './components/transactions/filter-dialog';
 
-const transactionVolumeData = [
-  { month: 'Jan', volume: 245, value: 12450 },
-  { month: 'Feb', volume: 312, value: 18720 },
-  { month: 'Mar', volume: 289, value: 15340 },
-  { month: 'Apr', volume: 401, value: 24060 },
-  { month: 'May', volume: 478, value: 28680 },
-  { month: 'Jun', volume: 523, value: 36610 },
-];
-
-const statusDistributionData = [
-  { name: 'Completed', value: 523, color: '#01d06c' },
-  { name: 'Active', value: 45, color: '#3b82f6' },
-  { name: 'Pending', value: 28, color: '#f59e0b' },
-  { name: 'Disputed', value: 4, color: '#ef4444' },
-];
-
 const recentTransactions = [
   {
     id: '1',
@@ -60,7 +44,7 @@ const recentTransactions = [
     item_description: 'Barely used MacBook Pro with AppleCare+ warranty',
     price: 1299,
     meeting_location: 'San Francisco, CA',
-    meeting_time: '2024-10-30T14:00:00Z',
+    meeting_time: '2025-10-30T14:00:00Z',
     delivery_address: null,
     delivery_method: null,
     online_platform: null,
@@ -71,8 +55,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'meetup' as const,
     hash: null,
-    created_at: '2024-10-30T10:00:00Z',
-    updated_at: '2024-10-30T15:00:00Z',
+    created_at: '2025-10-30T10:00:00Z',
+    updated_at: '2025-10-30T15:00:00Z',
   },
   {
     id: '2',
@@ -96,8 +80,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'delivery' as const,
     hash: null,
-    created_at: '2024-10-29T10:00:00Z',
-    updated_at: '2024-10-29T10:00:00Z',
+    created_at: '2025-10-29T10:00:00Z',
+    updated_at: '2025-10-29T10:00:00Z',
   },
   {
     id: '3',
@@ -121,8 +105,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'online' as const,
     hash: null,
-    created_at: '2024-10-28T10:00:00Z',
-    updated_at: '2024-10-28T10:00:00Z',
+    created_at: '2025-10-28T10:00:00Z',
+    updated_at: '2025-10-28T10:00:00Z',
   },
   {
     id: '4',
@@ -135,7 +119,7 @@ const recentTransactions = [
     item_description: 'PlayStation 5 with two controllers',
     price: 450,
     meeting_location: 'Seattle, WA',
-    meeting_time: '2024-10-28T16:00:00Z',
+    meeting_time: '2025-10-28T16:00:00Z',
     delivery_address: null,
     delivery_method: null,
     online_platform: null,
@@ -146,8 +130,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'meetup' as const,
     hash: null,
-    created_at: '2024-10-28T10:00:00Z',
-    updated_at: '2024-10-28T10:00:00Z',
+    created_at: '2025-10-28T10:00:00Z',
+    updated_at: '2025-10-28T10:00:00Z',
   },
   {
     id: '5',
@@ -171,8 +155,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'delivery' as const,
     hash: null,
-    created_at: '2024-10-27T10:00:00Z',
-    updated_at: '2024-10-27T18:00:00Z',
+    created_at: '2025-10-27T10:00:00Z',
+    updated_at: '2025-10-27T18:00:00Z',
   },
   {
     id: '6',
@@ -185,7 +169,7 @@ const recentTransactions = [
     item_description: 'Leica M6 film camera in excellent condition',
     price: 680,
     meeting_location: 'Austin, TX',
-    meeting_time: '2024-10-26T14:00:00Z',
+    meeting_time: '2025-10-26T14:00:00Z',
     delivery_address: null,
     delivery_method: null,
     online_platform: null,
@@ -196,8 +180,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'meetup' as const,
     hash: null,
-    created_at: '2024-10-26T10:00:00Z',
-    updated_at: '2024-10-26T14:00:00Z',
+    created_at: '2025-10-26T10:00:00Z',
+    updated_at: '2025-10-26T14:00:00Z',
   },
   {
     id: '7',
@@ -210,7 +194,7 @@ const recentTransactions = [
     item_description: 'Carbon fiber mountain bike, lightly used',
     price: 1200,
     meeting_location: 'Denver, CO',
-    meeting_time: '2024-10-25T12:00:00Z',
+    meeting_time: '2025-10-25T12:00:00Z',
     delivery_address: null,
     delivery_method: null,
     online_platform: null,
@@ -221,8 +205,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'meetup' as const,
     hash: null,
-    created_at: '2024-10-25T10:00:00Z',
-    updated_at: '2024-10-25T14:00:00Z',
+    created_at: '2025-10-25T10:00:00Z',
+    updated_at: '2025-10-25T14:00:00Z',
   },
   {
     id: '8',
@@ -246,8 +230,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'delivery' as const,
     hash: null,
-    created_at: '2024-10-24T10:00:00Z',
-    updated_at: '2024-10-24T10:00:00Z',
+    created_at: '2025-10-24T10:00:00Z',
+    updated_at: '2025-10-24T10:00:00Z',
   },
   {
     id: '9',
@@ -260,7 +244,7 @@ const recentTransactions = [
     item_description: 'Limited edition Air Jordan 1s, size 10',
     price: 450,
     meeting_location: 'Miami, FL',
-    meeting_time: '2024-10-23T15:00:00Z',
+    meeting_time: '2025-10-23T15:00:00Z',
     delivery_address: null,
     delivery_method: null,
     online_platform: null,
@@ -271,8 +255,8 @@ const recentTransactions = [
     quantity: 1,
     transaction_type: 'meetup' as const,
     hash: null,
-    created_at: '2024-10-23T10:00:00Z',
-    updated_at: '2024-10-23T10:00:00Z',
+    created_at: '2025-10-23T10:00:00Z',
+    updated_at: '2025-10-23T10:00:00Z',
   },
 ];
 
@@ -288,6 +272,78 @@ export default function TransactionsSection() {
     type: 'all',
     dateRange: 'all',
   });
+
+  // Calculate transaction volume data by month
+  const transactionVolumeData = useMemo(() => {
+    const monthlyData = new Map<string, { volume: number; value: number }>();
+
+    recentTransactions.forEach((transaction) => {
+      const date = new Date(transaction.created_at);
+      const monthKey = date.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, { volume: 0, value: 0 });
+      }
+
+      const data = monthlyData.get(monthKey)!;
+      data.volume += 1;
+      data.value += transaction.price;
+    });
+
+    // Get last 6 months
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = date.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      });
+      const monthShort = date.toLocaleDateString('en-US', { month: 'short' });
+
+      months.push({
+        month: monthShort,
+        volume: monthlyData.get(monthKey)?.volume || 0,
+        value: monthlyData.get(monthKey)?.value || 0,
+      });
+    }
+
+    return months;
+  }, []);
+
+  // Calculate status distribution data
+  const statusDistributionData = useMemo(() => {
+    const statusCounts = new Map<TransactionStatus, number>();
+
+    recentTransactions.forEach((transaction) => {
+      const count = statusCounts.get(transaction.status) || 0;
+      statusCounts.set(transaction.status, count + 1);
+    });
+
+    const statusColors: Record<string, string> = {
+      completed: '#01d06c',
+      active: '#3b82f6',
+      pending: '#f59e0b',
+      disputed: '#ef4444',
+      reported: '#f97316',
+      waiting_for_participant: '#a855f7',
+      both_joined: '#06b6d4',
+      screenshots_uploaded: '#10b981',
+      cancelled: '#6b7280',
+    };
+
+    return Array.from(statusCounts.entries())
+      .map(([status, count]) => ({
+        name:
+          status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' '),
+        value: count,
+        color: statusColors[status] || '#6b7280',
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, []);
 
   // Filter and search transactions
   const filteredTransactions = useMemo(() => {
@@ -352,6 +408,25 @@ export default function TransactionsSection() {
     });
   };
 
+  // Calculate total stats from recent transactions
+  const totalVolume = useMemo(() => {
+    const total = recentTransactions.reduce((sum, t) => sum + t.price, 0);
+    return `$${total.toLocaleString()}`;
+  }, []);
+
+  const successRate = useMemo(() => {
+    const completed = recentTransactions.filter(
+      (t) => t.status === 'completed'
+    ).length;
+    const rate = (completed / recentTransactions.length) * 100;
+    return `${rate.toFixed(1)}%`;
+  }, []);
+
+  const activePartners = useMemo(() => {
+    const uniquePartners = new Set(recentTransactions.map((t) => t.creator_id));
+    return uniquePartners.size.toString();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -369,29 +444,29 @@ export default function TransactionsSection() {
         <StatsCard
           Icon={DollarSign}
           title="Total Volume"
-          value="$136,860"
-          description="+20.1% from last month"
+          value={totalVolume}
+          description="Total transaction value"
         />
 
         <StatsCard
           Icon={TrendingUp}
           title="Total Transactions"
-          value="2,248"
-          description="+15.3% from last month"
+          value={recentTransactions.length.toString()}
+          description="All time transactions"
         />
 
         <StatsCard
           Icon={CheckCircle2}
           title="Success Rate"
-          value="98.2%"
-          description="+2.4% improvement"
+          value={successRate}
+          description="Completed transactions"
         />
 
         <StatsCard
           Icon={Users}
           title="Active Partners"
-          value="573"
-          description="-3.2% from last month"
+          value={activePartners}
+          description="Unique transaction partners"
         />
       </div>
 

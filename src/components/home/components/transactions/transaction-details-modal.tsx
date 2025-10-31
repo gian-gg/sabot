@@ -31,32 +31,7 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils/helpers';
-
-interface TransactionDetails {
-  id: string;
-  creator_id: string;
-  creator_name: string;
-  creator_email: string;
-  creator_avatar_url: string | null | undefined;
-  status: TransactionStatus;
-  item_name: string;
-  item_description: string;
-  price: number;
-  meeting_location: string | null | undefined;
-  meeting_time: string | null | undefined;
-  delivery_address: string | null | undefined;
-  delivery_method: string | null | undefined;
-  online_platform: string | null | undefined;
-  online_contact: string | null | undefined;
-  online_instructions: string | null | undefined;
-  category: string;
-  condition: string;
-  quantity: number;
-  transaction_type: 'meetup' | 'delivery' | 'online';
-  hash: string | null | undefined;
-  created_at: string;
-  updated_at: string;
-}
+import type { TransactionDetails } from '@/types/transaction';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -84,30 +59,20 @@ const statusColors: Record<TransactionStatus, string> = {
   cancelled: 'text-gray-500 bg-gray-500/10 border-gray-500/20',
 };
 
-interface TransactionDetailsModalProps {
-  transaction: TransactionDetails | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
 export function TransactionDetailsModal({
   transaction,
   open,
   onOpenChange,
-}: TransactionDetailsModalProps) {
-  const [copiedId, setCopiedId] = useState(false);
+}: {
+  transaction: TransactionDetails | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [isExporting, setIsExporting] = useState(false);
 
   if (!transaction) return null;
 
   const StatusIcon = statusIcons[transaction.status];
-
-  const copyTransactionId = () => {
-    navigator.clipboard.writeText(transaction.id);
-    setCopiedId(true);
-    toast.success('Transaction ID copied to clipboard');
-    setTimeout(() => setCopiedId(false), 2000);
-  };
 
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -121,29 +86,6 @@ export function TransactionDetailsModal({
       setIsExporting(false);
     }
   };
-
-  // Mock timeline data
-  const timeline = [
-    {
-      event: 'Transaction created',
-      date: transaction.created_at,
-      status: 'completed' as const,
-    },
-    {
-      event: 'Participant invited',
-      date: transaction.created_at,
-      status: 'completed' as const,
-    },
-    {
-      event: 'Payment processed',
-      date: transaction.updated_at,
-      status:
-        transaction.status === 'completed'
-          ? ('completed' as const)
-          : ('pending' as const),
-    },
-    { event: 'Item delivered', date: '-', status: 'pending' as const },
-  ];
 
   // Determine transaction type label
   const transactionTypeLabel =

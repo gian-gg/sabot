@@ -61,6 +61,33 @@ export interface DBTransaction {
   updated_at: string;
 }
 
+// for transaction details section
+export interface TransactionDetails {
+  id: string;
+  creator_id: string;
+  creator_name: string;
+  creator_email: string;
+  creator_avatar_url: string | null | undefined;
+  status: TransactionStatus;
+  item_name: string;
+  item_description: string;
+  price: number;
+  meeting_location: string | null | undefined;
+  meeting_time: string | null | undefined;
+  delivery_address: string | null | undefined;
+  delivery_method: string | null | undefined;
+  online_platform: string | null | undefined;
+  online_contact: string | null | undefined;
+  online_instructions: string | null | undefined;
+  category: string;
+  condition: string;
+  quantity: number;
+  transaction_type: 'meetup' | 'delivery' | 'online';
+  hash: string | null | undefined;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TransactionParticipant {
   id: string;
   transaction_id: string;
