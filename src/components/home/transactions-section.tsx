@@ -32,7 +32,9 @@ import {
   type TransactionFilters,
 } from './components/transactions/filter-dialog';
 
-const recentTransactions = [
+import type { TransactionDetails } from '@/types/transaction';
+
+const recentTransactions: TransactionDetails[] = [
   {
     id: '1',
     creator_id: 'user_001',

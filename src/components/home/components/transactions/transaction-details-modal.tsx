@@ -296,12 +296,12 @@ export function TransactionDetailsModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-3 p-4 sm:flex-row">
-            <Button variant="default" className="flex-1" size="lg">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="default" className="flex-1">
               <MessageSquare className="mr-2 h-4 w-4" />
               Contact Counterparty
             </Button>
-            <Button variant="outline" className="flex-1" size="lg">
+            <Button variant="outline" className="flex-1">
               <ExternalLink className="mr-2 h-4 w-4" />
               View on Blockchain
             </Button>
@@ -309,7 +309,6 @@ export function TransactionDetailsModal({
               onClick={handleExportPDF}
               disabled={isExporting}
               variant="outline"
-              size="lg"
             >
               <FileText className="mr-2 h-4 w-4" />
               Export
