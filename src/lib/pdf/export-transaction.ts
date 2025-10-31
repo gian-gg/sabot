@@ -5,22 +5,28 @@ import type { TransactionStatus } from '@/types/transaction';
 
 interface TransactionDetails {
   id: string;
-  type: string;
-  item: string;
-  amount: number;
+  creator_id: string;
+  creator_name: string;
+  creator_email: string;
+  creator_avatar_url: string | null | undefined;
   status: TransactionStatus;
-  date: string;
-  counterparty: string;
-  description?: string;
-  category?: string;
-  location?: string;
-  paymentMethod?: string;
-  escrowStatus?: string;
-  timeline?: {
-    event: string;
-    date: string;
-    status: 'completed' | 'pending' | 'failed';
-  }[];
+  item_name: string;
+  item_description: string;
+  price: number;
+  meeting_location: string | null | undefined;
+  meeting_time: string | null | undefined;
+  delivery_address: string | null | undefined;
+  delivery_method: string | null | undefined;
+  online_platform: string | null | undefined;
+  online_contact: string | null | undefined;
+  online_instructions: string | null | undefined;
+  category: string;
+  condition: string;
+  quantity: number;
+  transaction_type: 'meetup' | 'delivery' | 'online';
+  hash: string | null | undefined;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -73,7 +79,7 @@ export async function exportTransactionToPDF(
     pdf.setFont('Helvetica', 'bold');
     pdf.setFontSize(24);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(transaction.item, margin, currentY);
+    pdf.text(transaction.item_name, margin, currentY);
     currentY += 12;
 
     // Transaction ID
@@ -135,13 +141,13 @@ export async function exportTransactionToPDF(
     pdf.setFont('Helvetica', 'normal');
     pdf.setFontSize(9);
     pdf.setTextColor(100, 100, 100);
-    pdf.text('AMOUNT', margin + 3, currentY + 5);
+    pdf.text('PRICE', margin + 3, currentY + 5);
 
     pdf.setFont('Helvetica', 'bold');
     pdf.setFontSize(18);
     pdf.setTextColor(0, 0, 0);
     pdf.text(
-      `$${transaction.amount.toLocaleString()}`,
+      `$${transaction.price.toLocaleString()}`,
       margin + 3,
       currentY + 15
     );
@@ -171,11 +177,15 @@ export async function exportTransactionToPDF(
     pdf.setFont('Helvetica', 'bold');
     pdf.setFontSize(12);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(transaction.date, margin + detailBoxWidth + 13, currentY + 15);
+    pdf.text(
+      new Date(transaction.created_at).toLocaleDateString(),
+      margin + detailBoxWidth + 13,
+      currentY + 15
+    );
 
     currentY += detailBoxHeight + 5;
 
-    // Counterparty
+    // Creator
     pdf.setFillColor(240, 249, 255);
     pdf.rect(margin, currentY, detailBoxWidth, detailBoxHeight, 'F');
     pdf.setDrawColor(1, 208, 108);
@@ -184,14 +194,21 @@ export async function exportTransactionToPDF(
     pdf.setFont('Helvetica', 'normal');
     pdf.setFontSize(9);
     pdf.setTextColor(100, 100, 100);
-    pdf.text('COUNTERPARTY', margin + 3, currentY + 5);
+    pdf.text('CREATOR', margin + 3, currentY + 5);
 
     pdf.setFont('Helvetica', 'bold');
     pdf.setFontSize(12);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(transaction.counterparty, margin + 3, currentY + 15);
+    pdf.text(transaction.creator_name, margin + 3, currentY + 15);
 
     // Type
+    const typeLabel =
+      transaction.transaction_type === 'meetup'
+        ? 'In-Person Meetup'
+        : transaction.transaction_type === 'delivery'
+          ? 'Delivery'
+          : 'Online Transaction';
+
     pdf.setFillColor(240, 249, 255);
     pdf.rect(
       margin + detailBoxWidth + 10,
@@ -216,17 +233,31 @@ export async function exportTransactionToPDF(
     pdf.setFont('Helvetica', 'bold');
     pdf.setFontSize(12);
     pdf.setTextColor(0, 0, 0);
-    pdf.text(transaction.type, margin + detailBoxWidth + 13, currentY + 15);
+    pdf.text(typeLabel, margin + detailBoxWidth + 13, currentY + 15);
 
     currentY += detailBoxHeight + 15;
 
     checkPageBreak(40);
 
+    // Get location based on transaction type
+    const getLocation = () => {
+      if (transaction.transaction_type === 'meetup')
+        return transaction.meeting_location;
+      if (transaction.transaction_type === 'delivery')
+        return transaction.delivery_address;
+      if (transaction.transaction_type === 'online')
+        return transaction.online_platform;
+      return null;
+    };
+    const location = getLocation();
+
     // Additional Information Section
     if (
-      transaction.description ||
+      transaction.item_description ||
       transaction.category ||
-      transaction.location
+      location ||
+      transaction.condition ||
+      transaction.quantity
     ) {
       pdf.setFont('Helvetica', 'bold');
       pdf.setFontSize(14);
@@ -234,7 +265,7 @@ export async function exportTransactionToPDF(
       pdf.text('Additional Information', margin, currentY);
       currentY += 8;
 
-      if (transaction.description) {
+      if (transaction.item_description) {
         pdf.setFont('Helvetica', 'bold');
         pdf.setFontSize(10);
         pdf.setTextColor(0, 0, 0);
@@ -245,7 +276,7 @@ export async function exportTransactionToPDF(
         pdf.setFontSize(10);
         pdf.setTextColor(60, 60, 60);
         const descLines = pdf.splitTextToSize(
-          transaction.description,
+          transaction.item_description,
           contentWidth
         );
         pdf.text(descLines, margin, currentY);
@@ -267,108 +298,159 @@ export async function exportTransactionToPDF(
         currentY += 8;
       }
 
-      if (transaction.location) {
+      if (transaction.condition) {
         checkPageBreak(10);
         pdf.setFont('Helvetica', 'bold');
         pdf.setFontSize(10);
         pdf.setTextColor(0, 0, 0);
-        pdf.text('Location', margin, currentY);
+        pdf.text('Condition', margin, currentY);
         currentY += 5;
 
         pdf.setFont('Helvetica', 'normal');
         pdf.setFontSize(10);
         pdf.setTextColor(60, 60, 60);
-        pdf.text(transaction.location, margin, currentY);
+        pdf.text(transaction.condition, margin, currentY);
+        currentY += 8;
+      }
+
+      if (transaction.quantity) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Quantity', margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(transaction.quantity.toString(), margin, currentY);
+        currentY += 8;
+      }
+
+      if (location) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        const locationLabel =
+          transaction.transaction_type === 'meetup'
+            ? 'Meeting Location'
+            : transaction.transaction_type === 'delivery'
+              ? 'Delivery Address'
+              : 'Platform';
+        pdf.text(locationLabel, margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(location, margin, currentY);
         currentY += 10;
+      }
+
+      if (
+        transaction.transaction_type === 'meetup' &&
+        transaction.meeting_time
+      ) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Meeting Time', margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(
+          new Date(transaction.meeting_time).toLocaleString(),
+          margin,
+          currentY
+        );
+        currentY += 10;
+      }
+
+      if (
+        transaction.transaction_type === 'delivery' &&
+        transaction.delivery_method
+      ) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Delivery Method', margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(transaction.delivery_method, margin, currentY);
+        currentY += 10;
+      }
+
+      if (
+        transaction.transaction_type === 'online' &&
+        transaction.online_contact
+      ) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Online Contact', margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(transaction.online_contact, margin, currentY);
+        currentY += 10;
+      }
+
+      if (
+        transaction.transaction_type === 'online' &&
+        transaction.online_instructions
+      ) {
+        checkPageBreak(10);
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Instructions', margin, currentY);
+        currentY += 5;
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        const instrLines = pdf.splitTextToSize(
+          transaction.online_instructions,
+          contentWidth
+        );
+        pdf.text(instrLines, margin, currentY);
+        currentY += instrLines.length * 5 + 5;
       }
     }
 
     checkPageBreak(40);
 
-    // Payment & Security Section
-    if (transaction.paymentMethod || transaction.escrowStatus) {
+    // Blockchain Info Section
+    if (transaction.hash) {
       pdf.setFont('Helvetica', 'bold');
       pdf.setFontSize(14);
       pdf.setTextColor(0, 0, 0);
-      pdf.text('Payment & Security', margin, currentY);
+      pdf.text('Blockchain Information', margin, currentY);
       currentY += 8;
 
-      if (transaction.paymentMethod) {
-        pdf.setFont('Helvetica', 'bold');
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text('Payment Method', margin, currentY);
-        currentY += 5;
-
-        pdf.setFont('Helvetica', 'normal');
-        pdf.setFontSize(10);
-        pdf.setTextColor(60, 60, 60);
-        pdf.text(transaction.paymentMethod, margin, currentY);
-        currentY += 8;
-      }
-
-      if (transaction.escrowStatus) {
-        checkPageBreak(10);
-        pdf.setFont('Helvetica', 'bold');
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text('Escrow Status', margin, currentY);
-        currentY += 5;
-
-        pdf.setFont('Helvetica', 'normal');
-        pdf.setFontSize(10);
-        pdf.setTextColor(60, 60, 60);
-        pdf.text(transaction.escrowStatus, margin, currentY);
-        currentY += 10;
-      }
-    }
-
-    checkPageBreak(60);
-
-    // Timeline Section
-    if (transaction.timeline && transaction.timeline.length > 0) {
       pdf.setFont('Helvetica', 'bold');
-      pdf.setFontSize(14);
+      pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
-      pdf.text('Transaction Timeline', margin, currentY);
-      currentY += 10;
-
-      transaction.timeline.forEach((item, index) => {
-        checkPageBreak(15);
-
-        // Status indicator
-        const statusColor =
-          item.status === 'completed'
-            ? [1, 208, 108]
-            : item.status === 'pending'
-              ? [245, 158, 11]
-              : [239, 68, 68];
-
-        pdf.setFillColor(...(statusColor as [number, number, number]));
-        pdf.circle(margin + 3, currentY - 2, 2, 'F');
-
-        // Connect with line (except last item)
-        if (index < transaction.timeline!.length - 1) {
-          pdf.setDrawColor(200, 200, 200);
-          pdf.setLineWidth(0.5);
-          pdf.line(margin + 3, currentY, margin + 3, currentY + 10);
-        }
-
-        // Event text
-        pdf.setFont('Helvetica', 'bold');
-        pdf.setFontSize(10);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(item.event, margin + 10, currentY);
-
-        // Date text
-        pdf.setFont('Helvetica', 'normal');
-        pdf.setFontSize(9);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(item.date, margin + 10, currentY + 4);
-
-        currentY += 12;
-      });
+      pdf.text('Transaction Hash', margin, currentY);
       currentY += 5;
+
+      pdf.setFont('Courier', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(transaction.hash, margin, currentY);
+      currentY += 10;
     }
 
     // Footer
@@ -395,7 +477,7 @@ export async function exportTransactionToPDF(
     pdf.text('Powered by SABOT', pageWidth - margin - 30, footerY + 5);
 
     // Generate filename
-    const sanitizedItemName = transaction.item
+    const sanitizedItemName = transaction.item_name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
       .replace(/-+/g, '-')

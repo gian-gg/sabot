@@ -25,7 +25,7 @@ import { useEffect, useState } from 'react';
 
 export interface TransactionFilters {
   status: TransactionStatus | 'all';
-  type: 'all' | 'Sale' | 'Purchase';
+  type: 'all' | 'meetup' | 'delivery' | 'online';
   dateRange: 'all' | 'today' | 'week' | 'month' | 'year';
   minAmount?: number;
   maxAmount?: number;
@@ -122,7 +122,7 @@ export function FilterDialog({
               onValueChange={(value) =>
                 setLocalFilters({
                   ...localFilters,
-                  type: value as 'all' | 'Sale' | 'Purchase',
+                  type: value as 'all' | 'meetup' | 'delivery' | 'online',
                 })
               }
             >
@@ -131,8 +131,9 @@ export function FilterDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Sale">Sales</SelectItem>
-                <SelectItem value="Purchase">Purchases</SelectItem>
+                <SelectItem value="meetup">In-Person Meetup</SelectItem>
+                <SelectItem value="delivery">Delivery</SelectItem>
+                <SelectItem value="online">Online Transaction</SelectItem>
               </SelectContent>
             </Select>
           </div>
