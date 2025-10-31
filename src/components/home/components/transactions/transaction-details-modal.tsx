@@ -112,6 +112,10 @@ export function TransactionDetailsModal({
 
   const location = getLocation();
 
+  const inviteLink = `${
+    process.env.NEXT_PUBLIC_BASE_URL ?? 'https://sabot-hf.vercel.app'
+  }/transaction/accept?id=${transaction.id}`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-md overflow-y-auto md:min-w-xl lg:min-w-4xl xl:min-w-5xl">
@@ -229,21 +233,14 @@ export function TransactionDetailsModal({
                 <div className="flex items-center gap-2">
                   <div className="bg-muted/30 flex-1 overflow-hidden rounded-md border px-3 py-2">
                     <p className="text-foreground truncate font-mono text-sm">
-                      {process.env.NEXT_PUBLIC_BASE_URL ??
-                        'https://sabot-hf.vercel.app'}
-                      /transaction/accept?id=
-                      {transaction.id}
+                      {inviteLink}
                     </p>
                   </div>
                   <Button
                     size="sm"
                     className="shrink-0 bg-purple-500 hover:bg-purple-600"
                     onClick={() => {
-                      const link = `${
-                        process.env.NEXT_PUBLIC_BASE_URL ??
-                        'https://sabot-hf.vercel.app'
-                      }/transaction/accept?id=${transaction.id}`;
-                      navigator.clipboard.writeText(link);
+                      navigator.clipboard.writeText(inviteLink);
                       toast.success('Link copied to clipboard!');
                     }}
                   >
