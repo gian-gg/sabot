@@ -130,7 +130,10 @@ export default function TransactionsSection({
       const matchesSearch =
         searchQuery === '' ||
         transaction.item_name.toLowerCase().includes(searchLower) ||
-        transaction.creator_name.toLowerCase().includes(searchLower) ||
+        (transaction.transaction_participants.length > 1 &&
+          transaction.transaction_participants[1].participant_name
+            ?.toLowerCase()
+            .includes(searchLower)) ||
         transaction.id.toLowerCase().includes(searchLower);
 
       // Status filter
