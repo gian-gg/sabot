@@ -589,6 +589,90 @@ export async function exportTransactionToPDF(
 
         currentY += 12;
       }
+
+      // Item confirmations
+      const itemConfirmedParticipants =
+        transaction.transaction_participants.filter((p) => p.item_confirmed_at);
+      if (itemConfirmedParticipants.length > 0) {
+        checkPageBreak(12);
+
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+        pdf.setFillColor(1, 208, 108);
+        pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Item Confirmed', margin + 10, currentY);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        const names = itemConfirmedParticipants
+          .map((p) => p.participant_name || p.name || 'Participant')
+          .join(', ');
+        pdf.text(`${names} confirmed item receipt`, margin + 10, currentY + 4);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.setTextColor(120, 120, 120);
+        const firstConfirmation = itemConfirmedParticipants[0];
+        if (firstConfirmation.item_confirmed_at) {
+          pdf.text(
+            new Date(firstConfirmation.item_confirmed_at).toLocaleString(),
+            margin + 10,
+            currentY + 8
+          );
+        }
+
+        currentY += 12;
+      }
+
+      // Payment confirmations
+      const paymentConfirmedParticipants =
+        transaction.transaction_participants.filter(
+          (p) => p.payment_confirmed_at
+        );
+      if (paymentConfirmedParticipants.length > 0) {
+        checkPageBreak(12);
+
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin + 3, currentY - 10, margin + 3, currentY - 2);
+
+        pdf.setFillColor(1, 208, 108);
+        pdf.circle(margin + 3, currentY - 2, 2, 'F');
+
+        pdf.setFont('Helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Payment Confirmed', margin + 10, currentY);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        const names = paymentConfirmedParticipants
+          .map((p) => p.participant_name || p.name || 'Participant')
+          .join(', ');
+        pdf.text(`${names} confirmed payment`, margin + 10, currentY + 4);
+
+        pdf.setFont('Helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.setTextColor(120, 120, 120);
+        const firstConfirmation = paymentConfirmedParticipants[0];
+        if (firstConfirmation.payment_confirmed_at) {
+          pdf.text(
+            new Date(firstConfirmation.payment_confirmed_at).toLocaleString(),
+            margin + 10,
+            currentY + 8
+          );
+        }
+
+        currentY += 12;
+      }
     }
 
     // Status milestone

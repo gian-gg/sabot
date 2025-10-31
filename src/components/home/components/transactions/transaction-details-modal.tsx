@@ -528,7 +528,14 @@ export function TransactionDetailsModal({
                       <div
                         className={cn(
                           'bg-border absolute top-6 left-4 h-full w-px',
-                          transaction.status !== 'completed' && 'hidden'
+                          !transaction.transaction_participants.some(
+                            (p) => p.item_confirmed_at
+                          ) &&
+                            !transaction.transaction_participants.some(
+                              (p) => p.payment_confirmed_at
+                            ) &&
+                            transaction.status !== 'completed' &&
+                            'hidden'
                         )}
                       />
                       <div className="relative z-10 mt-2 ml-2 flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-green-500 bg-green-500/10" />
@@ -542,6 +549,82 @@ export function TransactionDetailsModal({
                           }{' '}
                           of {transaction.transaction_participants.length}{' '}
                           participants
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Item Confirmations */}
+                {transaction.transaction_participants &&
+                  transaction.transaction_participants.some(
+                    (p) => p.item_confirmed_at
+                  ) && (
+                    <div className="relative flex gap-4 pb-4">
+                      <div
+                        className={cn(
+                          'bg-border absolute top-6 left-4 h-full w-px',
+                          !transaction.transaction_participants.some(
+                            (p) => p.payment_confirmed_at
+                          ) &&
+                            transaction.status !== 'completed' &&
+                            'hidden'
+                        )}
+                      />
+                      <div className="relative z-10 mt-2 ml-2 flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-green-500 bg-green-500/10" />
+                      <div className="flex-1 pt-0.5">
+                        <p className="font-medium">Item Confirmed</p>
+                        <p className="text-muted-foreground text-sm">
+                          {transaction.transaction_participants
+                            .filter((p) => p.item_confirmed_at)
+                            .map(
+                              (p) =>
+                                p.participant_name || p.name || 'Participant'
+                            )
+                            .join(', ')}{' '}
+                          confirmed item receipt
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {formatDate(
+                            transaction.transaction_participants.find(
+                              (p) => p.item_confirmed_at
+                            )?.item_confirmed_at || ''
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Payment Confirmations */}
+                {transaction.transaction_participants &&
+                  transaction.transaction_participants.some(
+                    (p) => p.payment_confirmed_at
+                  ) && (
+                    <div className="relative flex gap-4 pb-4">
+                      <div
+                        className={cn(
+                          'bg-border absolute top-6 left-4 h-full w-px',
+                          transaction.status !== 'completed' && 'hidden'
+                        )}
+                      />
+                      <div className="relative z-10 mt-2 ml-2 flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-green-500 bg-green-500/10" />
+                      <div className="flex-1 pt-0.5">
+                        <p className="font-medium">Payment Confirmed</p>
+                        <p className="text-muted-foreground text-sm">
+                          {transaction.transaction_participants
+                            .filter((p) => p.payment_confirmed_at)
+                            .map(
+                              (p) =>
+                                p.participant_name || p.name || 'Participant'
+                            )
+                            .join(', ')}{' '}
+                          confirmed payment
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {formatDate(
+                            transaction.transaction_participants.find(
+                              (p) => p.payment_confirmed_at
+                            )?.payment_confirmed_at || ''
+                          )}
                         </p>
                       </div>
                     </div>
@@ -617,10 +700,18 @@ export function TransactionDetailsModal({
 
             {transaction.status === 'completed' && (
               <>
-                <Button variant="outline" className="flex-1">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View on Blockchain
-                </Button>
+                {transaction.hash && (
+                  <Button variant="outline" className="flex-1" asChild>
+                    <Link
+                      href={`https://sepolia-blockscout.lisk.com/tx/${transaction.hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View on Blockchain
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   onClick={handleExportPDF}
                   disabled={isExporting}
