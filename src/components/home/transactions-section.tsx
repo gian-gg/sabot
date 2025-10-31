@@ -89,7 +89,7 @@ export default function TransactionsSection({
     }
 
     return months;
-  }, []);
+  }, [recentTransactions]);
 
   // Calculate status distribution data
   const statusDistributionData = useMemo(() => {
@@ -120,7 +120,7 @@ export default function TransactionsSection({
         color: statusColors[status] || '#6b7280',
       }))
       .sort((a, b) => b.value - a.value);
-  }, []);
+  }, [recentTransactions]);
 
   // Filter and search transactions
   const filteredTransactions = useMemo(() => {
@@ -157,7 +157,7 @@ export default function TransactionsSection({
         matchesMaxAmount
       );
     });
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters, recentTransactions]);
 
   // Count active filters
   const activeFilterCount = useMemo(() => {
@@ -170,9 +170,7 @@ export default function TransactionsSection({
     return count;
   }, [filters]);
 
-  const handleTransactionClick = (
-    transaction: (typeof recentTransactions)[0]
-  ) => {
+  const handleTransactionClick = (transaction: TransactionDetails) => {
     setSelectedTransaction(transaction);
     setIsDetailsModalOpen(true);
   };
@@ -189,7 +187,7 @@ export default function TransactionsSection({
   const totalVolume = useMemo(() => {
     const total = recentTransactions.reduce((sum, t) => sum + t.price, 0);
     return `$${total.toLocaleString()}`;
-  }, []);
+  }, [recentTransactions]);
 
   const successRate = useMemo(() => {
     const completed = recentTransactions.filter(
@@ -198,12 +196,12 @@ export default function TransactionsSection({
     const rate = (completed / recentTransactions.length) * 100;
 
     return rate ? `${rate.toFixed(1)}%` : '0%';
-  }, []);
+  }, [recentTransactions]);
 
   const activePartners = useMemo(() => {
     const uniquePartners = new Set(recentTransactions.map((t) => t.creator_id));
     return uniquePartners.size.toString();
-  }, []);
+  }, [recentTransactions]);
 
   return (
     <div className="space-y-6">

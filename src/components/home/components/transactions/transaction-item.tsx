@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import React from 'react';
+import type { TransactionDetails } from '@/types/transaction';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -42,15 +43,7 @@ const TransactionItem = ({
   transaction,
   onClick,
 }: {
-  transaction: {
-    id: string;
-    item_name: string;
-    transaction_type: 'meetup' | 'delivery' | 'online';
-    price: number;
-    status: TransactionStatus;
-    created_at: string;
-    creator_name: string;
-  };
+  transaction: TransactionDetails;
   onClick?: () => void;
 }) => {
   const StatusIcon = statusIcons[transaction.status];

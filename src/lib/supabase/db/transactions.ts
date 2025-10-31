@@ -8,17 +8,20 @@ export async function getTransactionDetailsByUserID(
 ): Promise<TransactionDetails[]> {
   const supabase = await createClient();
 
-  console.log('ASDJKHASD' + userId);
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
-    .eq('creator_id', userId)
-    .order('created_at', { ascending: false });
+    .select(
+      `
+      *,
+      transaction_participants (*)
+    `
+    )
+    .eq('creator_id', userId);
 
   if (error) {
-    console.error('Error fetching transactions:', error);
+    console.error('Error fetching transactions with details:', error.message);
     return [];
   }
 
-  return data as TransactionDetails[];
+  return (data as TransactionDetails[]) || [];
 }
