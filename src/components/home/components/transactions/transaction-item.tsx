@@ -93,7 +93,7 @@ const TransactionItem = ({
       </div>
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="font-semibold">${transaction.price.toLocaleString()}</p>
+          <p className="font-semibold">${transaction.price}</p>
           <Badge
             variant="outline"
             className={cn('text-xs', statusColors[transaction.status])}

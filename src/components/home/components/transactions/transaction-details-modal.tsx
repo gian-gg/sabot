@@ -140,9 +140,7 @@ export function TransactionDetailsModal({
                   <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                     Price
                   </p>
-                  <p className="font-bold">
-                    ${transaction.price.toLocaleString()}
-                  </p>
+                  <p className="font-bold">${transaction.price}</p>
                 </div>
               </div>
             </div>
