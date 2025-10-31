@@ -5,7 +5,6 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import {
   getAllUserIds,
-  getEncryptedKey,
   getPublicAddress,
   getTransactionDetails,
   postHashTransaction,
@@ -95,7 +94,28 @@ export async function pushTransactionToBlockchain(
 
     if (!invitedAddress || !creatorAddress) {
       console.error(
-        'pushTransactionToBlockchain: No public address found for invitee or creator'
+        `pushTransactionToBlockchain: No public address found for invitee or creator`
+      );
+      return false;
+    }
+
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      console.error('registerUser: Failed to get user:', error?.message);
+      return false;
+    }
+
+    const userId = user.id;
+
+    if (userId !== creatorUser.user_id) {
+      console.log(
+        `User ${userId} is not the creator of the transaction ${transactionId}, to block duplicate push`
       );
       return false;
     }
@@ -109,7 +129,6 @@ export async function pushTransactionToBlockchain(
       return false;
     }
 
-    // Step 5: Push to blockchain
     console.log(
       `pushTransactionToBlockchain: Sending transaction to blockchain...`
     );
