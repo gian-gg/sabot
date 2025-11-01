@@ -48,7 +48,5 @@ CLAUDE.md
 # prd
 /prd
 
-
-#
-.party/
+# Ignore PartyKit local files
 .partykit/
