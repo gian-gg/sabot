@@ -32,7 +32,10 @@ import { ROUTES } from '@/constants/routes';
 import { createClient } from '@/lib/supabase/client';
 import { mapConditionToOption } from '@/lib/utils/condition-mapping';
 import type { AnalysisData } from '@/types/analysis';
+import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
+import { featureFlags } from '@/lib/config/features';
 import {
+  AlertTriangle,
   Calendar,
   CheckCircle2,
   ChevronLeft,
@@ -86,16 +89,26 @@ interface AnalysisWithSource extends AnalysisData {
 export function CreateTransactionForm({
   transactionId,
   onTransactionCreated,
+  conflictResolution,
+  userId,
+  userName,
 }: {
   transactionId?: string;
   onTransactionCreated?: (id: string) => void;
+  conflictResolution?: ReturnType<typeof useSharedConflictResolution>;
+  userId?: string;
+  userName?: string;
 }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(
+    userId || null
+  );
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
-  const [currentUserName, setCurrentUserName] = useState<string>('You');
+  const [currentUserName, setCurrentUserName] = useState<string>(
+    userName || 'You'
+  );
   const [otherUserName, setOtherUserName] = useState<string>('Other Party');
   const [extractedData, setExtractedData] = useState<AnalysisData | null>(null);
   const [isDataExtracted, setIsDataExtracted] = useState(false);
@@ -103,6 +116,10 @@ export function CreateTransactionForm({
     AnalysisWithSource[]
   >([]);
   const [hasConflicts, setHasConflicts] = useState(false);
+  const [bothPartiesReady, setBothPartiesReady] = useState(false);
+  const [conflictsWereResolved, setConflictsWereResolved] = useState(false);
+  const [analysisCompleted, setAnalysisCompleted] = useState(false);
+  const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
 
   // Scroll to top whenever the step changes
   useEffect(() => {
@@ -110,6 +127,32 @@ export function CreateTransactionForm({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  // Track when current user confirms in conflict resolution
+  useEffect(() => {
+    if (conflictResolution && currentUserId) {
+      const currentUser = conflictResolution.participants.find(
+        (p) => p.id === currentUserId || p.id === userId
+      );
+      if (currentUser) {
+        setCurrentUserConfirmed(currentUser.isReady);
+      }
+    }
+  }, [conflictResolution, currentUserId, userId]);
+
+  // Show warning when other party disconnects
+  useEffect(() => {
+    if (
+      featureFlags.enableDisconnectWarning &&
+      conflictResolution?.otherPartyDisconnected
+    ) {
+      toast.error('Transaction failed: Other party has disconnected', {
+        duration: 10000,
+        description:
+          'The other participant left the transaction. Please try again.',
+      });
+    }
+  }, [conflictResolution?.otherPartyDisconnected]);
 
   // Track which fields are locked individually
   const [fieldLocks, setFieldLocks] = useState({
@@ -504,7 +547,16 @@ export function CreateTransactionForm({
   const handleAnalysisComplete = (
     data: AnalysisData | AnalysisWithSource[]
   ) => {
+    // Only process if we haven't already completed analysis
+    if (analysisCompleted) {
+      console.log('📊 Analysis already processed, skipping');
+      return;
+    }
+
     console.log('📊 Received analysis data:', data);
+
+    // Mark analysis as completed to prevent re-running
+    setAnalysisCompleted(true);
 
     // Check if we received multiple analyses
     if (Array.isArray(data)) {
@@ -527,6 +579,7 @@ export function CreateTransactionForm({
     console.log('✅ Conflicts resolved:', resolvedData);
     setExtractedData(resolvedData);
     setHasConflicts(false);
+    setConflictsWereResolved(true); // Track that conflicts existed and were resolved
     transformExtractedData(resolvedData);
   };
 
@@ -548,11 +601,21 @@ export function CreateTransactionForm({
         // This ensures the analysis can be performed
         return !!transactionId;
       case 2:
-        // Conflict resolution step - only proceed if conflicts are resolved or no conflicts exist
+        // Conflict resolution step - only proceed if both parties have confirmed
         if (hasConflicts) {
-          return false; // Must resolve conflicts first
+          // Check both the state AND the actual participants from conflict resolution
+          const actuallyAllReady =
+            conflictResolution?.allParticipantsReady?.() || false;
+          console.log('[CreateTransactionForm] Step 2 check:', {
+            hasConflicts,
+            bothPartiesReady,
+            actuallyAllReady,
+            participants: conflictResolution?.participants,
+          });
+          return bothPartiesReady || actuallyAllReady; // Use either check
         }
-        return true; // No conflicts or already resolved
+        // If no conflicts, can proceed if we have extracted data
+        return !!extractedData;
       case 3:
         return (
           formData.item_name &&
@@ -640,7 +703,23 @@ export function CreateTransactionForm({
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => {
+      const newStep = prev - 1;
+
+      // Prevent going back to step 1 if user has confirmed (on step 2)
+      if (prev === 2 && newStep === 1 && currentUserConfirmed) {
+        toast.info('Cannot go back after confirming. Please unconfirm first.');
+        return prev; // Stay on current step
+      }
+
+      // Prevent going back to conflict resolution (step 2) if already resolved
+      if (newStep === 2 && conflictsWereResolved) {
+        toast.info('Cannot return to conflict resolution after proceeding');
+        return prev; // Stay on current step
+      }
+
+      return Math.max(newStep, 1);
+    });
   };
 
   const handleSubmit = async () => {
@@ -760,6 +839,10 @@ export function CreateTransactionForm({
             </Alert>
           );
         }
+
+        // Always show ScreenshotAnalysis - it handles its own state
+        // If analysis is completed, it will show the results
+        // If not completed, it will run the analysis
         return (
           <ScreenshotAnalysis
             transactionId={transactionId}
@@ -789,23 +872,32 @@ export function CreateTransactionForm({
         }
 
         // If we have extracted data and no conflicts, show success
-        if (extractedData && !hasConflicts) {
-          return (
-            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800 dark:text-green-200">
-                ✅ Data extracted successfully with no conflicts. Click Next to
-                continue.
-              </AlertDescription>
-            </Alert>
-          );
-        }
+        // if (extractedData && !hasConflicts) {
+        //   return (
+        //     <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+        //       <CheckCircle2 className="h-4 w-4 text-green-600" />
+        //       <AlertDescription className="text-green-800 dark:text-green-200">
+        //         ✅ Data extracted successfully with no conflicts. Click Next to
+        //         continue.
+        //       </AlertDescription>
+        //     </Alert>
+        //   );
+        // }
 
         // Show conflict resolver
         return (
           <DataConflictResolver
             analyses={multipleAnalyses}
             onResolve={handleConflictsResolved}
+            transactionId={transactionId || 'temp-' + Date.now()}
+            userId={
+              currentUserId ||
+              userId ||
+              'tab-' + Math.random().toString(36).slice(2, 9)
+            }
+            userName={currentUserName || userName || 'Guest'}
+            onAllReady={(isReady) => setBothPartiesReady(isReady)}
+            conflictResolution={conflictResolution}
           />
         );
       case 3:
@@ -1970,6 +2062,18 @@ export function CreateTransactionForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 p-8">
+            {/* Disconnect Warning Banner */}
+            {featureFlags.enableDisconnectWarning &&
+              conflictResolution?.otherPartyDisconnected && (
+                <Alert variant="destructive" className="border-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  <AlertDescription className="font-medium">
+                    The other party has disconnected. Please create a new
+                    transaction.
+                  </AlertDescription>
+                </Alert>
+              )}
+
             {renderStepContent()}
 
             {/* Navigation Buttons */}
@@ -1978,7 +2082,11 @@ export function CreateTransactionForm({
                 <Button
                   variant="outline"
                   onClick={handleBack}
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    (currentStep === 2 && currentUserConfirmed) ||
+                    (currentStep === 3 && conflictsWereResolved)
+                  }
                   className="h-11 flex-1"
                   size="lg"
                 >
@@ -1989,7 +2097,11 @@ export function CreateTransactionForm({
               {currentStep < STEPS.length ? (
                 <Button
                   onClick={handleNext}
-                  disabled={!canProceedToNext()}
+                  disabled={
+                    !canProceedToNext() ||
+                    (featureFlags.enableDisconnectWarning &&
+                      conflictResolution?.otherPartyDisconnected)
+                  }
                   className="h-11 flex-1 shadow-md"
                   size="lg"
                 >
@@ -1999,7 +2111,12 @@ export function CreateTransactionForm({
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={!canProceedToNext() || isSubmitting}
+                  disabled={
+                    !canProceedToNext() ||
+                    isSubmitting ||
+                    (featureFlags.enableDisconnectWarning &&
+                      conflictResolution?.otherPartyDisconnected)
+                  }
                   className="h-11 flex-1 shadow-md"
                   size="lg"
                 >
