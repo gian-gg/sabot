@@ -4,7 +4,7 @@ import { onConnect } from 'y-partykit';
 export default class CollaborationServer implements Party.Server {
   constructor(readonly room: Party.Room) {}
 
-  onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
+  onConnect(conn: Party.Connection, _ctx: Party.ConnectionContext) {
     return onConnect(conn, this.room, {
       persist: false,
       callback: {
