@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
-import * as Y from 'yjs';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import {
   Card,
   CardContent,
@@ -12,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users, Wifi, WifiOff } from 'lucide-react';
+import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 
 interface CollaborativeEditorProps {
   documentId: string;
@@ -19,22 +22,27 @@ interface CollaborativeEditorProps {
   userColor?: string;
 }
 
-// Global singleton to prevent multiple instances across hot reloads
-const ydocInstances = new Map<string, Y.Doc>();
-
 export default function CollaborativeEditor({
   documentId,
   userName = 'Anonymous',
   userColor = '#3b82f6',
 }: CollaborativeEditorProps) {
-  // Use singleton pattern for Yjs document
-  const ydoc = useMemo(() => {
-    if (!ydocInstances.has(documentId)) {
-      console.log('📄 Creating new Y.Doc for:', documentId);
-      ydocInstances.set(documentId, new Y.Doc());
-    }
-    return ydocInstances.get(documentId)!;
-  }, [documentId]);
+  // Use the collaboration hook
+  const { ydoc, provider, awareness, isConnected, localUser } =
+    useCollaboration({
+      documentId,
+      enabled: true,
+      user: {
+        name: userName,
+        color: userColor,
+      },
+    });
+
+  // Count connected users from awareness
+  const connectedUsers = useMemo(() => {
+    if (!awareness) return 1;
+    return awareness.getStates().size;
+  }, [awareness]);
 
   // Initialize editor
   const editor = useEditor(
@@ -42,8 +50,15 @@ export default function CollaborativeEditor({
       extensions: [
         StarterKit,
         Collaboration.configure({
-          document: ydoc,
+          document: ydoc ?? undefined,
           field: 'default',
+        }),
+        CollaborationCursor.configure({
+          provider: provider ?? undefined,
+          user: {
+            name: localUser.name,
+            color: localUser.color,
+          },
         }),
       ],
       editorProps: {
@@ -54,7 +69,7 @@ export default function CollaborativeEditor({
       },
       immediatelyRender: false,
     },
-    [userName, userColor, ydoc]
+    [ydoc, provider, localUser]
   );
 
   return (
@@ -70,6 +85,30 @@ export default function CollaborativeEditor({
               </code>
             </CardDescription>
           </div>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant={isConnected ? 'default' : 'secondary'}
+              className="gap-1.5"
+            >
+              {isConnected ? (
+                <>
+                  <Wifi className="size-3" />
+                  Connected
+                </>
+              ) : (
+                <>
+                  <WifiOff className="size-3" />
+                  Connecting...
+                </>
+              )}
+            </Badge>
+            {isConnected && (
+              <Badge variant="outline" className="gap-1.5">
+                <Users className="size-3" />
+                {connectedUsers} {connectedUsers === 1 ? 'user' : 'users'}
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -78,11 +117,16 @@ export default function CollaborativeEditor({
         </div>
         <div className="text-muted-foreground mt-4 space-y-1 text-xs">
           <p>
-            💡 Editor ready for collaboration - connect with PartyKit for
-            real-time sync
+            💡{' '}
+            {isConnected
+              ? 'Connected to PartyKit!'
+              : 'Connecting to PartyKit...'}{' '}
+            Open in multiple tabs to collaborate
           </p>
-          <p>
-            📝 Yjs document is configured and ready for provider integration
+          <p>📝 Changes sync in real-time across all connected users</p>
+          <p className="text-primary">
+            🔍 Status: {isConnected ? '✅ Connected' : '⏳ Connecting'} | Users:{' '}
+            {connectedUsers}
           </p>
         </div>
       </CardContent>
