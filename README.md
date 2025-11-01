@@ -57,16 +57,15 @@
 
 ## 🗺️ Project Overview
 
-This repository, submitted for Cebu Hacktoberfest, features Sabot — a composable platform designed for **peer-to-peer transaction verification**, offering clear transaction lifecycles, invite-and-accept flows, and structured UI primitives that make it easy to extend or re-implement. Acting as a **third-party safety layer**, Sabot ensures verified, transparent, and scam-free online transactions.
+A composable platform designed for **peer-to-peer transaction verification**, offering clear transaction lifecycles, invite-and-accept flows, and structured UI primitives that make it easy to extend or re-implement. Acting as a **third-party safety layer**, Sabot ensures verified, transparent, and scam-free online transactions.
 
-### 🆕 Latest Features
+### ⭐ Features
 
 **🔗 Blockchain Escrow Integration**: Comprehensive smart contract integration for secure fund management  
 **🔮 Oracle Verification System**: Decentralized dispute resolution with oracle-based verification  
 **⚖️ Arbiter Management**: Democratic arbiter selection and dispute resolution workflows  
 **📊 Real-time Status Tracking**: Live updates for escrow status and deliverable tracking  
-**🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection  
-**📱 Interactive Demo**: Comprehensive demo interface showcasing all escrow functionality
+**🛡️ Enhanced Security**: Multi-layer security with access controls and reentrancy protection
 
 ### 📚 Built With
 
@@ -77,8 +76,6 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
   <a href="https://nextjs.org/"><img alt="Next.js" src="https://img.shields.io/badge/Next.js-2B2B2B?logo=nextdotjs&logoColor=white&style=flat" /></a>
   <!-- TypeScript -->
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=flat" /></a>
-  <!-- JavaScript -->
-  <a href="https://developer.mozilla.org/docs/Web/JavaScript"><img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&style=flat" /></a>
   <!-- Ethereum -->
   <a href="https://ethereum.org/"><img alt="Ethereum" src="https://img.shields.io/badge/Ethereum-3C3C3D?logo=ethereum&logoColor=white&style=flat" /></a>
   <!-- Lisk -->
@@ -92,16 +89,6 @@ This repository, submitted for Cebu Hacktoberfest, features Sabot — a composab
   <!-- Google Gemini -->
   <a href="https://gemini.google.com/"><img alt="Google Gemini" src="https://img.shields.io/badge/Google_Gemini-4285F4?logo=googlegemini&logoColor=white&style=flat" /></a>
 </p>
-
-<!-- SCREENSHOTS -->
-
-## 📱 Screenshots & Features
-
-> _For more examples, please refer to the [Documentation](https://www.canva.com/design/DAG1XQBRczA/I1Ty55pcAZTr-qltGVJwlg/edit?utm_content=DAG1XQBRczA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)_
-
-<div align="center">
-
-</div>
 
 <!-- GETTING STARTED -->
 
@@ -124,7 +111,7 @@ git clone https://github.com/gian-gg/sabot.git
 cd sabot
 ```
 
-#### 2. Install Dependencies with Poetry
+#### 2. Install Dependencies with Bun
 
 ```sh
 # Install project dependencies
@@ -185,11 +172,10 @@ Sabot now includes comprehensive blockchain integration for secure escrow manage
 
 All project documentation is available in the [docs](docs) directory. This includes:
 
-- **[User Guide](docs/user-guide)**: Detailed information for end-users on how to use the application.
-- **[Developer Guide](docs/developer-guide)**: Comprehensive guides for developers, covering setup, architecture, and contribution guidelines.
-- **[Architecture](docs/architecture)**: Documentation related to the application's architecture and design.
-- **[API Reference](docs/api-reference)**: Detailed information about the API.
-- **[ADRs](docs/adr)**: Architecture Decision Records.
+- **[Introduction](docs/01-introduction)**: Documnetation related to getting started.
+- **[Architecture](docs/02-architecture)**: Documentation related to the application's architecture and design.
+- **[Developer Guide](docs/03-developer-guide)**: Comprehensive guides for developers, covering setup, architecture, and contribution guidelines.
+- **[User Guide](docs/04-user-guide)**: Detailed information for end-users on how to use the application.
 
 ### 🧪 Testing
 
