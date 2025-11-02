@@ -99,10 +99,34 @@ export function useSharedConflictResolution(
               '[ConflictResolution] Updating selection:',
               message.selection.field
             );
-            setSharedSelections((prev) => ({
-              ...prev,
-              [message.selection!.field]: message.selection!,
-            }));
+            setSharedSelections((prev) => {
+              const existing = prev[message.selection!.field];
+
+              // Only update if incoming message is newer or doesn't exist
+              if (
+                !existing ||
+                message.selection!.timestamp > existing.timestamp
+              ) {
+                console.log(
+                  '[ConflictResolution] Accepting selection:',
+                  message.selection!.field,
+                  'timestamp:',
+                  message.selection!.timestamp
+                );
+                return {
+                  ...prev,
+                  [message.selection!.field]: message.selection!,
+                };
+              }
+
+              // Ignore older selections
+              console.log('[ConflictResolution] Ignoring older selection:', {
+                field: message.selection!.field,
+                existingTimestamp: existing.timestamp,
+                incomingTimestamp: message.selection!.timestamp,
+              });
+              return prev;
+            });
           }
           break;
 
