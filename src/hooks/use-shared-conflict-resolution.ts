@@ -5,6 +5,9 @@ import usePartySocket from 'partysocket/react';
 import type { AnalysisData } from '@/types/analysis';
 import { featureFlags } from '@/lib/config/features';
 import { toast } from 'sonner';
+import { createLogger } from '@/lib/utils/logger';
+
+const logger = createLogger('ConflictResolution');
 
 interface SharedSelection {
   field: keyof AnalysisData;
@@ -55,40 +58,37 @@ export function useSharedConflictResolution(
   // Use message handler callback
   const handleMessage = useCallback(
     (evt: MessageEvent) => {
-      console.log('[ConflictResolution] Received message:', evt.data);
+      logger.log('Received message:', evt.data);
 
       // Convert data to string synchronously if possible
       const data = evt.data;
 
       // Skip if data is Blob - we'll handle string messages only
       if (data instanceof Blob) {
-        console.log('[ConflictResolution] Skipping Blob message');
+        logger.log('Skipping Blob message');
         return;
       }
 
       // Must be a string at this point
       if (typeof data !== 'string') {
-        console.log(
-          '[ConflictResolution] Skipping non-string message:',
-          typeof data
-        );
+        logger.log('Skipping non-string message:', typeof data);
         return;
       }
 
       // Skip empty strings
       if (!data || data.trim() === '') {
-        console.log('[ConflictResolution] Skipping empty message');
+        logger.log('Skipping empty message');
         return;
       }
 
       try {
         const message: ConflictResolutionMessage = JSON.parse(data);
-        console.log('[ConflictResolution] Parsed message:', message);
+        logger.log('Parsed message:', message);
 
         switch (message.type) {
           case 'field_selected':
             if (message.selection) {
-              console.log(
+              logger.log(
                 '[ConflictResolution] Updating selection:',
                 message.selection.field
               );
@@ -103,7 +103,7 @@ export function useSharedConflictResolution(
                     message.selection!.userId > existing.userId);
 
                 if (shouldUpdate) {
-                  console.log(
+                  logger.log(
                     '[ConflictResolution] Accepting selection:',
                     message.selection!.field,
                     'timestamp:',
@@ -118,7 +118,7 @@ export function useSharedConflictResolution(
                 }
 
                 // Ignore older or lower-priority selections
-                console.log('[ConflictResolution] Ignoring selection:', {
+                logger.log('Ignoring selection:', {
                   field: message.selection!.field,
                   existingTimestamp: existing.timestamp,
                   existingUserId: existing.userId,
@@ -132,7 +132,7 @@ export function useSharedConflictResolution(
 
           case 'sync_response':
             if (message.selections) {
-              console.log(
+              logger.log(
                 '[ConflictResolution] Syncing selections:',
                 message.selections
               );
@@ -142,10 +142,7 @@ export function useSharedConflictResolution(
 
           case 'user_joined':
             if (message.userId && message.userName) {
-              console.log(
-                '[ConflictResolution] User joined:',
-                message.userName
-              );
+              logger.log('[ConflictResolution] User joined:', message.userName);
               const { userId: joinedUserId, userName: joinedUserName } =
                 message;
               setParticipants((prev) => {
@@ -165,7 +162,7 @@ export function useSharedConflictResolution(
 
           case 'user_ready':
             if (message.userId && message.isReady !== undefined) {
-              console.log(
+              logger.log(
                 '[ConflictResolution] User ready status:',
                 message.userId,
                 message.isReady
@@ -180,7 +177,7 @@ export function useSharedConflictResolution(
                 const userExists = prev.find((p) => p.id === readyUserId);
 
                 if (!userExists) {
-                  console.log(
+                  logger.log(
                     '[ConflictResolution] User not in participants, adding:',
                     readyUserId
                   );
@@ -201,7 +198,7 @@ export function useSharedConflictResolution(
                     ? { ...p, isReady: readyStatus ?? false }
                     : p
                 );
-                console.log(
+                logger.log(
                   '[ConflictResolution] Updated participants:',
                   updated
                 );
@@ -212,14 +209,12 @@ export function useSharedConflictResolution(
 
           case 'user_left':
             if (message.userId && featureFlags.enableDisconnectWarning) {
-              console.log('[ConflictResolution] User left:', message.userId);
+              logger.log('User left:', message.userId);
               const leftUserId = message.userId;
 
               // Check if it's not the current user who left
               if (leftUserId !== userId) {
-                console.log(
-                  '[ConflictResolution] ⚠️ Other party disconnected!'
-                );
+                logger.log('[ConflictResolution] ⚠️ Other party disconnected!');
                 setOtherPartyDisconnected(true);
               }
 
@@ -231,7 +226,7 @@ export function useSharedConflictResolution(
             break;
 
           case 'room_full':
-            console.log(
+            logger.log(
               '[ConflictResolution] ❌ Room is full:',
               message.message
             );
@@ -243,7 +238,7 @@ export function useSharedConflictResolution(
             break;
         }
       } catch (error) {
-        console.error(
+        logger.error(
           '[ConflictResolution] Parse error:',
           error,
           'Raw data:',
@@ -259,12 +254,12 @@ export function useSharedConflictResolution(
     party: 'collaboration',
     room: `conflict-resolution:${transactionId}`,
     onOpen() {
-      console.log('[ConflictResolution] Connected to PartyKit');
+      logger.log('Connected to PartyKit');
       setIsConnected(true);
 
       // Skip announcing presence if userId is empty (still loading auth)
       if (!userId || userId === '') {
-        console.log(
+        logger.log(
           '[ConflictResolution] Skipping user_joined - userId not ready'
         );
         return;
@@ -274,7 +269,7 @@ export function useSharedConflictResolution(
       setParticipants((prev) => {
         const exists = prev.find((p) => p.id === userId);
         if (exists) return prev;
-        console.log(
+        logger.log(
           '[ConflictResolution] Adding self to participants:',
           userName
         );
@@ -299,7 +294,7 @@ export function useSharedConflictResolution(
     },
     onMessage: handleMessage,
     onClose() {
-      console.log('[ConflictResolution] Disconnected from PartyKit');
+      logger.log('Disconnected from PartyKit');
       setIsConnected(false);
 
       // Remove self from participants (server broadcasts user_left to others)
@@ -308,7 +303,7 @@ export function useSharedConflictResolution(
       // Server will broadcast user_left message to other participants
     },
     onError(error) {
-      console.error('[ConflictResolution] Socket error:', error);
+      logger.error('Socket error:', error);
     },
   });
 
@@ -322,7 +317,7 @@ export function useSharedConflictResolution(
         timestamp: Date.now(),
       };
 
-      console.log(
+      logger.log(
         '[ConflictResolution] Selecting field:',
         field,
         'value:',
@@ -341,7 +336,7 @@ export function useSharedConflictResolution(
             selection.userId > existing.userId);
 
         if (shouldUpdate) {
-          console.log(
+          logger.log(
             '[ConflictResolution] Applying optimistic update for:',
             field
           );
@@ -352,7 +347,7 @@ export function useSharedConflictResolution(
         }
 
         // Don't overwrite higher-priority selection
-        console.warn(
+        logger.warn(
           '[ConflictResolution] Skipping optimistic update - existing selection has priority'
         );
         return prev;
@@ -365,10 +360,10 @@ export function useSharedConflictResolution(
           selection,
         } as ConflictResolutionMessage);
 
-        console.log('[ConflictResolution] Sending message:', message);
+        logger.log('Sending message:', message);
         socket.send(message);
       } else {
-        console.warn('[ConflictResolution] Socket not available');
+        logger.warn('Socket not available');
       }
     },
     [socket, userId, userName]
@@ -398,17 +393,14 @@ export function useSharedConflictResolution(
 
   const setUserReady = useCallback(
     (isReady: boolean) => {
-      console.log('[ConflictResolution] Setting user ready:', userId, isReady);
+      logger.log('Setting user ready:', userId, isReady);
 
       // Update local participant state
       setParticipants((prev) => {
         const updated = prev.map((p) =>
           p.id === userId ? { ...p, isReady } : p
         );
-        console.log(
-          '[ConflictResolution] Updated local participants:',
-          updated
-        );
+        logger.log('[ConflictResolution] Updated local participants:', updated);
         return updated;
       });
 
@@ -419,7 +411,7 @@ export function useSharedConflictResolution(
           userId,
           isReady,
         } as ConflictResolutionMessage);
-        console.log('[ConflictResolution] Broadcasting ready status:', message);
+        logger.log('Broadcasting ready status:', message);
         socket.send(message);
       }
     },
@@ -429,7 +421,7 @@ export function useSharedConflictResolution(
   const allParticipantsReady = useCallback(() => {
     const ready =
       participants.length >= 2 && participants.every((p) => p.isReady);
-    console.log('[ConflictResolution] All ready check:', {
+    logger.log('All ready check:', {
       participantCount: participants.length,
       participants,
       allReady: ready,

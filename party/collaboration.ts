@@ -1,4 +1,5 @@
 import type * as Party from 'partykit/server';
+import { ServerLogger } from '../src/lib/utils/logger';
 import { onConnect } from 'y-partykit';
 
 // Store userId for each connection
@@ -31,6 +32,7 @@ interface RoomState {
 }
 
 export default class CollaborationServer implements Party.Server {
+  private logger = new ServerLogger('PartyKit');
   constructor(readonly room: Party.Room) {}
 
   // Load room state from storage
@@ -52,8 +54,8 @@ export default class CollaborationServer implements Party.Server {
   onConnect(conn: Party.Connection, _ctx: Party.ConnectionContext) {
     // Handle Y.js collaboration for document editing rooms
     if (this.room.id.startsWith('conflict-resolution:')) {
-      console.log(
-        `[PartyKit] User connected to conflict resolution room: ${this.room.id}`
+      this.logger.log(
+        ` User connected to conflict resolution room: ${this.room.id}`
       );
 
       // Count unique users (not connections) in the room
@@ -62,16 +64,14 @@ export default class CollaborationServer implements Party.Server {
       );
       const currentUserCount = uniqueUserIds.size;
 
-      console.log(
-        `[PartyKit] Current unique users in room: ${currentUserCount}`
-      );
+      this.logger.log(` Current unique users in room: ${currentUserCount}`);
 
       // Check if room is full (wait for user_joined message to identify the user)
       // We'll reject in onMessage if needed
       const existingConnectionsCount =
         [...this.room.getConnections()].length - 1; // -1 to exclude current
-      console.log(
-        `[PartyKit] ${existingConnectionsCount} existing connections in room`
+      this.logger.log(
+        ` ${existingConnectionsCount} existing connections in room`
       );
 
       return;
@@ -82,7 +82,7 @@ export default class CollaborationServer implements Party.Server {
       persist: false,
       callback: {
         handler: async () => {
-          console.log(`[PartyKit] User connected to room: ${this.room.id}`);
+          this.logger.log(` User connected to room: ${this.room.id}`);
         },
       },
     });
@@ -91,24 +91,24 @@ export default class CollaborationServer implements Party.Server {
   onClose(connection: Party.Connection) {
     // Handle disconnection for conflict resolution rooms
     if (this.room.id.startsWith('conflict-resolution:')) {
-      console.log(
-        `[PartyKit] User disconnected from conflict resolution room: ${this.room.id}, connection: ${connection.id}`
+      this.logger.log(
+        ` User disconnected from conflict resolution room: ${this.room.id}, connection: ${connection.id}`
       );
 
       // Get user info from connection map
       const userInfo = connectionUserMap.get(connection.id);
 
       if (userInfo) {
-        console.log(
-          `[PartyKit] Scheduling user_left broadcast for user: ${userInfo.userName} (${userInfo.userId})`
+        this.logger.log(
+          ` Scheduling user_left broadcast for user: ${userInfo.userName} (${userInfo.userId})`
         );
 
         // Cancel any existing pending disconnect for this user
         const existingTimeout = pendingDisconnects.get(userInfo.userId);
         if (existingTimeout) {
           clearTimeout(existingTimeout);
-          console.log(
-            `[PartyKit] Cancelled previous disconnect timer for ${userInfo.userName}`
+          this.logger.log(
+            ` Cancelled previous disconnect timer for ${userInfo.userName}`
           );
         }
 
@@ -119,16 +119,16 @@ export default class CollaborationServer implements Party.Server {
           for (const [connId, info] of connectionUserMap.entries()) {
             if (info.userId === userInfo.userId && connId !== connection.id) {
               userReconnected = true;
-              console.log(
-                `[PartyKit] User ${userInfo.userName} reconnected, skipping disconnect notification`
+              this.logger.log(
+                ` User ${userInfo.userName} reconnected, skipping disconnect notification`
               );
               break;
             }
           }
 
           if (!userReconnected) {
-            console.log(
-              `[PartyKit] Broadcasting user_left for user: ${userInfo.userName} (grace period expired)`
+            this.logger.log(
+              ` Broadcasting user_left for user: ${userInfo.userName} (grace period expired)`
             );
             // Broadcast to remaining participants that this user left
             this.room.broadcast(
@@ -149,9 +149,7 @@ export default class CollaborationServer implements Party.Server {
         // Clean up connection map
         connectionUserMap.delete(connection.id);
       } else {
-        console.log(
-          `[PartyKit] No user info found for connection ${connection.id}`
-        );
+        this.logger.log(` No user info found for connection ${connection.id}`);
       }
     }
   }
@@ -159,24 +157,21 @@ export default class CollaborationServer implements Party.Server {
   onMessage(message: string, sender: Party.Connection) {
     // Broadcast custom messages (for conflict resolution)
     if (this.room.id.startsWith('conflict-resolution:')) {
-      console.log(
-        `[PartyKit] Broadcasting message in ${this.room.id}:`,
-        message
-      );
+      this.logger.log(` Broadcasting message in ${this.room.id}:`, message);
 
       try {
         const parsed = JSON.parse(message);
 
         // Handle sync_request - send current state to requester
         if (parsed.type === 'sync_request') {
-          console.log(
-            `[PartyKit] Received sync_request from connection ${sender.id}`
+          this.logger.log(
+            ` Received sync_request from connection ${sender.id}`
           );
 
           // Load current state and send to requester
           this.getState().then((state) => {
-            console.log(
-              `[PartyKit] Sending sync_response with ${Object.keys(state.selections).length} selections`
+            this.logger.log(
+              ` Sending sync_response with ${Object.keys(state.selections).length} selections`
             );
 
             sender.send(
@@ -192,8 +187,8 @@ export default class CollaborationServer implements Party.Server {
 
         // Handle field_selected - persist to storage
         if (parsed.type === 'field_selected' && parsed.selection) {
-          console.log(
-            `[PartyKit] Persisting field selection: ${parsed.selection.field}`
+          this.logger.log(
+            ` Persisting field selection: ${parsed.selection.field}`
           );
 
           // Update state in storage with conflict resolution
@@ -212,15 +207,15 @@ export default class CollaborationServer implements Party.Server {
               state.lastUpdated = Date.now();
 
               this.setState(state).then(() => {
-                console.log(
-                  `[PartyKit] ✅ Persisted selection for field: ${parsed.selection.field}`,
+                this.logger.log(
+                  ` ✅ Persisted selection for field: ${parsed.selection.field}`,
                   `timestamp: ${parsed.selection.timestamp}`,
                   `userId: ${parsed.selection.userId}`
                 );
               });
             } else {
-              console.log(
-                `[PartyKit] Ignoring lower-priority selection for field: ${parsed.selection.field}`,
+              this.logger.log(
+                ` Ignoring lower-priority selection for field: ${parsed.selection.field}`,
                 `existing timestamp: ${existing.timestamp}, userId: ${existing.userId}`,
                 `incoming timestamp: ${parsed.selection.timestamp}, userId: ${parsed.selection.userId}`
               );
@@ -230,8 +225,8 @@ export default class CollaborationServer implements Party.Server {
 
         // Store userId for this connection when they join
         if (parsed.type === 'user_joined' && parsed.userId && parsed.userName) {
-          console.log(
-            `[PartyKit] Storing user info for connection ${sender.id}: ${parsed.userName} (${parsed.userId})`
+          this.logger.log(
+            ` Storing user info for connection ${sender.id}: ${parsed.userName} (${parsed.userId})`
           );
 
           // Check if this user is already in the room (reconnection)
@@ -245,14 +240,14 @@ export default class CollaborationServer implements Party.Server {
           );
           const currentUserCount = uniqueUserIds.size;
 
-          console.log(
-            `[PartyKit] Current user count: ${currentUserCount}, Is reconnection: ${isReconnection}`
+          this.logger.log(
+            ` Current user count: ${currentUserCount}, Is reconnection: ${isReconnection}`
           );
 
           // Reject if room is full and this is a new user
           if (!isReconnection && currentUserCount >= MAX_PARTICIPANTS) {
-            console.log(
-              `[PartyKit] ❌ Room is full (${MAX_PARTICIPANTS} participants max). Rejecting user: ${parsed.userName}`
+            this.logger.log(
+              ` ❌ Room is full (${MAX_PARTICIPANTS} participants max). Rejecting user: ${parsed.userName}`
             );
 
             // Send rejection message to the connecting user
@@ -280,13 +275,13 @@ export default class CollaborationServer implements Party.Server {
           if (pendingTimeout) {
             clearTimeout(pendingTimeout);
             pendingDisconnects.delete(parsed.userId);
-            console.log(
-              `[PartyKit] User ${parsed.userName} reconnected, cancelled disconnect timer`
+            this.logger.log(
+              ` User ${parsed.userName} reconnected, cancelled disconnect timer`
             );
           }
 
-          console.log(
-            `[PartyKit] ✅ User joined successfully, notifying ${[...this.room.getConnections()].length} connections`
+          this.logger.log(
+            ` ✅ User joined successfully, notifying ${[...this.room.getConnections()].length} connections`
           );
         }
       } catch (_e) {
