@@ -17,6 +17,19 @@ export const featureFlags = {
    */
   enableDisconnectWarning:
     process.env.NEXT_PUBLIC_ENABLE_DISCONNECT_WARNING !== 'false',
+
+  /**
+   * Debug Logging
+   *
+   * When enabled, shows detailed console logs for development/debugging.
+   * Should be disabled in production for performance and security.
+   *
+   * Default: false (only in development)
+   * Environment Variable: NEXT_PUBLIC_ENABLE_DEBUG_LOGS
+   */
+  enableDebugLogs:
+    process.env.NEXT_PUBLIC_ENABLE_DEBUG_LOGS === 'true' ||
+    process.env.NODE_ENV === 'development',
 } as const;
 
 /**
