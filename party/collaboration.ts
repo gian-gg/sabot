@@ -162,6 +162,22 @@ export default class CollaborationServer implements Party.Server {
       try {
         const parsed = JSON.parse(message);
 
+        // Handle ping - respond with pong
+        if (parsed.type === 'ping') {
+          sender.send(
+            JSON.stringify({
+              type: 'pong',
+              timestamp: Date.now(),
+            })
+          );
+          return;
+        }
+
+        // Handle pong - don't need to do anything
+        if (parsed.type === 'pong') {
+          return;
+        }
+
         // Handle acknowledgments - just forward to sender
         if (parsed.type === 'ack') {
           // Don't broadcast acks, they're point-to-point
