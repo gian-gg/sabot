@@ -13,6 +13,9 @@ const pendingDisconnects = new Map<string, NodeJS.Timeout>();
 // Grace period for reconnections (milliseconds)
 const RECONNECT_GRACE_PERIOD = 8000; // 8 seconds
 
+// Maximum participants allowed in a conflict resolution room
+const MAX_PARTICIPANTS = 2;
+
 export default class CollaborationServer implements Party.Server {
   constructor(readonly room: Party.Room) {}
 
@@ -23,7 +26,18 @@ export default class CollaborationServer implements Party.Server {
         `[PartyKit] User connected to conflict resolution room: ${this.room.id}`
       );
 
-      // Notify this connection about existing connections
+      // Count unique users (not connections) in the room
+      const uniqueUserIds = new Set(
+        [...connectionUserMap.values()].map((info) => info.userId)
+      );
+      const currentUserCount = uniqueUserIds.size;
+
+      console.log(
+        `[PartyKit] Current unique users in room: ${currentUserCount}`
+      );
+
+      // Check if room is full (wait for user_joined message to identify the user)
+      // We'll reject in onMessage if needed
       const existingConnectionsCount =
         [...this.room.getConnections()].length - 1; // -1 to exclude current
       console.log(
@@ -128,6 +142,43 @@ export default class CollaborationServer implements Party.Server {
           console.log(
             `[PartyKit] Storing user info for connection ${sender.id}: ${parsed.userName} (${parsed.userId})`
           );
+
+          // Check if this user is already in the room (reconnection)
+          const isReconnection = [...connectionUserMap.values()].some(
+            (info) => info.userId === parsed.userId
+          );
+
+          // Count unique users currently in room (excluding this one if new)
+          const uniqueUserIds = new Set(
+            [...connectionUserMap.values()].map((info) => info.userId)
+          );
+          const currentUserCount = uniqueUserIds.size;
+
+          console.log(
+            `[PartyKit] Current user count: ${currentUserCount}, Is reconnection: ${isReconnection}`
+          );
+
+          // Reject if room is full and this is a new user
+          if (!isReconnection && currentUserCount >= MAX_PARTICIPANTS) {
+            console.log(
+              `[PartyKit] ❌ Room is full (${MAX_PARTICIPANTS} participants max). Rejecting user: ${parsed.userName}`
+            );
+
+            // Send rejection message to the connecting user
+            sender.send(
+              JSON.stringify({
+                type: 'room_full',
+                message: `This transaction room is full. Only ${MAX_PARTICIPANTS} participants allowed.`,
+                maxParticipants: MAX_PARTICIPANTS,
+              })
+            );
+
+            // Close the connection
+            sender.close(1008, 'Room is full');
+            return;
+          }
+
+          // Allow connection - store user info
           connectionUserMap.set(sender.id, {
             userId: parsed.userId,
             userName: parsed.userName,
@@ -144,7 +195,7 @@ export default class CollaborationServer implements Party.Server {
           }
 
           console.log(
-            `[PartyKit] User joined, notifying ${[...this.room.getConnections()].length} connections`
+            `[PartyKit] ✅ User joined successfully, notifying ${[...this.room.getConnections()].length} connections`
           );
         }
       } catch (_e) {
