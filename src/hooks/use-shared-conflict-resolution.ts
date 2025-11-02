@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import usePartySocket from 'partysocket/react';
 import type { AnalysisData } from '@/types/analysis';
 import { featureFlags } from '@/lib/config/features';
+import { toast } from 'sonner';
 
 interface SharedSelection {
   field: keyof AnalysisData;
@@ -20,12 +21,15 @@ interface ConflictResolutionMessage {
     | 'sync_response'
     | 'user_joined'
     | 'user_ready'
-    | 'user_left';
+    | 'user_left'
+    | 'room_full';
   selection?: SharedSelection;
   selections?: Record<string, SharedSelection>;
   userId?: string;
   userName?: string;
   isReady?: boolean;
+  message?: string;
+  maxParticipants?: number;
 }
 
 interface Participant {
@@ -220,6 +224,15 @@ export function useSharedConflictResolution(
             // Remove user from participants
             setParticipants((prev) => prev.filter((p) => p.id !== leftUserId));
           }
+          break;
+
+        case 'room_full':
+          console.log('[ConflictResolution] ❌ Room is full:', message.message);
+          toast.error(message.message || 'This transaction room is full.', {
+            duration: 10000,
+            description: `Maximum ${message.maxParticipants || 2} participants allowed per transaction.`,
+          });
+          // Connection will be closed by server
           break;
       }
     } catch (error) {
