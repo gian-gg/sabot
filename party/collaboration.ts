@@ -16,8 +16,38 @@ const RECONNECT_GRACE_PERIOD = 8000; // 8 seconds
 // Maximum participants allowed in a conflict resolution room
 const MAX_PARTICIPANTS = 2;
 
+// Types for state persistence
+interface SharedSelection {
+  field: string;
+  value: unknown;
+  userId: string;
+  userName: string;
+  timestamp: number;
+}
+
+interface RoomState {
+  selections: Record<string, SharedSelection>;
+  lastUpdated: number;
+}
+
 export default class CollaborationServer implements Party.Server {
   constructor(readonly room: Party.Room) {}
+
+  // Load room state from storage
+  async getState(): Promise<RoomState> {
+    const stored = await this.room.storage.get<RoomState>('state');
+    return (
+      stored || {
+        selections: {},
+        lastUpdated: Date.now(),
+      }
+    );
+  }
+
+  // Save room state to storage
+  async setState(state: RoomState): Promise<void> {
+    await this.room.storage.put('state', state);
+  }
 
   onConnect(conn: Party.Connection, _ctx: Party.ConnectionContext) {
     // Handle Y.js collaboration for document editing rooms
@@ -136,6 +166,57 @@ export default class CollaborationServer implements Party.Server {
 
       try {
         const parsed = JSON.parse(message);
+
+        // Handle sync_request - send current state to requester
+        if (parsed.type === 'sync_request') {
+          console.log(
+            `[PartyKit] Received sync_request from connection ${sender.id}`
+          );
+
+          // Load current state and send to requester
+          this.getState().then((state) => {
+            console.log(
+              `[PartyKit] Sending sync_response with ${Object.keys(state.selections).length} selections`
+            );
+
+            sender.send(
+              JSON.stringify({
+                type: 'sync_response',
+                selections: state.selections,
+              })
+            );
+          });
+
+          return; // Don't broadcast sync_request
+        }
+
+        // Handle field_selected - persist to storage
+        if (parsed.type === 'field_selected' && parsed.selection) {
+          console.log(
+            `[PartyKit] Persisting field selection: ${parsed.selection.field}`
+          );
+
+          // Update state in storage
+          this.getState().then((state) => {
+            const existing = state.selections[parsed.selection.field];
+
+            // Only update if incoming message is newer or doesn't exist
+            if (!existing || parsed.selection.timestamp > existing.timestamp) {
+              state.selections[parsed.selection.field] = parsed.selection;
+              state.lastUpdated = Date.now();
+
+              this.setState(state).then(() => {
+                console.log(
+                  `[PartyKit] ✅ Persisted selection for field: ${parsed.selection.field}`
+                );
+              });
+            } else {
+              console.log(
+                `[PartyKit] Ignoring older selection for field: ${parsed.selection.field}`
+              );
+            }
+          });
+        }
 
         // Store userId for this connection when they join
         if (parsed.type === 'user_joined' && parsed.userId && parsed.userName) {
