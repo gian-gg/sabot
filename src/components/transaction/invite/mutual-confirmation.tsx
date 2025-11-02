@@ -23,6 +23,7 @@ interface MutualConfirmationProps {
   onConfirm: (isReady: boolean) => void;
   onAllReady?: (isReady: boolean) => void;
   onRetryConnection?: () => void;
+  otherPartyDisconnected?: boolean;
 }
 
 export function MutualConfirmation({
@@ -33,6 +34,7 @@ export function MutualConfirmation({
   onConfirm,
   onAllReady,
   onRetryConnection,
+  otherPartyDisconnected = false,
 }: MutualConfirmationProps) {
   const [isCurrentUserReady, setIsCurrentUserReady] = useState(false);
   const [showUnconfirmDialog, setShowUnconfirmDialog] = useState(false);
@@ -86,10 +88,10 @@ export function MutualConfirmation({
   return (
     <>
       <div className="space-y-3">
-        {/* Sync Status Indicator */}
+        {/* Sync Status Indicator with Retry Button */}
         <div className="border-muted bg-muted/20 flex items-center justify-between rounded-lg border px-3 py-2">
           <div className="flex items-center gap-2 text-sm">
-            {isConnected ? (
+            {isConnected && !otherPartyDisconnected ? (
               <>
                 <div className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-muted-foreground">
@@ -104,8 +106,7 @@ export function MutualConfirmation({
             )}
           </div>
 
-          {/* Retry Connection Button */}
-          {!isConnected && (
+          {!isConnected && !otherPartyDisconnected && (
             <Button
               variant="ghost"
               size="sm"
@@ -120,19 +121,6 @@ export function MutualConfirmation({
             </Button>
           )}
         </div>
-
-        {/* Connection Warning */}
-        {!isConnected && (
-          <div className="bg-destructive/10 border-destructive/50 text-destructive flex items-start gap-2 rounded-lg border p-3 text-sm">
-            <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
-            <div>
-              <p className="font-medium">Connection lost</p>
-              <p className="text-destructive/80 text-xs">
-                Changes won&apos;`t sync until connection is restored
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Participant Status */}
         <div className="border-muted bg-muted/20 rounded-lg border p-3">
@@ -166,7 +154,7 @@ export function MutualConfirmation({
         {!isCurrentUserReady ? (
           <Button
             onClick={handleConfirm}
-            disabled={!canProceed || !isConnected}
+            disabled={!canProceed || !isConnected || otherPartyDisconnected}
             className="w-full"
             size="lg"
           >
@@ -177,7 +165,7 @@ export function MutualConfirmation({
           <Button
             variant="outline"
             onClick={handleUnconfirmClick}
-            disabled={!isConnected}
+            disabled={!isConnected || otherPartyDisconnected}
             className="w-full"
             size="lg"
           >

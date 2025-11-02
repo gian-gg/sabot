@@ -49,6 +49,7 @@ import {
   Shield,
   Truck,
   Unlock,
+  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -2062,17 +2063,58 @@ export function CreateTransactionForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 p-8">
-            {/* Disconnect Warning Banner */}
-            {featureFlags.enableDisconnectWarning &&
-              conflictResolution?.otherPartyDisconnected && (
-                <Alert variant="destructive" className="border-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  <AlertDescription className="font-medium">
-                    The other party has disconnected. Please create a new
-                    transaction.
-                  </AlertDescription>
-                </Alert>
-              )}
+            {/* Collaboration Status Header */}
+            {featureFlags.enableDisconnectWarning && conflictResolution && (
+              <div
+                className={`flex items-center justify-between rounded-lg border p-3 ${
+                  conflictResolution.otherPartyDisconnected
+                    ? 'border-red-500/30 bg-red-900/20'
+                    : conflictResolution.isConnected
+                      ? 'border-blue-500/30 bg-blue-900/20'
+                      : 'border-yellow-500/30 bg-yellow-900/20'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Users
+                    className={`h-4 w-4 ${
+                      conflictResolution.otherPartyDisconnected
+                        ? 'text-red-400'
+                        : conflictResolution.isConnected
+                          ? 'text-blue-400'
+                          : 'text-yellow-400'
+                    }`}
+                  />
+                  <span
+                    className={`text-sm font-medium ${
+                      conflictResolution.otherPartyDisconnected
+                        ? 'text-red-200'
+                        : conflictResolution.isConnected
+                          ? 'text-blue-200'
+                          : 'text-yellow-200'
+                    }`}
+                  >
+                    {conflictResolution.otherPartyDisconnected
+                      ? 'Other party disconnected'
+                      : conflictResolution.isConnected
+                        ? 'Live Collaboration'
+                        : 'Connecting...'}
+                  </span>
+                </div>
+                {conflictResolution.isConnected &&
+                  !conflictResolution.otherPartyDisconnected && (
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+                      <span className="text-xs text-green-300">Connected</span>
+                    </div>
+                  )}
+                {conflictResolution.otherPartyDisconnected && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-red-400" />
+                    <span className="text-xs text-red-300">Disconnected</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {renderStepContent()}
 

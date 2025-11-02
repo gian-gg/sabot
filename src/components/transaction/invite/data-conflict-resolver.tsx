@@ -408,22 +408,6 @@ export function DataConflictResolver({
 
   return (
     <div className="space-y-6">
-      {/* Collaboration Status Header */}
-      <div className="flex items-center justify-between rounded-lg border border-blue-500/30 bg-blue-900/20 p-3">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-blue-400" />
-          <span className="text-sm font-medium text-blue-200">
-            {isConnected ? 'Live Collaboration' : 'Connecting...'}
-          </span>
-        </div>
-        {isConnected && (
-          <div className="flex items-center gap-1">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            <span className="text-xs text-green-300">Connected</span>
-          </div>
-        )}
-      </div>
-
       {/* Header */}
       <Alert>
         <AlertTriangle className="h-4 w-4" />
@@ -623,6 +607,9 @@ export function DataConflictResolver({
               window.location.reload();
             }
           }}
+          otherPartyDisconnected={
+            externalConflictResolution?.otherPartyDisconnected
+          }
         />
       </div>
 
