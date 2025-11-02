@@ -7,6 +7,7 @@ import type { AnalysisData } from '@/types/analysis';
 import { featureFlags } from '@/lib/config/features';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/utils/logger';
+import { parseAndValidateMessage } from '@/lib/utils/message-validation';
 
 const logger = createLogger('ConflictResolution');
 
@@ -250,216 +251,206 @@ export function useSharedConflictResolution(
         return;
       }
 
-      try {
-        const message: ConflictResolutionMessage = JSON.parse(data);
-        logger.log('Parsed message:', message);
+      // Parse and validate message
+      const validation = parseAndValidateMessage(data);
 
-        // Handle ping - respond with pong
-        if (message.type === 'ping') {
-          const socket = socketRef.current;
-          if (socket) {
-            socket.send(
-              JSON.stringify({
-                type: 'pong',
-                timestamp: Date.now(),
-              } as ConflictResolutionMessage)
-            );
-          }
-          return;
-        }
+      if (!validation.valid) {
+        logger.error('Invalid message received:', validation.error);
+        return; // Silently ignore malformed messages
+      }
 
-        // Handle pong - update last received time
-        if (message.type === 'pong') {
-          logger.log('Received pong');
-          lastPongReceivedRef.current = Date.now();
-          return;
-        }
+      const message = validation.message as ConflictResolutionMessage;
+      logger.log('Parsed message:', message);
 
-        // Handle acknowledgments
-        if (message.type === 'ack' && message.ackFor) {
-          logger.log('Received ACK for message:', message.ackFor);
-
-          // Clear pending message and timeout
-          pendingMessagesRef.current.delete(message.ackFor);
-
-          const timeout = ackTimeoutRef.current.get(message.ackFor);
-          if (timeout) {
-            clearTimeout(timeout);
-            ackTimeoutRef.current.delete(message.ackFor);
-          }
-
-          return; // Don't process ack further
-        }
-
-        // Send acknowledgment for messages that have messageId
-        if (message.messageId && socketRef.current) {
-          socketRef.current.send(
+      // Handle ping - respond with pong
+      if (message.type === 'ping') {
+        const socket = socketRef.current;
+        if (socket) {
+          socket.send(
             JSON.stringify({
-              type: 'ack',
-              ackFor: message.messageId,
+              type: 'pong',
+              timestamp: Date.now(),
             } as ConflictResolutionMessage)
           );
         }
+        return;
+      }
 
-        switch (message.type) {
-          case 'field_selected':
-            if (message.selection) {
-              logger.log(
-                '[ConflictResolution] Updating selection:',
-                message.selection.field
-              );
-              setSharedSelections((prev) => {
-                const existing = prev[message.selection!.field];
+      // Handle pong - update last received time
+      if (message.type === 'pong') {
+        logger.log('Received pong');
+        lastPongReceivedRef.current = Date.now();
+        return;
+      }
 
-                // Conflict resolution: timestamp + userId tiebreaker
-                const shouldUpdate =
-                  !existing ||
-                  message.selection!.timestamp > existing.timestamp ||
-                  (message.selection!.timestamp === existing.timestamp &&
-                    message.selection!.userId > existing.userId);
+      // Handle acknowledgments
+      if (message.type === 'ack' && message.ackFor) {
+        logger.log('Received ACK for message:', message.ackFor);
 
-                if (shouldUpdate) {
-                  logger.log(
-                    '[ConflictResolution] Accepting selection:',
-                    message.selection!.field,
-                    'timestamp:',
-                    message.selection!.timestamp,
-                    'userId:',
-                    message.selection!.userId
-                  );
-                  return {
-                    ...prev,
-                    [message.selection!.field]: message.selection!,
-                  };
-                }
+        // Clear pending message and timeout
+        pendingMessagesRef.current.delete(message.ackFor);
 
-                // Ignore older or lower-priority selections
-                logger.log('Ignoring selection:', {
-                  field: message.selection!.field,
-                  existingTimestamp: existing.timestamp,
-                  existingUserId: existing.userId,
-                  incomingTimestamp: message.selection!.timestamp,
-                  incomingUserId: message.selection!.userId,
-                });
-                return prev;
+        const timeout = ackTimeoutRef.current.get(message.ackFor);
+        if (timeout) {
+          clearTimeout(timeout);
+          ackTimeoutRef.current.delete(message.ackFor);
+        }
+
+        return; // Don't process ack further
+      }
+
+      // Send acknowledgment for messages that have messageId
+      if (message.messageId && socketRef.current) {
+        socketRef.current.send(
+          JSON.stringify({
+            type: 'ack',
+            ackFor: message.messageId,
+          } as ConflictResolutionMessage)
+        );
+      }
+
+      switch (message.type) {
+        case 'field_selected':
+          if (message.selection) {
+            logger.log(
+              '[ConflictResolution] Updating selection:',
+              message.selection.field
+            );
+            setSharedSelections((prev) => {
+              const existing = prev[message.selection!.field];
+
+              // Conflict resolution: timestamp + userId tiebreaker
+              const shouldUpdate =
+                !existing ||
+                message.selection!.timestamp > existing.timestamp ||
+                (message.selection!.timestamp === existing.timestamp &&
+                  message.selection!.userId > existing.userId);
+
+              if (shouldUpdate) {
+                logger.log(
+                  '[ConflictResolution] Accepting selection:',
+                  message.selection!.field,
+                  'timestamp:',
+                  message.selection!.timestamp,
+                  'userId:',
+                  message.selection!.userId
+                );
+                return {
+                  ...prev,
+                  [message.selection!.field]: message.selection!,
+                };
+              }
+
+              // Ignore older or lower-priority selections
+              logger.log('Ignoring selection:', {
+                field: message.selection!.field,
+                existingTimestamp: existing.timestamp,
+                existingUserId: existing.userId,
+                incomingTimestamp: message.selection!.timestamp,
+                incomingUserId: message.selection!.userId,
               });
-            }
-            break;
+              return prev;
+            });
+          }
+          break;
 
-          case 'sync_response':
-            if (message.selections) {
-              logger.log(
-                '[ConflictResolution] Syncing selections:',
-                message.selections
-              );
-              setSharedSelections(message.selections);
-            }
-            break;
+        case 'sync_response':
+          if (message.selections) {
+            logger.log(
+              '[ConflictResolution] Syncing selections:',
+              message.selections
+            );
+            setSharedSelections(message.selections);
+          }
+          break;
 
-          case 'user_joined':
-            if (message.userId && message.userName) {
-              logger.log('[ConflictResolution] User joined:', message.userName);
-              const { userId: joinedUserId, userName: joinedUserName } =
-                message;
-              setParticipants((prev) => {
-                const exists = prev.find((p) => p.id === joinedUserId);
-                if (exists) return prev;
+        case 'user_joined':
+          if (message.userId && message.userName) {
+            logger.log('[ConflictResolution] User joined:', message.userName);
+            const { userId: joinedUserId, userName: joinedUserName } = message;
+            setParticipants((prev) => {
+              const exists = prev.find((p) => p.id === joinedUserId);
+              if (exists) return prev;
+              return [
+                ...prev,
+                {
+                  id: joinedUserId,
+                  name: joinedUserName,
+                  isReady: false,
+                },
+              ];
+            });
+          }
+          break;
+
+        case 'user_ready':
+          if (message.userId && message.isReady !== undefined) {
+            logger.log(
+              '[ConflictResolution] User ready status:',
+              message.userId,
+              message.isReady
+            );
+            const {
+              userId: readyUserId,
+              userName: readyUserName,
+              isReady: readyStatus,
+            } = message;
+            setParticipants((prev) => {
+              // Check if user exists in participants
+              const userExists = prev.find((p) => p.id === readyUserId);
+
+              if (!userExists) {
+                logger.log(
+                  '[ConflictResolution] User not in participants, adding:',
+                  readyUserId
+                );
+                // Add the user if they don't exist
                 return [
                   ...prev,
                   {
-                    id: joinedUserId,
-                    name: joinedUserName,
-                    isReady: false,
+                    id: readyUserId,
+                    name: readyUserName ?? 'Other party',
+                    isReady: readyStatus ?? false,
                   },
                 ];
-              });
-            }
-            break;
-
-          case 'user_ready':
-            if (message.userId && message.isReady !== undefined) {
-              logger.log(
-                '[ConflictResolution] User ready status:',
-                message.userId,
-                message.isReady
-              );
-              const {
-                userId: readyUserId,
-                userName: readyUserName,
-                isReady: readyStatus,
-              } = message;
-              setParticipants((prev) => {
-                // Check if user exists in participants
-                const userExists = prev.find((p) => p.id === readyUserId);
-
-                if (!userExists) {
-                  logger.log(
-                    '[ConflictResolution] User not in participants, adding:',
-                    readyUserId
-                  );
-                  // Add the user if they don't exist
-                  return [
-                    ...prev,
-                    {
-                      id: readyUserId,
-                      name: readyUserName ?? 'Other party',
-                      isReady: readyStatus ?? false,
-                    },
-                  ];
-                }
-
-                // Update existing user
-                const updated = prev.map((p) =>
-                  p.id === readyUserId
-                    ? { ...p, isReady: readyStatus ?? false }
-                    : p
-                );
-                logger.log(
-                  '[ConflictResolution] Updated participants:',
-                  updated
-                );
-                return updated;
-              });
-            }
-            break;
-
-          case 'user_left':
-            if (message.userId && featureFlags.enableDisconnectWarning) {
-              logger.log('User left:', message.userId);
-              const leftUserId = message.userId;
-
-              // Check if it's not the current user who left
-              if (leftUserId !== userId) {
-                logger.log('[ConflictResolution] ⚠️ Other party disconnected!');
-                setOtherPartyDisconnected(true);
               }
 
-              // Remove user from participants
-              setParticipants((prev) =>
-                prev.filter((p) => p.id !== leftUserId)
+              // Update existing user
+              const updated = prev.map((p) =>
+                p.id === readyUserId
+                  ? { ...p, isReady: readyStatus ?? false }
+                  : p
               );
-            }
-            break;
-
-          case 'room_full':
-            logger.log(
-              '[ConflictResolution] ❌ Room is full:',
-              message.message
-            );
-            toast.error(message.message || 'This transaction room is full.', {
-              duration: 10000,
-              description: `Maximum ${message.maxParticipants || 2} participants allowed per transaction.`,
+              logger.log('[ConflictResolution] Updated participants:', updated);
+              return updated;
             });
-            // Connection will be closed by server
-            break;
-        }
-      } catch (error) {
-        logger.error(
-          '[ConflictResolution] Parse error:',
-          error,
-          'Raw data:',
-          data
-        );
+          }
+          break;
+
+        case 'user_left':
+          if (message.userId && featureFlags.enableDisconnectWarning) {
+            logger.log('User left:', message.userId);
+            const leftUserId = message.userId;
+
+            // Check if it's not the current user who left
+            if (leftUserId !== userId) {
+              logger.log('[ConflictResolution] ⚠️ Other party disconnected!');
+              setOtherPartyDisconnected(true);
+            }
+
+            // Remove user from participants
+            setParticipants((prev) => prev.filter((p) => p.id !== leftUserId));
+          }
+          break;
+
+        case 'room_full':
+          logger.log('[ConflictResolution] ❌ Room is full:', message.message);
+          toast.error(message.message || 'This transaction room is full.', {
+            duration: 10000,
+            description: `Maximum ${message.maxParticipants || 2} participants allowed per transaction.`,
+          });
+          // Connection will be closed by server
+          break;
       }
     },
     [userId]

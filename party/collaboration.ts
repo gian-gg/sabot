@@ -2,6 +2,20 @@ import type * as Party from 'partykit/server';
 import { ServerLogger } from '../src/lib/utils/logger';
 import { onConnect } from 'y-partykit';
 
+// Valid message types for server-side validation
+const VALID_MESSAGE_TYPES = [
+  'field_selected',
+  'sync_request',
+  'sync_response',
+  'user_joined',
+  'user_ready',
+  'user_left',
+  'room_full',
+  'ack',
+  'ping',
+  'pong',
+] as const;
+
 // Store userId for each connection
 const connectionUserMap = new Map<
   string,
@@ -33,6 +47,7 @@ interface RoomState {
 
 export default class CollaborationServer implements Party.Server {
   private logger = new ServerLogger('PartyKit');
+
   constructor(readonly room: Party.Room) {}
 
   // Load room state from storage
@@ -159,165 +174,187 @@ export default class CollaborationServer implements Party.Server {
     if (this.room.id.startsWith('conflict-resolution:')) {
       this.logger.log(` Broadcasting message in ${this.room.id}:`, message);
 
+      let parsed: unknown;
+
       try {
-        const parsed = JSON.parse(message);
+        parsed = JSON.parse(message);
+      } catch (_error) {
+        this.logger.log(` Invalid JSON, ignoring message`);
+        return;
+      }
 
-        // Handle ping - respond with pong
-        if (parsed.type === 'ping') {
+      // Validate message structure
+      if (!parsed || typeof parsed !== 'object') {
+        this.logger.log(` Invalid message structure, ignoring`);
+        return;
+      }
+
+      const msg = parsed as Record<string, unknown>;
+
+      // Validate message type
+      if (!msg.type || typeof msg.type !== 'string') {
+        this.logger.log(` Message missing type field, ignoring`);
+        return;
+      }
+
+      if (
+        !VALID_MESSAGE_TYPES.includes(
+          msg.type as (typeof VALID_MESSAGE_TYPES)[number]
+        )
+      ) {
+        this.logger.log(` Invalid message type: ${msg.type}, ignoring`);
+        return;
+      }
+
+      // Handle ping - respond with pong
+      if (msg.type === 'ping') {
+        sender.send(
+          JSON.stringify({
+            type: 'pong',
+            timestamp: Date.now(),
+          })
+        );
+        return;
+      }
+
+      // Handle pong - don't need to do anything
+      if (msg.type === 'pong') {
+        return;
+      }
+
+      // Handle acknowledgments - just forward to sender
+      if (msg.type === 'ack') {
+        // Don't broadcast acks, they're point-to-point
+        return;
+      }
+
+      // Send acknowledgment back to sender for messages with messageId
+      if (msg.messageId) {
+        sender.send(
+          JSON.stringify({
+            type: 'ack',
+            ackFor: msg.messageId,
+          })
+        );
+      }
+
+      // Handle sync_request - send current state to requester
+      if (msg.type === 'sync_request') {
+        this.logger.log(` Received sync_request from connection ${sender.id}`);
+
+        // Load current state and send to requester
+        this.getState().then((state) => {
+          this.logger.log(
+            ` Sending sync_response with ${Object.keys(state.selections).length} selections`
+          );
+
           sender.send(
             JSON.stringify({
-              type: 'pong',
-              timestamp: Date.now(),
+              type: 'sync_response',
+              selections: state.selections,
             })
           );
-          return;
-        }
+        });
 
-        // Handle pong - don't need to do anything
-        if (parsed.type === 'pong') {
-          return;
-        }
+        return; // Don't broadcast sync_request
+      }
 
-        // Handle acknowledgments - just forward to sender
-        if (parsed.type === 'ack') {
-          // Don't broadcast acks, they're point-to-point
-          return;
-        }
+      // Handle field_selected - persist to storage
+      if (msg.type === 'field_selected' && msg.selection) {
+        this.logger.log(` Persisting field selection: ${msg.selection.field}`);
 
-        // Send acknowledgment back to sender for messages with messageId
-        if (parsed.messageId) {
-          sender.send(
-            JSON.stringify({
-              type: 'ack',
-              ackFor: parsed.messageId,
-            })
-          );
-        }
+        // Update state in storage with conflict resolution
+        this.getState().then((state) => {
+          const existing = state.selections[msg.selection.field];
 
-        // Handle sync_request - send current state to requester
-        if (parsed.type === 'sync_request') {
-          this.logger.log(
-            ` Received sync_request from connection ${sender.id}`
-          );
+          // Conflict resolution: timestamp + userId tiebreaker
+          const shouldUpdate =
+            !existing ||
+            msg.selection.timestamp > existing.timestamp ||
+            (msg.selection.timestamp === existing.timestamp &&
+              msg.selection.userId > existing.userId);
 
-          // Load current state and send to requester
-          this.getState().then((state) => {
-            this.logger.log(
-              ` Sending sync_response with ${Object.keys(state.selections).length} selections`
-            );
+          if (shouldUpdate) {
+            state.selections[msg.selection.field] = msg.selection;
+            state.lastUpdated = Date.now();
 
-            sender.send(
-              JSON.stringify({
-                type: 'sync_response',
-                selections: state.selections,
-              })
-            );
-          });
-
-          return; // Don't broadcast sync_request
-        }
-
-        // Handle field_selected - persist to storage
-        if (parsed.type === 'field_selected' && parsed.selection) {
-          this.logger.log(
-            ` Persisting field selection: ${parsed.selection.field}`
-          );
-
-          // Update state in storage with conflict resolution
-          this.getState().then((state) => {
-            const existing = state.selections[parsed.selection.field];
-
-            // Conflict resolution: timestamp + userId tiebreaker
-            const shouldUpdate =
-              !existing ||
-              parsed.selection.timestamp > existing.timestamp ||
-              (parsed.selection.timestamp === existing.timestamp &&
-                parsed.selection.userId > existing.userId);
-
-            if (shouldUpdate) {
-              state.selections[parsed.selection.field] = parsed.selection;
-              state.lastUpdated = Date.now();
-
-              this.setState(state).then(() => {
-                this.logger.log(
-                  ` ✅ Persisted selection for field: ${parsed.selection.field}`,
-                  `timestamp: ${parsed.selection.timestamp}`,
-                  `userId: ${parsed.selection.userId}`
-                );
-              });
-            } else {
+            this.setState(state).then(() => {
               this.logger.log(
-                ` Ignoring lower-priority selection for field: ${parsed.selection.field}`,
-                `existing timestamp: ${existing.timestamp}, userId: ${existing.userId}`,
-                `incoming timestamp: ${parsed.selection.timestamp}, userId: ${parsed.selection.userId}`
+                ` ✅ Persisted selection for field: ${msg.selection.field}`,
+                `timestamp: ${msg.selection.timestamp}`,
+                `userId: ${msg.selection.userId}`
               );
-            }
-          });
-        }
-
-        // Store userId for this connection when they join
-        if (parsed.type === 'user_joined' && parsed.userId && parsed.userName) {
-          this.logger.log(
-            ` Storing user info for connection ${sender.id}: ${parsed.userName} (${parsed.userId})`
-          );
-
-          // Check if this user is already in the room (reconnection)
-          const isReconnection = [...connectionUserMap.values()].some(
-            (info) => info.userId === parsed.userId
-          );
-
-          // Count unique users currently in room (excluding this one if new)
-          const uniqueUserIds = new Set(
-            [...connectionUserMap.values()].map((info) => info.userId)
-          );
-          const currentUserCount = uniqueUserIds.size;
-
-          this.logger.log(
-            ` Current user count: ${currentUserCount}, Is reconnection: ${isReconnection}`
-          );
-
-          // Reject if room is full and this is a new user
-          if (!isReconnection && currentUserCount >= MAX_PARTICIPANTS) {
+            });
+          } else {
             this.logger.log(
-              ` ❌ Room is full (${MAX_PARTICIPANTS} participants max). Rejecting user: ${parsed.userName}`
-            );
-
-            // Send rejection message to the connecting user
-            sender.send(
-              JSON.stringify({
-                type: 'room_full',
-                message: `This transaction room is full. Only ${MAX_PARTICIPANTS} participants allowed.`,
-                maxParticipants: MAX_PARTICIPANTS,
-              })
-            );
-
-            // Close the connection
-            sender.close(1008, 'Room is full');
-            return;
-          }
-
-          // Allow connection - store user info
-          connectionUserMap.set(sender.id, {
-            userId: parsed.userId,
-            userName: parsed.userName,
-          });
-
-          // Cancel any pending disconnect for this user (they reconnected)
-          const pendingTimeout = pendingDisconnects.get(parsed.userId);
-          if (pendingTimeout) {
-            clearTimeout(pendingTimeout);
-            pendingDisconnects.delete(parsed.userId);
-            this.logger.log(
-              ` User ${parsed.userName} reconnected, cancelled disconnect timer`
+              ` Ignoring lower-priority selection for field: ${msg.selection.field}`,
+              `existing timestamp: ${existing.timestamp}, userId: ${existing.userId}`,
+              `incoming timestamp: ${msg.selection.timestamp}, userId: ${msg.selection.userId}`
             );
           }
+        });
+      }
 
+      // Store userId for this connection when they join
+      if (msg.type === 'user_joined' && msg.userId && msg.userName) {
+        this.logger.log(
+          ` Storing user info for connection ${sender.id}: ${msg.userName} (${msg.userId})`
+        );
+
+        // Check if this user is already in the room (reconnection)
+        const isReconnection = [...connectionUserMap.values()].some(
+          (info) => info.userId === msg.userId
+        );
+
+        // Count unique users currently in room (excluding this one if new)
+        const uniqueUserIds = new Set(
+          [...connectionUserMap.values()].map((info) => info.userId)
+        );
+        const currentUserCount = uniqueUserIds.size;
+
+        this.logger.log(
+          ` Current user count: ${currentUserCount}, Is reconnection: ${isReconnection}`
+        );
+
+        // Reject if room is full and this is a new user
+        if (!isReconnection && currentUserCount >= MAX_PARTICIPANTS) {
           this.logger.log(
-            ` ✅ User joined successfully, notifying ${[...this.room.getConnections()].length} connections`
+            ` ❌ Room is full (${MAX_PARTICIPANTS} participants max). Rejecting user: ${msg.userName}`
+          );
+
+          // Send rejection message to the connecting user
+          sender.send(
+            JSON.stringify({
+              type: 'room_full',
+              message: `This transaction room is full. Only ${MAX_PARTICIPANTS} participants allowed.`,
+              maxParticipants: MAX_PARTICIPANTS,
+            })
+          );
+
+          // Close the connection
+          sender.close(1008, 'Room is full');
+          return;
+        }
+
+        // Allow connection - store user info
+        connectionUserMap.set(sender.id, {
+          userId: msg.userId,
+          userName: msg.userName,
+        });
+
+        // Cancel any pending disconnect for this user (they reconnected)
+        const pendingTimeout = pendingDisconnects.get(msg.userId);
+        if (pendingTimeout) {
+          clearTimeout(pendingTimeout);
+          pendingDisconnects.delete(msg.userId);
+          this.logger.log(
+            ` User ${msg.userName} reconnected, cancelled disconnect timer`
           );
         }
-      } catch (_e) {
-        // Ignore parse errors
+
+        this.logger.log(
+          ` ✅ User joined successfully, notifying ${[...this.room.getConnections()].length} connections`
+        );
       }
 
       // Broadcast to all connections in the room (excluding sender)
