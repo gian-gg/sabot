@@ -162,6 +162,22 @@ export default class CollaborationServer implements Party.Server {
       try {
         const parsed = JSON.parse(message);
 
+        // Handle acknowledgments - just forward to sender
+        if (parsed.type === 'ack') {
+          // Don't broadcast acks, they're point-to-point
+          return;
+        }
+
+        // Send acknowledgment back to sender for messages with messageId
+        if (parsed.messageId) {
+          sender.send(
+            JSON.stringify({
+              type: 'ack',
+              ackFor: parsed.messageId,
+            })
+          );
+        }
+
         // Handle sync_request - send current state to requester
         if (parsed.type === 'sync_request') {
           this.logger.log(
