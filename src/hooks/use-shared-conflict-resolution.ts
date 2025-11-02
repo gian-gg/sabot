@@ -13,6 +13,8 @@ const logger = createLogger('ConflictResolution');
 // Configuration
 const ACK_TIMEOUT_MS = 5000; // 5 seconds
 const MAX_RETRIES = 3;
+const HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds - send ping
+const HEARTBEAT_TIMEOUT_MS = 40000; // 40 seconds - expect pong
 
 interface SharedSelection {
   field: keyof AnalysisData;
@@ -31,7 +33,9 @@ interface ConflictResolutionMessage {
     | 'user_ready'
     | 'user_left'
     | 'room_full'
-    | 'ack'; // Message acknowledgment
+    | 'ack' // Message acknowledgment
+    | 'ping' // Heartbeat ping
+    | 'pong'; // Heartbeat pong
   selection?: SharedSelection;
   selections?: Record<string, SharedSelection>;
   userId?: string;
@@ -41,6 +45,7 @@ interface ConflictResolutionMessage {
   maxParticipants?: number;
   messageId?: string; // Unique ID for message tracking
   ackFor?: string; // ID of message being acknowledged
+  timestamp?: number; // For heartbeat timing
 }
 
 interface Participant {
@@ -77,12 +82,77 @@ export function useSharedConflictResolution(
     null
   );
 
+  // Heartbeat tracking
+  const heartbeatIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const heartbeatTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lastPongReceivedRef = React.useRef<number>(Date.now());
+
   const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST || 'localhost:1999';
 
   // Generate unique message ID
   const generateMessageId = useCallback(() => {
     return `${userId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }, [userId]);
+
+  // Start heartbeat monitoring
+  const startHeartbeat = useCallback(() => {
+    logger.log('Starting heartbeat monitoring');
+
+    // Clear any existing intervals
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+    }
+    if (heartbeatTimeoutRef.current) {
+      clearTimeout(heartbeatTimeoutRef.current);
+    }
+
+    lastPongReceivedRef.current = Date.now();
+
+    // Send ping every 30 seconds
+    heartbeatIntervalRef.current = setInterval(() => {
+      const socket = socketRef.current;
+      if (!socket) return;
+
+      const now = Date.now();
+      const timeSinceLastPong = now - lastPongReceivedRef.current;
+
+      // Check if connection is stale (no pong for 40 seconds)
+      if (timeSinceLastPong > HEARTBEAT_TIMEOUT_MS) {
+        logger.warn('Connection appears stale - no pong received');
+        toast.error('Connection lost', {
+          description: 'Attempting to reconnect...',
+        });
+
+        // Force reconnection by closing socket
+        socket.close();
+        return;
+      }
+
+      // Send ping
+      logger.log('Sending heartbeat ping');
+      socket.send(
+        JSON.stringify({
+          type: 'ping',
+          timestamp: now,
+        } as ConflictResolutionMessage)
+      );
+    }, HEARTBEAT_INTERVAL_MS);
+  }, []);
+
+  // Stop heartbeat monitoring
+  const stopHeartbeat = useCallback(() => {
+    logger.log('Stopping heartbeat monitoring');
+
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
+    if (heartbeatTimeoutRef.current) {
+      clearTimeout(heartbeatTimeoutRef.current);
+      heartbeatTimeoutRef.current = null;
+    }
+  }, []);
 
   // Send message with acknowledgment and retry logic
   const sendMessageWithAck = useCallback(
@@ -183,6 +253,27 @@ export function useSharedConflictResolution(
       try {
         const message: ConflictResolutionMessage = JSON.parse(data);
         logger.log('Parsed message:', message);
+
+        // Handle ping - respond with pong
+        if (message.type === 'ping') {
+          const socket = socketRef.current;
+          if (socket) {
+            socket.send(
+              JSON.stringify({
+                type: 'pong',
+                timestamp: Date.now(),
+              } as ConflictResolutionMessage)
+            );
+          }
+          return;
+        }
+
+        // Handle pong - update last received time
+        if (message.type === 'pong') {
+          logger.log('Received pong');
+          lastPongReceivedRef.current = Date.now();
+          return;
+        }
 
         // Handle acknowledgments
         if (message.type === 'ack' && message.ackFor) {
@@ -418,11 +509,17 @@ export function useSharedConflictResolution(
         },
         false
       );
+
+      // Start heartbeat monitoring
+      startHeartbeat();
     },
     onMessage: handleMessage,
     onClose() {
       logger.log('Disconnected from PartyKit');
       setIsConnected(false);
+
+      // Stop heartbeat monitoring
+      stopHeartbeat();
 
       // Remove self from participants (server broadcasts user_left to others)
       setParticipants((prev) => prev.filter((p) => p.id !== userId));
@@ -438,6 +535,21 @@ export function useSharedConflictResolution(
   React.useEffect(() => {
     socketRef.current = socket;
   }, [socket]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      stopHeartbeat();
+
+      // Clear all pending message timeouts
+
+      ackTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ackTimeoutRef.current.clear();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      pendingMessagesRef.current.clear();
+    };
+  }, [stopHeartbeat]);
 
   const selectField = useCallback(
     (field: keyof AnalysisData, value: unknown) => {

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getBestValue, hasConflict } from '@/lib/utils/conflict-resolution';
 import type { AnalysisData } from '@/types/analysis';
-import { AlertTriangle, CheckCircle2, XCircle, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
 import { toast } from 'sonner';

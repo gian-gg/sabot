@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, X, WifiOff, RefreshCw } from 'lucide-react';
+import { CheckCircle2, X, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
