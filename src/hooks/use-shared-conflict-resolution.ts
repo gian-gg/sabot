@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import * as React from 'react';
 import usePartySocket from 'partysocket/react';
 import type { AnalysisData } from '@/types/analysis';
 import { featureFlags } from '@/lib/config/features';
@@ -8,6 +9,10 @@ import { toast } from 'sonner';
 import { createLogger } from '@/lib/utils/logger';
 
 const logger = createLogger('ConflictResolution');
+
+// Configuration
+const ACK_TIMEOUT_MS = 5000; // 5 seconds
+const MAX_RETRIES = 3;
 
 interface SharedSelection {
   field: keyof AnalysisData;
@@ -25,7 +30,8 @@ interface ConflictResolutionMessage {
     | 'user_joined'
     | 'user_ready'
     | 'user_left'
-    | 'room_full';
+    | 'room_full'
+    | 'ack'; // Message acknowledgment
   selection?: SharedSelection;
   selections?: Record<string, SharedSelection>;
   userId?: string;
@@ -33,6 +39,8 @@ interface ConflictResolutionMessage {
   isReady?: boolean;
   message?: string;
   maxParticipants?: number;
+  messageId?: string; // Unique ID for message tracking
+  ackFor?: string; // ID of message being acknowledged
 }
 
 interface Participant {
@@ -53,7 +61,98 @@ export function useSharedConflictResolution(
   const [isConnected, setIsConnected] = useState(false);
   const [otherPartyDisconnected, setOtherPartyDisconnected] = useState(false);
 
+  // Message acknowledgment tracking
+  const pendingMessagesRef = React.useRef<
+    Map<
+      string,
+      {
+        message: ConflictResolutionMessage;
+        timestamp: number;
+        retries: number;
+      }
+    >
+  >(new Map());
+  const ackTimeoutRef = React.useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const socketRef = React.useRef<ReturnType<typeof usePartySocket> | null>(
+    null
+  );
+
   const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST || 'localhost:1999';
+
+  // Generate unique message ID
+  const generateMessageId = useCallback(() => {
+    return `${userId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }, [userId]);
+
+  // Send message with acknowledgment and retry logic
+  const sendMessageWithAck = useCallback(
+    (message: ConflictResolutionMessage, requireAck: boolean = true) => {
+      const socket = socketRef.current;
+      if (!socket) {
+        logger.warn('Cannot send message - socket not available');
+        return;
+      }
+
+      const messageId = requireAck ? generateMessageId() : undefined;
+      const messageWithId = { ...message, messageId };
+
+      // Send the message
+      socket.send(JSON.stringify(messageWithId));
+      logger.log('Sent message:', messageWithId.type, 'ID:', messageId);
+
+      // If acknowledgment required, set up retry logic
+      if (requireAck && messageId) {
+        pendingMessagesRef.current.set(messageId, {
+          message: messageWithId,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+
+        const scheduleRetry = (msgId: string, retryCount: number) => {
+          const timeout = setTimeout(() => {
+            const pending = pendingMessagesRef.current.get(msgId);
+
+            if (!pending) return; // Already acknowledged
+
+            if (retryCount >= MAX_RETRIES) {
+              logger.error('Message delivery failed after retries:', msgId);
+              pendingMessagesRef.current.delete(msgId);
+              ackTimeoutRef.current.delete(msgId);
+
+              // Show error to user for critical messages
+              if (message.type === 'field_selected') {
+                toast.error(
+                  'Connection issue - your selection may not have been saved',
+                  {
+                    description:
+                      'Please check your internet connection and try again',
+                  }
+                );
+              }
+              return;
+            }
+
+            // Retry sending
+            logger.warn(
+              `Retrying message ${msgId} (attempt ${retryCount + 1}/${MAX_RETRIES})`
+            );
+            const currentSocket = socketRef.current;
+            if (currentSocket) {
+              currentSocket.send(JSON.stringify(pending.message));
+            }
+
+            pending.retries = retryCount + 1;
+            scheduleRetry(msgId, retryCount + 1);
+          }, ACK_TIMEOUT_MS);
+
+          ackTimeoutRef.current.set(msgId, timeout);
+        };
+
+        scheduleRetry(messageId, 0);
+      }
+    },
+    [generateMessageId]
+  );
 
   // Use message handler callback
   const handleMessage = useCallback(
@@ -84,6 +183,32 @@ export function useSharedConflictResolution(
       try {
         const message: ConflictResolutionMessage = JSON.parse(data);
         logger.log('Parsed message:', message);
+
+        // Handle acknowledgments
+        if (message.type === 'ack' && message.ackFor) {
+          logger.log('Received ACK for message:', message.ackFor);
+
+          // Clear pending message and timeout
+          pendingMessagesRef.current.delete(message.ackFor);
+
+          const timeout = ackTimeoutRef.current.get(message.ackFor);
+          if (timeout) {
+            clearTimeout(timeout);
+            ackTimeoutRef.current.delete(message.ackFor);
+          }
+
+          return; // Don't process ack further
+        }
+
+        // Send acknowledgment for messages that have messageId
+        if (message.messageId && socketRef.current) {
+          socketRef.current.send(
+            JSON.stringify({
+              type: 'ack',
+              ackFor: message.messageId,
+            } as ConflictResolutionMessage)
+          );
+        }
 
         switch (message.type) {
           case 'field_selected':
@@ -276,20 +401,22 @@ export function useSharedConflictResolution(
         return [...prev, { id: userId, name: userName, isReady: false }];
       });
 
-      // Announce presence to others
-      socket.send(
-        JSON.stringify({
+      // Announce presence to others (no ack needed for join)
+      sendMessageWithAck(
+        {
           type: 'user_joined',
           userId,
           userName,
-        } as ConflictResolutionMessage)
+        },
+        false
       );
 
-      // Request current state sync
-      socket.send(
-        JSON.stringify({
+      // Request current state sync (no ack needed)
+      sendMessageWithAck(
+        {
           type: 'sync_request',
-        } as ConflictResolutionMessage)
+        },
+        false
       );
     },
     onMessage: handleMessage,
@@ -306,6 +433,11 @@ export function useSharedConflictResolution(
       logger.error('Socket error:', error);
     },
   });
+
+  // Store socket ref for use in sendMessageWithAck
+  React.useEffect(() => {
+    socketRef.current = socket;
+  }, [socket]);
 
   const selectField = useCallback(
     (field: keyof AnalysisData, value: unknown) => {
@@ -353,20 +485,16 @@ export function useSharedConflictResolution(
         return prev;
       });
 
-      // Broadcast to other participants
-      if (socket) {
-        const message = JSON.stringify({
+      // Broadcast to other participants with acknowledgment
+      sendMessageWithAck(
+        {
           type: 'field_selected',
           selection,
-        } as ConflictResolutionMessage);
-
-        logger.log('Sending message:', message);
-        socket.send(message);
-      } else {
-        logger.warn('Socket not available');
-      }
+        },
+        true
+      ); // Require ACK for field selections (critical data)
     },
-    [socket, userId, userName]
+    [sendMessageWithAck, userId, userName]
   );
 
   const getFieldSelection = useCallback(
@@ -404,18 +532,17 @@ export function useSharedConflictResolution(
         return updated;
       });
 
-      // Broadcast ready status
-      if (socket) {
-        const message = JSON.stringify({
+      // Broadcast ready status (critical for flow coordination)
+      sendMessageWithAck(
+        {
           type: 'user_ready',
           userId,
           isReady,
-        } as ConflictResolutionMessage);
-        logger.log('Broadcasting ready status:', message);
-        socket.send(message);
-      }
+        },
+        true
+      );
     },
-    [socket, userId]
+    [sendMessageWithAck, userId]
   );
 
   const allParticipantsReady = useCallback(() => {
