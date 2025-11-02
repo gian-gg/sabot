@@ -51,7 +51,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 
 const STEPS = [
@@ -574,6 +574,11 @@ export function CreateTransactionForm({
     }
   };
 
+  // Memoize the onAllReady callback to prevent recreating on every render
+  const handleAllReadyCallback = useCallback((isReady: boolean) => {
+    setBothPartiesReady(isReady);
+  }, []);
+
   // Callback for when conflicts are resolved
   const handleConflictsResolved = (resolvedData: AnalysisData) => {
     console.log('✅ Conflicts resolved:', resolvedData);
@@ -594,28 +599,16 @@ export function CreateTransactionForm({
     return missing;
   };
 
-  const canProceedToNext = () => {
+  const canProceedToNext = useMemo(() => {
     switch (currentStep) {
       case 1:
         // Screenshot analysis step - only allow proceeding if we have a transactionId
         // This ensures the analysis can be performed
         return !!transactionId;
       case 2:
-        // Conflict resolution step - only proceed if both parties have confirmed
-        if (hasConflicts) {
-          // Check both the state AND the actual participants from conflict resolution
-          const actuallyAllReady =
-            conflictResolution?.allParticipantsReady?.() || false;
-          console.log('[CreateTransactionForm] Step 2 check:', {
-            hasConflicts,
-            bothPartiesReady,
-            actuallyAllReady,
-            participants: conflictResolution?.participants,
-          });
-          return bothPartiesReady || actuallyAllReady; // Use either check
-        }
-        // If no conflicts, can proceed if we have extracted data
-        return !!extractedData;
+        // Conflict resolution step - always require both parties to be ready
+        // This ensures mutual confirmation before proceeding
+        return bothPartiesReady && (hasConflicts ? true : !!extractedData);
       case 3:
         return (
           formData.item_name &&
@@ -666,10 +659,20 @@ export function CreateTransactionForm({
       default:
         return false;
     }
-  };
+  }, [
+    currentStep,
+    transactionId,
+    hasConflicts,
+    bothPartiesReady,
+    extractedData,
+    formData,
+    escrowEnabled,
+    escrowData,
+    arbiterEnabled,
+  ]);
 
   const handleNext = () => {
-    if (canProceedToNext()) {
+    if (canProceedToNext) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
     } else {
       // Provide feedback on what's missing
@@ -723,7 +726,7 @@ export function CreateTransactionForm({
   };
 
   const handleSubmit = async () => {
-    if (!canProceedToNext()) return;
+    if (!canProceedToNext) return;
 
     setIsSubmitting(true);
     try {
@@ -896,7 +899,7 @@ export function CreateTransactionForm({
               'tab-' + Math.random().toString(36).slice(2, 9)
             }
             userName={currentUserName || userName || 'Guest'}
-            onAllReady={(isReady) => setBothPartiesReady(isReady)}
+            onAllReady={handleAllReadyCallback}
             conflictResolution={conflictResolution}
           />
         );
@@ -2139,7 +2142,7 @@ export function CreateTransactionForm({
                 <Button
                   onClick={handleNext}
                   disabled={
-                    !canProceedToNext() ||
+                    !canProceedToNext ||
                     (featureFlags.enableDisconnectWarning &&
                       conflictResolution?.otherPartyDisconnected)
                   }
@@ -2153,7 +2156,7 @@ export function CreateTransactionForm({
                 <Button
                   onClick={handleSubmit}
                   disabled={
-                    !canProceedToNext() ||
+                    !canProceedToNext ||
                     isSubmitting ||
                     (featureFlags.enableDisconnectWarning &&
                       conflictResolution?.otherPartyDisconnected)

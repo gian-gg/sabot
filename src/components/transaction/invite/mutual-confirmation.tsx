@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, X, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -39,6 +39,7 @@ export function MutualConfirmation({
   const [isCurrentUserReady, setIsCurrentUserReady] = useState(false);
   const [showUnconfirmDialog, setShowUnconfirmDialog] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const previousAllReadyRef = useRef<boolean | null>(null);
 
   const otherPartyReady = participants.some(
     (p) => p.id !== userId && p.isReady
@@ -46,12 +47,13 @@ export function MutualConfirmation({
   const allParticipantsReady =
     participants.length >= 2 && participants.every((p) => p.isReady);
 
-  // Notify parent when all participants are ready
+  // Notify parent when all participants are ready - only when value actually changes
   useEffect(() => {
-    if (onAllReady) {
+    if (onAllReady && previousAllReadyRef.current !== allParticipantsReady) {
+      previousAllReadyRef.current = allParticipantsReady;
       onAllReady(allParticipantsReady);
     }
-  }, [allParticipantsReady, onAllReady]);
+  }, [allParticipantsReady, onAllReady, participants]);
 
   const handleConfirm = () => {
     setIsCurrentUserReady(true);
