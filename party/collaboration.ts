@@ -196,23 +196,33 @@ export default class CollaborationServer implements Party.Server {
             `[PartyKit] Persisting field selection: ${parsed.selection.field}`
           );
 
-          // Update state in storage
+          // Update state in storage with conflict resolution
           this.getState().then((state) => {
             const existing = state.selections[parsed.selection.field];
 
-            // Only update if incoming message is newer or doesn't exist
-            if (!existing || parsed.selection.timestamp > existing.timestamp) {
+            // Conflict resolution: timestamp + userId tiebreaker
+            const shouldUpdate =
+              !existing ||
+              parsed.selection.timestamp > existing.timestamp ||
+              (parsed.selection.timestamp === existing.timestamp &&
+                parsed.selection.userId > existing.userId);
+
+            if (shouldUpdate) {
               state.selections[parsed.selection.field] = parsed.selection;
               state.lastUpdated = Date.now();
 
               this.setState(state).then(() => {
                 console.log(
-                  `[PartyKit] ✅ Persisted selection for field: ${parsed.selection.field}`
+                  `[PartyKit] ✅ Persisted selection for field: ${parsed.selection.field}`,
+                  `timestamp: ${parsed.selection.timestamp}`,
+                  `userId: ${parsed.selection.userId}`
                 );
               });
             } else {
               console.log(
-                `[PartyKit] Ignoring older selection for field: ${parsed.selection.field}`
+                `[PartyKit] Ignoring lower-priority selection for field: ${parsed.selection.field}`,
+                `existing timestamp: ${existing.timestamp}, userId: ${existing.userId}`,
+                `incoming timestamp: ${parsed.selection.timestamp}, userId: ${parsed.selection.userId}`
               );
             }
           });
