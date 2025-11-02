@@ -1,5 +1,6 @@
 {
   "name": "sabot",
+  "main": "party/collaboration.ts",
   "parties": {
     "collaboration": "party/collaboration.ts"
   }
