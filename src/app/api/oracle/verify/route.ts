@@ -121,6 +121,38 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', escrow_id);
 
+      // Mirror confirmations across BOTH participants based on deliverable type
+      if (escrow.transaction_id) {
+        const isItemType = (t: string) =>
+          t === 'item' ||
+          t === 'service' ||
+          t === 'digital' ||
+          t === 'document' ||
+          t === 'product' ||
+          t === 'mixed';
+        const isPaymentType = (t: string) =>
+          t === 'cash' ||
+          t === 'digital_transfer' ||
+          t === 'payment' ||
+          t === 'mixed';
+
+        const updates: Record<string, boolean> = {};
+        if (isItemType(deliverable.type)) updates.item_confirmed = true;
+        if (isPaymentType(deliverable.type)) updates.payment_confirmed = true;
+
+        try {
+          await supabase
+            .from('transaction_participants')
+            .update(updates)
+            .eq('transaction_id', escrow.transaction_id);
+        } catch (e) {
+          console.error(
+            '[Oracle Verify] Error mirroring participant confirmations:',
+            e
+          );
+        }
+      }
+
       // TODO: Submit to blockchain if configured
       // await submitToBlockchain(escrow_id, verificationResult);
     }
@@ -223,7 +255,7 @@ Only mark as verified if confidence >= 80%.
 
     const ai = geminiClient();
     const result = await ai.models.generateContent({
-      model: 'gemini-pro',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           parts: [{ text: prompt }],

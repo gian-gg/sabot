@@ -13,7 +13,6 @@ import {
   Clock,
   Users,
   Award,
-  Shield,
   CheckCircle,
   AlertCircle,
   Sparkles,
@@ -74,10 +73,6 @@ const RECOMMENDED_ARBITERS: ArbiterCandidate[] = [
 ];
 
 export function ArbiterSelection({
-  initiatorId,
-  participantId,
-  initiatorName,
-  participantName,
   onArbiterSelected,
   selectedArbiter,
   isWaitingForApproval = false,

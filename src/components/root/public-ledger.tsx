@@ -1,88 +1,85 @@
-import React from 'react';
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Transaction,
-  TransactionStatus,
-  TransactionType,
-} from '@/types/transaction';
+import { Card, CardHeader } from '@/components/ui/card';
+import {} from // Transaction,
+// TransactionStatus,
+// TransactionType,
+'@/types/transaction';
 
-interface PublicLedgerProps {
-  transactions: Transaction[];
-}
+// interface PublicLedgerProps {
+//   transactions: Transaction[];
+// }
 
 // Helper function to get status badge variant
-function getStatusBadgeVariant(
-  status: TransactionStatus
-): 'default' | 'secondary' | 'destructive' | 'outline' {
-  switch (status) {
-    case 'completed':
-      return 'default';
-    case 'active':
-      return 'secondary';
-    case 'pending':
-      return 'outline';
-    case 'reported':
-      return 'destructive';
-    default:
-      return 'default';
-  }
-}
+// function getStatusBadgeVariant(
+//   status: TransactionStatus
+// ): 'default' | 'secondary' | 'destructive' | 'outline' {
+//   switch (status) {
+//     case 'completed':
+//       return 'default';
+//     case 'active':
+//       return 'secondary';
+//     case 'pending':
+//       return 'outline';
+//     case 'reported':
+//       return 'destructive';
+//     default:
+//       return 'default';
+//   }
+// }
 
-// Helper function to get transaction type display name
-function getTransactionTypeLabel(type: TransactionType): string {
-  switch (type) {
-    case 'electronics':
-      return 'Electronics';
-    case 'services':
-      return 'Services';
-    case 'fashion':
-      return 'Fashion';
-    case 'home-goods':
-      return 'Home Goods';
-    case 'vehicles':
-      return 'Vehicles';
-    case 'collectibles':
-      return 'Collectibles';
-    case 'other':
-      return 'Other';
-    default:
-      return 'Unknown';
-  }
-}
+// // Helper function to get transaction type display name
+// function getTransactionTypeLabel(type: TransactionType): string {
+//   switch (type) {
+//     case 'electronics':
+//       return 'Electronics';
+//     case 'services':
+//       return 'Services';
+//     case 'fashion':
+//       return 'Fashion';
+//     case 'home-goods':
+//       return 'Home Goods';
+//     case 'vehicles':
+//       return 'Vehicles';
+//     case 'collectibles':
+//       return 'Collectibles';
+//     case 'other':
+//       return 'Other';
+//     default:
+//       return 'Unknown';
+//   }
+// }
 
 // Helper function to format timestamp
-function formatTimestamp(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+// function formatTimestamp(date: Date): string {
+//   const now = new Date();
+//   const diffMs = now.getTime() - date.getTime();
+//   const diffMins = Math.floor(diffMs / 60000);
+//   const diffHours = Math.floor(diffMs / 3600000);
+//   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+//   if (diffMins < 1) return 'Just now';
+//   if (diffMins < 60) return `${diffMins}m ago`;
+//   if (diffHours < 24) return `${diffHours}h ago`;
+//   if (diffDays < 7) return `${diffDays}d ago`;
 
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
+//   return date.toLocaleDateString('en-US', {
+//     month: 'short',
+//     day: 'numeric',
+//     year: 'numeric',
+//   });
+// }
 
 // Helper function to blur name (keep first name + initial)
-function blurName(fullName: string): string {
-  const parts = fullName.split(' ');
-  if (parts.length === 1) return fullName;
-  return `${parts[0]} ${parts[1].charAt(0)}.`;
-}
+// function blurName(fullName: string): string {
+//   const parts = fullName.split(' ');
+//   if (parts.length === 1) return fullName;
+//   return `${parts[0]} ${parts[1].charAt(0)}.`;
+// }
 
-export function PublicLedger({ transactions }: PublicLedgerProps) {
+// export function PublicLedger({ transactions }: PublicLedgerProps) {
+export function PublicLedger() {
   // Limit to 10 most recent transactions
-  const recentTransactions = transactions.slice(0, 10);
+  // const recentTransactions = transactions.slice(0, 10);
 
   return (
     <Card className="gap-0 border border-neutral-800/60 bg-linear-to-b from-neutral-900/40 to-neutral-950/60 p-0 shadow-2xl backdrop-blur-sm">

@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Button } from '../ui/button';
-import { Plus, BadgeCheck, Clock } from 'lucide-react';
-import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 import { useUserStore } from '@/store/user/userStore';
-import { useRouter } from 'next/navigation';
+import { BadgeCheck, Clock, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '../ui/button';
 
 import {
   Tooltip,
@@ -17,24 +15,19 @@ import {
 
 import { useRegisterWallet } from '@/hooks/useRegisterWallet';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+import { Handshake } from 'lucide-react';
+
 const HeroAction = () => {
   const user = useUserStore();
-  const router = useRouter();
-  const [createOpen, setCreateOpen] = useState(false);
-  const createRef = useRef<HTMLDivElement>(null);
 
-  // Trigger wallet registration when user verification is complete
   useRegisterWallet(user.verificationStatus === 'complete');
-
-  const goToTransactionNew = () => {
-    router.push(ROUTES.TRANSACTION.INVITE);
-    setCreateOpen(false);
-  };
-
-  const goToAgreementNew = () => {
-    router.push(ROUTES.AGREEMENT.INVITE);
-    setCreateOpen(false);
-  };
 
   if (user.verificationStatus === 'not-started') {
     return (
@@ -66,31 +59,29 @@ const HeroAction = () => {
   }
 
   return (
-    <div ref={createRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setCreateOpen((v) => !v)}
-        className="bg-primary hover:bg-primary/90 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-zinc-900"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Create Transaction
-      </button>
-      {createOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-44 rounded-md border bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-          <button
-            onClick={goToTransactionNew}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
-          >
-            Transaction
-          </button>
-          <button
-            onClick={goToAgreementNew}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-zinc-800"
-          >
-            Agreement
-          </button>
-        </div>
-      )}
+    <div className="relative">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>
+            <Plus className="size-4" />
+            Create
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="bottom">
+          <DropdownMenuItem asChild>
+            <Link href={ROUTES.TRANSACTION.INVITE}>
+              <BadgeCheck />
+              Transaction
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={ROUTES.AGREEMENT.INVITE}>
+              <Handshake />
+              Agreement
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

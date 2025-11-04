@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Coins,
   Shield,
@@ -36,11 +36,7 @@ export default function BuyTokensPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const { balance } = useSabotBalance();
 
-  useEffect(() => {
-    fetchTokenData();
-  }, []);
-
-  async function fetchTokenData() {
+  const fetchTokenData = useCallback(async () => {
     setIsLoading(true);
     try {
       const circulatingSupply = await fetchLiskCirculatingSupply();
@@ -58,7 +54,11 @@ export default function BuyTokensPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchTokenData();
+  }, [fetchTokenData]);
 
   async function fetchLiskCirculatingSupply(): Promise<number> {
     const supply = await getCirculatingSupply();
@@ -92,12 +92,12 @@ export default function BuyTokensPage() {
     });
   }
 
-  function formatNumber(num: number): string {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(num);
-  }
+  // function formatNumber(num: number): string {
+  //   return new Intl.NumberFormat('en-US', {
+  //     minimumFractionDigits: 0,
+  //     maximumFractionDigits: 2,
+  //   }).format(num);
+  // }
 
   function formatCurrency(num: number): string {
     return new Intl.NumberFormat('en-US', {

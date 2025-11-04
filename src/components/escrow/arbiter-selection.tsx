@@ -1,18 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,17 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Info,
   Search,
   Shield,
   Star,
-  CheckCircle2,
-  Clock,
   Users,
-  Info,
-  AlertCircle,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Arbiter {
   id: string;
@@ -96,7 +89,6 @@ export function ArbiterSelection({
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredArbiters, setFilteredArbiters] =
     useState<Arbiter[]>(RECOMMENDED_ARBITERS);
-  const [showCustomArbiter, setShowCustomArbiter] = useState(false);
   const [customArbiterEmail, setCustomArbiterEmail] = useState('');
 
   // add stable selected id to avoid accessing .id on possibly-null value

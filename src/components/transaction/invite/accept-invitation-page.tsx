@@ -56,7 +56,22 @@ export function AcceptTransactionPage({
         const response = await fetch(`/api/transaction/${transactionId}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch transaction details');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Transaction fetch failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
+
+          if (response.status === 401) {
+            throw new Error('Please sign in to view this transaction');
+          } else if (response.status === 404) {
+            throw new Error('Transaction not found');
+          } else {
+            throw new Error(
+              errorData.error || 'Failed to fetch transaction details'
+            );
+          }
         }
 
         const data = await response.json();

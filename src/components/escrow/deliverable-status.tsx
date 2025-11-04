@@ -1,40 +1,34 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import {
-  CheckCircle,
-  Clock,
-  Package,
-  Bot,
-  FileText,
-  DollarSign,
-  User,
-  Upload,
-  Download,
-  AlertCircle,
-  Star,
-  XCircle,
-  Wrench,
-  CreditCard,
-  Layers,
-} from 'lucide-react';
-import { SubmitProofDialog } from './submit-proof-dialog';
-import {
-  getDeliverableStatusConfig,
-  getOracleTypeConfig,
-  getDeliverableTypeConfig,
-  getConfidenceScoreColor,
   formatDeliverableValue,
+  getConfidenceScoreColor,
+  getDeliverableStatusConfig,
+  getDeliverableTypeConfig,
+  getOracleTypeConfig,
 } from '@/lib/escrow/deliverable-status';
 import type {
   Deliverable,
-  OracleVerification,
   EscrowProof,
+  OracleVerification,
 } from '@/types/escrow';
+import {
+  CheckCircle,
+  CreditCard,
+  DollarSign,
+  FileText,
+  Layers,
+  Package,
+  Upload,
+  User,
+  Wrench,
+} from 'lucide-react';
+import React from 'react';
+import { SubmitProofDialog } from './submit-proof-dialog';
 
 interface DeliverableStatusProps {
   deliverable: Deliverable;
@@ -82,6 +76,19 @@ export function DeliverableStatus({
   const oracleType = getOracleTypeForDeliverable(deliverable);
   const oracleConfig = getOracleTypeConfig(oracleType);
   const deliverableConfig = getDeliverableTypeConfig(deliverable.type);
+
+  // Add null checks to prevent runtime errors
+  if (!statusConfig || !oracleConfig || !deliverableConfig) {
+    console.error('Missing configuration for deliverable:', {
+      status: deliverable.status,
+      type: deliverable.type,
+      oracleType,
+      statusConfig,
+      oracleConfig,
+      deliverableConfig,
+    });
+    return null;
+  }
 
   // Helper function to determine oracle type
   function getOracleTypeForDeliverable(
@@ -136,6 +143,7 @@ export function DeliverableStatus({
     switch (deliverable.status) {
       case 'completed':
       case 'verified':
+      case 'confirmed':
         return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950';
       case 'in_progress':
         return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950';

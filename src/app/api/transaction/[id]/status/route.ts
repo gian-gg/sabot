@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 // Assuming this is the type for the response body
 import { TransactionStatusResponse } from '@/types/transaction';
 // NOTE: This helper function must be defined and imported separately.
@@ -190,19 +190,76 @@ export async function GET(
       oracleVerifications = verifications || [];
     }
 
-    // Calculate deliverable statuses with verifications
+    // Calculate deliverable statuses with verifications (by id)
+    type DeliverableLite = { id: string; type?: string; status?: string };
+    type OracleVerificationLite = { deliverable_id?: string };
+
     const deliverableStatuses =
-      escrowData?.deliverables?.map(
-        (deliverable: { id: string; [key: string]: unknown }) => ({
-          ...deliverable,
-          verification: oracleVerifications.find((verification) =>
-            escrowData.deliverables?.some(
-              (d: { id: string; [key: string]: unknown }) =>
-                d.id === deliverable.id
-            )
-          ),
-        })
-      ) || [];
+      escrowData?.deliverables?.map((deliverable: DeliverableLite) => ({
+        ...deliverable,
+        verification: oracleVerifications.find(
+          (v: OracleVerificationLite) => v.deliverable_id === deliverable.id
+        ),
+      })) || [];
+
+    // Mirror confirmations across both participants and cover all deliverable types
+    if (enrichedParticipants.length > 0) {
+      const isItemType = (t: string) =>
+        t === 'item' ||
+        t === 'service' ||
+        t === 'digital' ||
+        t === 'document' ||
+        t === 'product' ||
+        t === 'mixed';
+      const isPaymentType = (t: string) =>
+        t === 'cash' ||
+        t === 'digital_transfer' ||
+        t === 'payment' ||
+        t === 'mixed';
+
+      const anyParticipantItemConfirmed = enrichedParticipants.some(
+        (p) => p.item_confirmed === true
+      );
+      const anyParticipantPaymentConfirmed = enrichedParticipants.some(
+        (p) => p.payment_confirmed === true
+      );
+
+      const anyItemDeliverableConfirmed = (deliverableStatuses || []).some(
+        (d: DeliverableLite) =>
+          isItemType(d.type || '') && d.status === 'confirmed'
+      );
+      const anyPaymentDeliverableConfirmed = (deliverableStatuses || []).some(
+        (d: DeliverableLite) =>
+          isPaymentType(d.type || '') && d.status === 'confirmed'
+      );
+
+      const unifiedItemConfirmed =
+        anyParticipantItemConfirmed || anyItemDeliverableConfirmed;
+      const unifiedPaymentConfirmed =
+        anyParticipantPaymentConfirmed || anyPaymentDeliverableConfirmed;
+
+      // Apply unified values to in-memory participants for response
+      for (const p of enrichedParticipants) {
+        p.item_confirmed = unifiedItemConfirmed;
+        p.payment_confirmed = unifiedPaymentConfirmed;
+      }
+
+      // Persist to DB if needed: set BOTH participants to unified values
+      try {
+        await supabase
+          .from('transaction_participants')
+          .update({
+            item_confirmed: unifiedItemConfirmed,
+            payment_confirmed: unifiedPaymentConfirmed,
+          })
+          .eq('transaction_id', id);
+      } catch (persistErr) {
+        console.error(
+          '[Status API] Mirror confirmations persist error:',
+          persistErr
+        );
+      }
+    }
 
     console.log(`📊 Status API [${id.slice(0, 8)}]:`, {
       status: transaction.status,
@@ -213,6 +270,12 @@ export async function GET(
       user: user.id.slice(0, 8),
       hasEscrow: !!escrowData,
       deliverableCount: deliverableStatuses.length,
+      participants: enrichedParticipants.map((p) => ({
+        userId: p.user_id.slice(0, 8),
+        role: p.role,
+        itemConfirmed: p.item_confirmed,
+        paymentConfirmed: p.payment_confirmed,
+      })),
       pushToBlock: transaction.pushToBlock, // Log the new status
     });
 

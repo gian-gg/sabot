@@ -5,9 +5,8 @@
 import type {
   Deliverable,
   DeliverableWithStatus,
-  OracleVerification,
   EscrowProof,
-  PartyRole,
+  OracleVerification,
 } from '@/types/escrow';
 
 /**
@@ -60,7 +59,10 @@ export function getOverallProgress(
   if (deliverables.length === 0) return 0;
 
   const completedCount = deliverables.filter(
-    (d) => d.status === 'completed' || d.status === 'verified'
+    (d) =>
+      d.status === 'completed' ||
+      d.status === 'verified' ||
+      d.status === 'confirmed'
   ).length;
 
   return Math.round((completedCount / deliverables.length) * 100);
@@ -146,6 +148,12 @@ export function getDeliverableStatusConfig(status: Deliverable['status']) {
       bgColor: 'bg-green-100',
       icon: 'CheckCircle',
     },
+    confirmed: {
+      label: 'Confirmed',
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      icon: 'CheckCircle',
+    },
     completed: {
       label: 'Completed',
       color: 'text-green-600',
@@ -203,6 +211,10 @@ export function getOracleTypeForDeliverable(
       return 'ipfs';
     case 'service':
       return 'ai';
+    case 'item':
+    case 'cash':
+    case 'digital_transfer':
+    case 'mixed':
     default:
       return 'manual';
   }
@@ -250,7 +262,13 @@ export function getDeliverableTypeConfig(type: Deliverable['type']) {
     },
   };
 
-  return configs[type];
+  return (
+    configs[type] || {
+      icon: 'Package',
+      label: 'Unknown',
+      color: 'text-gray-600',
+    }
+  );
 }
 
 /**

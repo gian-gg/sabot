@@ -45,6 +45,7 @@ export type DeliverableStatus =
   | 'in_progress'
   | 'submitted'
   | 'verified'
+  | 'confirmed'
   | 'completed'
   | 'failed';
 
