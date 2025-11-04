@@ -15,6 +15,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { Deliverable, EscrowType, PartyResponsible } from '@/types/escrow';
+import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
 import {
   Calendar,
   CheckCircle,
@@ -51,6 +52,9 @@ interface EscrowProtectionEnhancedProps {
   participantId: string;
   initiatorName?: string;
   participantName?: string;
+  conflictResolution?: ReturnType<typeof useSharedConflictResolution>;
+  currentUserId?: string;
+  currentStep?: number;
 }
 
 export interface EnhancedEscrowData {
@@ -277,10 +281,25 @@ export function EscrowProtectionEnhanced({
   itemDetails,
   initiatorName,
   participantName,
+  conflictResolution,
+  currentUserId,
+  currentStep,
 }: EscrowProtectionEnhancedProps) {
   const [inferredDeliverables, setInferredDeliverables] = useState<
     Deliverable[]
   >([]);
+
+  // Track debounce timer for syncing
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadInferredDeliverables = async () => {
@@ -327,6 +346,38 @@ export function EscrowProtectionEnhanced({
     onEscrowDataChange,
   ]);
 
+  // Sync escrow data changes from other party
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep !== 5) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+    const selection =
+      sharedSelections['escrowData' as keyof typeof sharedSelections];
+
+    if (selection) {
+      const escrowUpdate = selection.value as {
+        value: EnhancedEscrowData;
+        userId: string;
+        timestamp: number;
+      };
+
+      // Only apply changes from other party
+      if (escrowUpdate.userId !== currentUserId) {
+        setEscrowData(escrowUpdate.value);
+        // Also notify parent
+        setTimeout(() => {
+          onEscrowDataChange(escrowUpdate.value);
+        }, 0);
+      }
+    }
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+    onEscrowDataChange,
+  ]);
+
   const handleDataChange = (updates: Partial<EnhancedEscrowData>) => {
     const newData = { ...escrowData, ...updates };
 
@@ -335,10 +386,32 @@ export function EscrowProtectionEnhanced({
     }
 
     setEscrowData(newData);
-    // Use setTimeout to avoid setState during render
+
+    // Call parent's onChange
     setTimeout(() => {
       onEscrowDataChange(newData);
     }, 0);
+
+    // Sync to PartyKit if in collaborative mode (Step 5)
+    if (conflictResolution && currentUserId && currentStep === 5) {
+      // Clear existing debounce timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      // Debounce sync (500ms delay)
+      debounceTimerRef.current = setTimeout(() => {
+        conflictResolution.selectField(
+          'escrowData' as keyof typeof conflictResolution.sharedSelections,
+          {
+            value: newData,
+            userId: currentUserId,
+            timestamp: Date.now(),
+          }
+        );
+        debounceTimerRef.current = undefined;
+      }, 500);
+    }
   };
 
   const addDeliverable = async (

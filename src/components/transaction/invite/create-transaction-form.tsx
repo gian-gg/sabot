@@ -34,7 +34,6 @@ import { createClient } from '@/lib/supabase/client';
 import { mapConditionToOption } from '@/lib/utils/condition-mapping';
 import type { AnalysisData } from '@/types/analysis';
 import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
-import { featureFlags } from '@/lib/config/features';
 import {
   Calendar,
   CheckCircle2,
@@ -143,10 +142,11 @@ export function CreateTransactionForm({
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
+    const timers = debounceTimersRef.current;
     return () => {
       // Clear all debounce timers
-      debounceTimersRef.current.forEach((timer) => clearTimeout(timer));
-      debounceTimersRef.current.clear();
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 
@@ -428,6 +428,124 @@ export function CreateTransactionForm({
     deliverables: [],
     arbiter_required: false,
   });
+
+  // Track last switch change timestamps to prevent circular updates
+  const lastSwitchChangeRef = React.useRef<{
+    escrowEnabled?: number;
+    arbiterEnabled?: number;
+  }>({});
+
+  // Sync escrowEnabled state changes
+  const updateEscrowEnabled = useCallback(
+    (enabled: boolean) => {
+      setEscrowEnabled(enabled);
+
+      // Record timestamp
+      lastSwitchChangeRef.current.escrowEnabled = Date.now();
+
+      // Sync to PartyKit if in Step 5
+      if (conflictResolution && currentUserId && currentStep === 5) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            'escrowEnabled' as keyof AnalysisData,
+            {
+              value: enabled,
+              userId: currentUserId,
+              timestamp:
+                lastSwitchChangeRef.current.escrowEnabled || Date.now(),
+            }
+          );
+        }, 0);
+      }
+    },
+    [conflictResolution, currentUserId, currentStep]
+  );
+
+  // Sync arbiterEnabled state changes
+  const updateArbiterEnabled = useCallback(
+    (enabled: boolean) => {
+      setArbiterEnabled(enabled);
+      setEscrowData((prev) => ({
+        ...prev,
+        arbiter_required: enabled,
+      }));
+
+      // Record timestamp
+      lastSwitchChangeRef.current.arbiterEnabled = Date.now();
+
+      // Sync to PartyKit if in Step 5
+      if (conflictResolution && currentUserId && currentStep === 5) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            'arbiterEnabled' as keyof AnalysisData,
+            {
+              value: enabled,
+              userId: currentUserId,
+              timestamp:
+                lastSwitchChangeRef.current.arbiterEnabled || Date.now(),
+            }
+          );
+        }, 0);
+      }
+    },
+    [conflictResolution, currentUserId, currentStep]
+  );
+
+  // Listen for escrowEnabled/arbiterEnabled changes from other party
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep !== 5) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    // Check escrowEnabled
+    const escrowSelection =
+      sharedSelections['escrowEnabled' as keyof AnalysisData];
+    if (escrowSelection) {
+      const data = escrowSelection.value as {
+        value: boolean;
+        userId: string;
+        timestamp: number;
+      };
+
+      // Only apply if from other user AND timestamp is newer than our last change
+      if (data.userId !== currentUserId) {
+        const lastChange = lastSwitchChangeRef.current.escrowEnabled || 0;
+        // Only update if incoming change is newer (with 100ms tolerance to prevent race conditions)
+        if (data.timestamp > lastChange + 100) {
+          setEscrowEnabled(data.value);
+        }
+      }
+    }
+
+    // Check arbiterEnabled
+    const arbiterSelection =
+      sharedSelections['arbiterEnabled' as keyof AnalysisData];
+    if (arbiterSelection) {
+      const data = arbiterSelection.value as {
+        value: boolean;
+        userId: string;
+        timestamp: number;
+      };
+
+      // Only apply if from other user AND timestamp is newer than our last change
+      if (data.userId !== currentUserId) {
+        const lastChange = lastSwitchChangeRef.current.arbiterEnabled || 0;
+        // Only update if incoming change is newer (with 100ms tolerance to prevent race conditions)
+        if (data.timestamp > lastChange + 100) {
+          setArbiterEnabled(data.value);
+          setEscrowData((prev) => ({
+            ...prev,
+            arbiter_required: data.value,
+          }));
+        }
+      }
+    }
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+  ]);
 
   // Track debounce timers for field changes
   const debounceTimersRef = React.useRef<Map<string, NodeJS.Timeout>>(
@@ -2115,11 +2233,11 @@ export function CreateTransactionForm({
                 <Card className="border-2 shadow-lg">
                   <EscrowProtectionEnhanced
                     enabled={escrowEnabled}
-                    onEnabledChange={setEscrowEnabled}
+                    onEnabledChange={updateEscrowEnabled}
                     onEscrowDataChange={(data) => {
                       setEscrowData(data);
                       // Don't auto-enable arbiter from escrow
-                      setArbiterEnabled(false);
+                      updateArbiterEnabled(false);
                     }}
                     agreementTitle={formData.item_name}
                     agreementTerms={formData.item_description}
@@ -2135,6 +2253,9 @@ export function CreateTransactionForm({
                     participantId={otherUserId || ''}
                     initiatorName={currentUserName}
                     participantName={otherUserName}
+                    conflictResolution={conflictResolution}
+                    currentUserId={currentUserId || undefined}
+                    currentStep={currentStep}
                   />
                 </Card>
               </div>
@@ -2159,13 +2280,7 @@ export function CreateTransactionForm({
                       </div>
                       <Switch
                         checked={arbiterEnabled}
-                        onCheckedChange={(checked) => {
-                          setArbiterEnabled(checked);
-                          setEscrowData((prev) => ({
-                            ...prev,
-                            arbiter_required: checked,
-                          }));
-                        }}
+                        onCheckedChange={updateArbiterEnabled}
                         aria-label="Enable arbiter oversight"
                         className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
                       />
