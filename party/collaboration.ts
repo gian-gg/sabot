@@ -339,18 +339,21 @@ export default class CollaborationServer implements Party.Server {
         }
 
         // Allow connection - store user info
+        const userId = typeof msg.userId === 'string' ? msg.userId : '';
+        const userName = typeof msg.userName === 'string' ? msg.userName : '';
+
         connectionUserMap.set(sender.id, {
-          userId: msg.userId,
-          userName: msg.userName,
+          userId,
+          userName,
         });
 
         // Cancel any pending disconnect for this user (they reconnected)
-        const pendingTimeout = pendingDisconnects.get(msg.userId);
+        const pendingTimeout = pendingDisconnects.get(userId);
         if (pendingTimeout) {
           clearTimeout(pendingTimeout);
-          pendingDisconnects.delete(msg.userId);
+          pendingDisconnects.delete(userId);
           this.logger.log(
-            ` User ${msg.userName} reconnected, cancelled disconnect timer`
+            ` User ${userName} reconnected, cancelled disconnect timer`
           );
         }
 
