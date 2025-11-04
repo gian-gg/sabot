@@ -27,6 +27,12 @@ This documentation is divided into the following sections:
 - [Escrow Quick Start](./04-user-guide/01-escrow-quick-start.md)
 - [PDF Export Guide](./04-user-guide/02-pdf-export-guide.md)
 
-## 5. Verification System
+## 5. Real-Time Synchronization
 
-- [Verification Flow](./05-verification-system/01-verification-flow.md)
+- [Overview](./05-real-time-sync/README.md)
+- [Transaction Real-Time Sync](./05-real-time-sync/TRANSACTION_REALTIME_SYNC.md)
+- [Agreement Real-Time Collaboration](./05-real-time-sync/AGREEMENT_REALTIME_SYNC.md)
+
+## 6. Verification System
+
+- [Verification Flow](./02-architecture/06-verification-flow.md)
