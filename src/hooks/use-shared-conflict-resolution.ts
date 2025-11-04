@@ -65,7 +65,6 @@ export function useSharedConflictResolution(
   >({});
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [otherPartyDisconnected, setOtherPartyDisconnected] = useState(false);
 
   // Message acknowledgment tracking
   const pendingMessagesRef = React.useRef<
@@ -368,9 +367,28 @@ export function useSharedConflictResolution(
           if (message.userId && message.userName) {
             logger.log('[ConflictResolution] User joined:', message.userName);
             const { userId: joinedUserId, userName: joinedUserName } = message;
+
+            // Check if this is a reconnection (user was previously in participants)
+            if (joinedUserId !== userId) {
+              logger.log(
+                '[ConflictResolution] ✅ Other party joined/reconnected!'
+              );
+
+              // Note: We rely on participants array to track who's in the room
+              // No separate disconnected state needed
+            }
+
             setParticipants((prev) => {
               const exists = prev.find((p) => p.id === joinedUserId);
-              if (exists) return prev;
+              if (exists) {
+                // User reconnected - show toast
+                if (joinedUserId !== userId) {
+                  toast.success('Other party reconnected', {
+                    duration: 3000,
+                  });
+                }
+                return prev;
+              }
               return [
                 ...prev,
                 {
@@ -434,8 +452,10 @@ export function useSharedConflictResolution(
 
             // Check if it's not the current user who left
             if (leftUserId !== userId) {
-              logger.log('[ConflictResolution] ⚠️ Other party disconnected!');
-              setOtherPartyDisconnected(true);
+              logger.log('[ConflictResolution] ⚠️ Other party left the room');
+
+              // No toast needed - participants array update is enough
+              // The absence from participants array indicates they're gone
             }
 
             // Remove user from participants
@@ -663,7 +683,6 @@ export function useSharedConflictResolution(
     sharedSelections,
     participants,
     isConnected,
-    otherPartyDisconnected,
     selectField,
     getFieldSelection,
     hasSelection,
