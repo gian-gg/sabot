@@ -1,18 +1,20 @@
 /**
- * Example: Using Confirmation Requests for Critical Changes
+ * Example: Using Field Change Approval for Critical Changes
  *
- * This file demonstrates how to implement confirmation requests
- * for critical field changes in the transaction flow.
+ * This file demonstrates how to implement field change approval
+ * for critical field changes in the transaction flow using the
+ * FieldChangeApproval component and PartyKit sync.
  */
 
 import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
 import type { AnalysisData } from '@/types/analysis';
 
-// Example 1: Request confirmation before changing price
+// Example 1: Broadcast field change with approval required
 export function usePriceChangeWithConfirmation(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
+  currentUserId: string,
   currentStep: number
 ) {
   const handlePriceChange = (
@@ -22,36 +24,38 @@ export function usePriceChangeWithConfirmation(
     if (!conflictResolution) return;
 
     if (requireConfirmation && conflictResolution.participants.length > 1) {
-      // Request confirmation from other party
-      conflictResolution.requestConfirmation(
-        'proposedPrice',
-        newPrice,
-        currentStep
-      );
+      // Broadcast field change - FieldChangeApproval will handle confirmation
+      const messageId = `change-proposedPrice-${Date.now()}`;
+      conflictResolution.selectField('proposedPrice' as keyof AnalysisData, {
+        field: 'proposedPrice',
+        value: newPrice,
+        userId: currentUserId,
+        timestamp: Date.now(),
+        messageId,
+      });
 
-      // The change will be applied only after confirmation
-      // Listen for confirmation_response in the hook
+      // The change will be applied only after other party approves
+      // via FieldChangeApproval component
     } else {
       // Apply change immediately (solo user or confirmation disabled)
-      // ... update form data
-
-      // Still notify the other party
-      conflictResolution.notifyFieldChange(
-        'proposedPrice',
-        newPrice,
-        currentStep
-      );
+      conflictResolution.selectField('proposedPrice' as keyof AnalysisData, {
+        field: 'proposedPrice',
+        value: newPrice,
+        userId: currentUserId,
+        timestamp: Date.now(),
+      });
     }
   };
 
   return { handlePriceChange };
 }
 
-// Example 2: Batch confirmation for multiple fields
+// Example 2: Batch changes for multiple fields
 export function useBatchFieldConfirmation(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
+  currentUserId: string,
   currentStep: number
 ) {
   const requestBatchConfirmation = (
@@ -62,9 +66,16 @@ export function useBatchFieldConfirmation(
   ) => {
     if (!conflictResolution) return;
 
-    // Send separate confirmation request for each field
+    // Send separate change for each field
     changes.forEach(({ field, value }) => {
-      conflictResolution.requestConfirmation(field, value, currentStep);
+      const messageId = `change-${String(field)}-${Date.now()}`;
+      conflictResolution.selectField(field, {
+        field,
+        value,
+        userId: currentUserId,
+        timestamp: Date.now(),
+        messageId,
+      });
     });
   };
 
@@ -76,6 +87,7 @@ export function useSmartPriceConfirmation(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
+  currentUserId: string,
   currentStep: number,
   currentPrice: number
 ) {
@@ -89,46 +101,38 @@ export function useSmartPriceConfirmation(
     // Require confirmation if price changes by more than 10%
     const requiresConfirmation = percentageChange > 10;
 
-    if (requiresConfirmation) {
-      conflictResolution.requestConfirmation(
-        'proposedPrice',
-        newPrice,
-        currentStep
-      );
-    } else {
-      // Small change - just notify
-      conflictResolution.notifyFieldChange(
-        'proposedPrice',
-        newPrice,
-        currentStep
-      );
-    }
+    const messageId = requiresConfirmation
+      ? `change-proposedPrice-${Date.now()}`
+      : undefined;
+
+    conflictResolution.selectField('proposedPrice' as keyof AnalysisData, {
+      field: 'proposedPrice',
+      value: newPrice,
+      userId: currentUserId,
+      timestamp: Date.now(),
+      messageId, // Include messageId only if confirmation required
+    });
   };
 
   return { handlePriceChange };
 }
 
-// Example 4: Listen for confirmation responses
+// Example 4: Listen for approval/rejection responses
 export function useConfirmationResponseHandler() {
-  // This would be integrated into the component that requested confirmation
+  // This is handled by FieldChangeApproval component
+  // which dispatches 'transaction-confirmation-required' events
 
-  const handleConfirmationResponse = (
-    confirmed: boolean,
-    field: keyof AnalysisData,
-    value: unknown
-  ) => {
-    if (confirmed) {
-      console.log(`✅ Change confirmed for ${field}:`, value);
-      // Apply the change
-      // updateFormData(field, value);
-    } else {
-      console.log(`❌ Change rejected for ${field}`);
-      // Revert to previous value or show error
-      // toast.error('Change was not accepted by the other party');
-    }
+  const handleApproval = (field: string, value: unknown) => {
+    console.log(`✅ Change approved for ${field}:`, value);
+    // Apply the change via handleApproveChange callback
   };
 
-  return { handleConfirmationResponse };
+  const handleRejection = (field: string) => {
+    console.log(`❌ Change rejected for ${field}`);
+    // Keep current value via handleRejectChange callback
+  };
+
+  return { handleApproval, handleRejection };
 }
 
 // Example 5: Integration in CreateTransactionForm
@@ -136,81 +140,45 @@ export function exampleIntegration() {
   /*
   // In CreateTransactionForm component:
   
-  const updateFormDataWithConfirmation = (
-    field: keyof TransactionFormData,
-    value: string,
-    requireConfirmation: boolean = false
-  ) => {
-    if (requireConfirmation && conflictResolution) {
-      // Request confirmation first
-      conflictResolution.requestConfirmation(
-        field as keyof AnalysisData,
-        value,
-        currentStep
-      );
-      
-      // Store pending change
-      setPendingChanges((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-      
-      // Show toast to user
-      toast.info('Confirmation requested from other party');
-      
-      // The change will be applied when confirmation is received
-      // via the confirmation_response handler in the hook
-    } else {
-      // Apply immediately
-      setFormData((prev) => {
-        // Notify if this is an actual change
-        if (prev[field] && prev[field] !== value && conflictResolution) {
-          conflictResolution.notifyFieldChange(
-            field as keyof AnalysisData,
+  const updateFormData = (field: keyof TransactionFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // Broadcast with debounce (already implemented)
+    if (conflictResolution && currentUserId && currentStep >= 3) {
+      const existingTimer = debounceTimersRef.current.get(field);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+
+      const timer = setTimeout(() => {
+        const messageId = `change-formField_${field}-${Date.now()}`;
+        conflictResolution.selectField(
+          `formField_${field}` as keyof AnalysisData,
+          {
+            field,
             value,
-            currentStep
-          );
-        }
-        
-        return { ...prev, [field]: value };
-      });
+            userId: currentUserId,
+            timestamp: Date.now(),
+            messageId, // Triggers FieldChangeApproval dialog
+          }
+        );
+        debounceTimersRef.current.delete(field);
+      }, 500);
+
+      debounceTimersRef.current.set(field, timer);
     }
   };
   
-  // Listen for confirmation responses
-  useEffect(() => {
-    const handleConfirmationEvent = (event: CustomEvent) => {
-      const { messageId, confirmed } = event.detail;
-      
-      // Find the pending change
-      const change = pendingChanges[messageId];
-      
-      if (confirmed && change) {
-        // Apply the confirmed change
-        setFormData((prev) => ({
-          ...prev,
-          ...change,
-        }));
-        
-        // Clear pending change
-        setPendingChanges((prev) => {
-          const newPending = { ...prev };
-          delete newPending[messageId];
-          return newPending;
-        });
-      }
-    };
-    
-    window.addEventListener('transaction-confirmation-response', handleConfirmationEvent);
-    
-    return () => {
-      window.removeEventListener('transaction-confirmation-response', handleConfirmationEvent);
-    };
-  }, [pendingChanges]);
+  // FieldChangeApproval component handles approval dialogs
+  <FieldChangeApproval
+    onRespond={handleChangeResponse}
+    onApprove={handleApproveChange}
+    onReject={handleRejectChange}
+  />
   */
 }
 
-// Example 6: Confirmation for critical fields only
+// Example 6: Critical fields that require approval
 const CRITICAL_FIELDS: Array<keyof AnalysisData> = [
   'proposedPrice',
   'meetingLocation',
@@ -225,18 +193,22 @@ export function useFieldChangeHandler(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
+  currentUserId: string,
   currentStep: number
 ) {
   const handleFieldChange = (field: keyof AnalysisData, value: unknown) => {
     if (!conflictResolution) return;
 
-    // Critical fields require confirmation
-    if (isCriticalField(field)) {
-      conflictResolution.requestConfirmation(field, value, currentStep);
-    } else {
-      // Non-critical fields just notify
-      conflictResolution.notifyFieldChange(field, value, currentStep);
-    }
+    // All fields in Step 3+ trigger approval via messageId
+    const messageId = `change-${String(field)}-${Date.now()}`;
+
+    conflictResolution.selectField(field, {
+      field,
+      value,
+      userId: currentUserId,
+      timestamp: Date.now(),
+      messageId, // Triggers FieldChangeApproval component
+    });
   };
 
   return { handleFieldChange };
