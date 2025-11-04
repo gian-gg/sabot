@@ -261,38 +261,40 @@ export default class CollaborationServer implements Party.Server {
 
       // Handle field_selected - persist to storage
       if (msg.type === 'field_selected' && msg.selection) {
-        this.logger.log(` Persisting field selection: ${msg.selection.field}`);
+        const selection = msg.selection as SharedSelection;
+        this.logger.log(` Persisting field selection: ${selection.field}`);
 
         // Update state in storage with conflict resolution
         this.getState().then((state) => {
-          const existing = state.selections[msg.selection.field];
+          const existing = state.selections[selection.field];
 
           // Conflict resolution: timestamp + userId tiebreaker
           const shouldUpdate =
             !existing ||
-            msg.selection.timestamp > existing.timestamp ||
-            (msg.selection.timestamp === existing.timestamp &&
-              msg.selection.userId > existing.userId);
+            selection.timestamp > existing.timestamp ||
+            (selection.timestamp === existing.timestamp &&
+              selection.userId > existing.userId);
 
           if (shouldUpdate) {
-            state.selections[msg.selection.field] = msg.selection;
+            state.selections[selection.field] = selection;
             state.lastUpdated = Date.now();
 
             this.setState(state).then(() => {
               this.logger.log(
-                ` ✅ Persisted selection for field: ${msg.selection.field}`,
-                `timestamp: ${msg.selection.timestamp}`,
-                `userId: ${msg.selection.userId}`
+                ` ✅ Persisted selection for field: ${selection.field}`,
+                `timestamp: ${selection.timestamp}`,
+                `userId: ${selection.userId}`
               );
             });
           } else {
             this.logger.log(
-              ` Ignoring lower-priority selection for field: ${msg.selection.field}`,
+              ` Ignoring lower-priority selection for field: ${selection.field}`,
               `existing timestamp: ${existing.timestamp}, userId: ${existing.userId}`,
-              `incoming timestamp: ${msg.selection.timestamp}, userId: ${msg.selection.userId}`
+              `incoming timestamp: ${selection.timestamp}, userId: ${selection.userId}`
             );
           }
         });
+        // Continue to broadcast to other clients
       }
 
       // Store userId for this connection when they join
@@ -358,6 +360,10 @@ export default class CollaborationServer implements Party.Server {
       }
 
       // Broadcast to all connections in the room (excluding sender)
+      const connections = [...this.room.getConnections()];
+      this.logger.log(
+        ` 📡 Broadcasting ${msg.type} to ${connections.length - 1} other connections`
+      );
       this.room.broadcast(message, [sender.id]);
     }
   }

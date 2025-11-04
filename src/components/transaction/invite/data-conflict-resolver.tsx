@@ -607,9 +607,6 @@ export function DataConflictResolver({
               window.location.reload();
             }
           }}
-          otherPartyDisconnected={
-            externalConflictResolution?.otherPartyDisconnected
-          }
         />
       </div>
 
