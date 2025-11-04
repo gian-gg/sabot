@@ -1,6 +1,3 @@
-import * as Y from 'yjs';
-import * as awarenessProtocol from 'y-protocols/awareness';
-
 export interface UserPresence {
   id: string;
   email: string;
@@ -28,103 +25,27 @@ const USER_COLORS = [
 ];
 
 /**
- * Create and manage user presence awareness
+ * Get a random user color
  */
-export function createAwareness(ydoc: Y.Doc): awarenessProtocol.Awareness {
-  const awareness = new awarenessProtocol.Awareness(ydoc);
-
-  // Assign random color to user
-  const randomColor =
-    USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
-
-  // Set initial awareness state
-  awareness.setLocalState({
-    user: {
-      id: `user-${Math.random().toString(36).substring(2, 11)}`,
-      email: 'user@example.com',
-      name: 'User',
-      color: randomColor,
-      cursor: null,
-      selection: null,
-    },
-  });
-
-  return awareness;
+export function getRandomUserColor(): string {
+  return USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
 }
 
 /**
- * Get all active users from awareness
+ * Create a default user presence object
  */
-export function getActiveUsers(
-  awareness: awarenessProtocol.Awareness
-): UserPresence[] {
-  const users: UserPresence[] = [];
-  const states = awareness.getStates();
-
-  states.forEach((state) => {
-    if (state.user) {
-      users.push(state.user as UserPresence);
-    }
-  });
-
-  return users.filter((user) => user.id !== String(awareness.clientID));
-}
-
-/**
- * Update local cursor position
- */
-export function updateCursorPosition(
-  awareness: awarenessProtocol.Awareness,
-  line: number,
-  ch: number
-): void {
-  const state = awareness.getLocalState();
-  if (state) {
-    awareness.setLocalState({
-      ...state,
-      user: {
-        ...(state.user as UserPresence),
-        cursor: { line, ch },
-      },
-    });
-  }
-}
-
-/**
- * Update local selection
- */
-export function updateSelection(
-  awareness: awarenessProtocol.Awareness,
-  anchor: number,
-  head: number
-): void {
-  const state = awareness.getLocalState();
-  if (state) {
-    awareness.setLocalState({
-      ...state,
-      user: {
-        ...(state.user as UserPresence),
-        selection: { anchor, head },
-      },
-    });
-  }
-}
-
-/**
- * Update user presence
- */
-export function updateUserPresence(
-  _payload: unknown,
-  awareness: awarenessProtocol.Awareness
-): void {
-  const state = awareness.getLocalState();
-  if (state) {
-    awareness.setLocalState({
-      ...state,
-      user: {
-        ...(state.user as UserPresence),
-        cursor: { line: 0, ch: 0 },
-      },
-    });
-  }
+export function createUserPresence(
+  id?: string,
+  name?: string,
+  email?: string
+): UserPresence {
+  const userId = id ?? `user-${Math.random().toString(36).substring(2, 11)}`;
+  return {
+    id: userId,
+    email: email ?? 'user@example.com',
+    name: name ?? 'User',
+    color: getRandomUserColor(),
+    cursor: null,
+    selection: null,
+  };
 }

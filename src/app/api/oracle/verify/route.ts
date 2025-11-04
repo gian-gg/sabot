@@ -255,7 +255,7 @@ Only mark as verified if confidence >= 80%.
 
     const ai = geminiClient();
     const result = await ai.models.generateContent({
-      model: 'gemini-pro',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           parts: [{ text: prompt }],

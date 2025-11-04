@@ -9,6 +9,8 @@ export async function GET(
     const supabase = await createClient();
     const { id } = await params;
 
+    console.log('🔍 GET /api/transaction/[id] - Request received:', { id });
+
     // Check authentication
     const {
       data: { user },
@@ -16,8 +18,14 @@ export async function GET(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('❌ Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('✅ User authenticated:', {
+      userId: user.id,
+      email: user.email,
+    });
 
     // Get transaction with creator information
     const { data: transaction, error: transactionError } = await supabase
@@ -26,7 +34,16 @@ export async function GET(
       .eq('id', id)
       .single();
 
-    if (transactionError || !transaction) {
+    if (transactionError) {
+      console.error('❌ Transaction query error:', transactionError);
+      return NextResponse.json(
+        { error: 'Transaction not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!transaction) {
+      console.error('❌ Transaction not found in database');
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
@@ -34,6 +51,8 @@ export async function GET(
     }
 
     console.log('📦 Transaction data:', {
+      id: transaction.id,
+      creator_id: transaction.creator_id,
       creator_name: transaction.creator_name,
       creator_email: transaction.creator_email,
       creator_avatar: transaction.creator_avatar_url,
@@ -41,7 +60,7 @@ export async function GET(
 
     return NextResponse.json(transaction);
   } catch (error) {
-    console.error('Error fetching transaction:', error);
+    console.error('❌ Error fetching transaction:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

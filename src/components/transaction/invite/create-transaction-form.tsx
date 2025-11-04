@@ -7,6 +7,7 @@ import {
 } from '@/components/agreement/finalize/escrow-protection-enhanced';
 import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analysis';
 import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
+import { FieldChangeApproval } from '@/components/transaction/invite/field-change-approval';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ import { ROUTES } from '@/constants/routes';
 import { createClient } from '@/lib/supabase/client';
 import { mapConditionToOption } from '@/lib/utils/condition-mapping';
 import type { AnalysisData } from '@/types/analysis';
+import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
 import {
   Calendar,
   CheckCircle2,
@@ -46,9 +48,10 @@ import {
   Shield,
   Truck,
   Unlock,
+  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 
 const STEPS = [
@@ -86,16 +89,26 @@ interface AnalysisWithSource extends AnalysisData {
 export function CreateTransactionForm({
   transactionId,
   onTransactionCreated,
+  conflictResolution,
+  userId,
+  userName,
 }: {
   transactionId?: string;
   onTransactionCreated?: (id: string) => void;
+  conflictResolution?: ReturnType<typeof useSharedConflictResolution>;
+  userId?: string;
+  userName?: string;
 }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(
+    userId || null
+  );
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
-  const [currentUserName, setCurrentUserName] = useState<string>('You');
+  const [currentUserName, setCurrentUserName] = useState<string>(
+    userName || 'You'
+  );
   const [otherUserName, setOtherUserName] = useState<string>('Other Party');
   const [extractedData, setExtractedData] = useState<AnalysisData | null>(null);
   const [isDataExtracted, setIsDataExtracted] = useState(false);
@@ -103,6 +116,10 @@ export function CreateTransactionForm({
     AnalysisWithSource[]
   >([]);
   const [hasConflicts, setHasConflicts] = useState(false);
+  const [bothPartiesReady, setBothPartiesReady] = useState(false);
+  const [conflictsWereResolved, setConflictsWereResolved] = useState(false);
+  const [analysisCompleted, setAnalysisCompleted] = useState(false);
+  const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
 
   // Scroll to top whenever the step changes
   useEffect(() => {
@@ -110,6 +127,28 @@ export function CreateTransactionForm({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  // Track when current user confirms in conflict resolution
+  useEffect(() => {
+    if (conflictResolution && currentUserId) {
+      const currentUser = conflictResolution.participants.find(
+        (p) => p.id === currentUserId || p.id === userId
+      );
+      if (currentUser) {
+        setCurrentUserConfirmed(currentUser.isReady);
+      }
+    }
+  }, [conflictResolution, currentUserId, userId]);
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    const timers = debounceTimersRef.current;
+    return () => {
+      // Clear all debounce timers
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 
   // Track which fields are locked individually
   const [fieldLocks, setFieldLocks] = useState({
@@ -199,9 +238,187 @@ export function CreateTransactionForm({
     fetchUserData();
   }, [transactionId]);
 
+  // Sync field lock states from other party
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+    const lockUpdates: Partial<typeof fieldLocks> = {};
+    const notifiedFields = new Set<string>();
+
+    Object.entries(sharedSelections).forEach(([key, selection]) => {
+      if (key.startsWith('fieldLock_') && selection) {
+        const lockData = selection.value as {
+          field: keyof typeof fieldLocks;
+          locked: boolean;
+          userId: string;
+          timestamp: number;
+        };
+
+        // Only apply lock changes from other party
+        if (lockData.userId !== currentUserId) {
+          const fieldKey = lockData.field;
+          const previousState = fieldLocks[fieldKey];
+
+          // Only update if state actually changed
+          if (previousState !== lockData.locked) {
+            lockUpdates[fieldKey] = lockData.locked;
+
+            // Show notification about other party's action (only once per field)
+            if (!notifiedFields.has(fieldKey)) {
+              notifiedFields.add(fieldKey);
+              if (lockData.locked) {
+                toast.info(
+                  `Other party locked ${getFieldDisplayName(fieldKey)}`,
+                  {
+                    duration: 2000,
+                  }
+                );
+              } else {
+                toast.info(
+                  `Other party unlocked ${getFieldDisplayName(fieldKey)}`,
+                  {
+                    duration: 2000,
+                  }
+                );
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (Object.keys(lockUpdates).length > 0) {
+      setFieldLocks((prev) => ({ ...prev, ...lockUpdates }));
+    }
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    fieldLocks,
+  ]);
+
+  // Track which change requests we've already shown
+  const shownChangeRequestsRef = React.useRef<Set<string>>(new Set());
+
+  // Sync form data changes from other party (Step 3+) - Request approval
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep < 3) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    Object.entries(sharedSelections).forEach(([key, selection]) => {
+      if (key.startsWith('formField_') && selection) {
+        const fieldData = selection.value as {
+          field: keyof TransactionFormData;
+          value: string;
+          userId: string;
+          timestamp: number;
+          messageId?: string;
+        };
+
+        // Only trigger approval for changes from other party
+        if (fieldData.userId !== currentUserId) {
+          // Generate or use existing message ID
+          const messageId =
+            fieldData.messageId || `change-${key}-${fieldData.timestamp}`;
+
+          // Check if we've already shown this change request
+          if (shownChangeRequestsRef.current.has(messageId)) {
+            return; // Skip if already shown
+          }
+
+          // Check if value is actually different from current value
+          const currentValue = formData[fieldData.field];
+          if (currentValue === fieldData.value) {
+            return; // Skip if value hasn't changed
+          }
+
+          // Mark as shown
+          shownChangeRequestsRef.current.add(messageId);
+
+          // Dispatch custom event for FieldChangeApproval to handle
+          const event = new CustomEvent('transaction-confirmation-required', {
+            detail: {
+              messageId,
+              field: fieldData.field,
+              value: fieldData.value,
+              userName:
+                currentUserName === 'You' ? 'Other Party' : otherUserName,
+              step: currentStep,
+            },
+          });
+          window.dispatchEvent(event);
+        }
+      }
+    });
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+    currentUserName,
+    otherUserName,
+    formData,
+  ]);
+
   // Helper to toggle individual field lock
   const toggleFieldLock = (field: keyof typeof fieldLocks) => {
-    setFieldLocks((prev) => ({ ...prev, [field]: !prev[field] }));
+    setFieldLocks((prev) => {
+      const newLockState = !prev[field];
+
+      // Show toast notification
+      if (newLockState) {
+        toast.success(`Locked ${getFieldDisplayName(field)}`, {
+          duration: 2000,
+        });
+      } else {
+        toast.info(`Unlocked ${getFieldDisplayName(field)} for editing`, {
+          duration: 2000,
+          description: 'You can now modify this field',
+        });
+      }
+
+      // Broadcast lock state change to other party if using real-time collaboration
+      // Use setTimeout to avoid setState during render
+      if (conflictResolution && currentUserId) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            `fieldLock_${field}` as keyof AnalysisData,
+            {
+              field,
+              locked: newLockState,
+              userId: currentUserId,
+              timestamp: Date.now(),
+            }
+          );
+        }, 0);
+      }
+
+      return { ...prev, [field]: newLockState };
+    });
+  };
+
+  // Helper to get display name for field
+  const getFieldDisplayName = (field: string): string => {
+    const displayNames: Record<string, string> = {
+      item_name: 'Item Name',
+      product_model: 'Product Model',
+      item_description: 'Description',
+      price: 'Price',
+      quantity: 'Quantity',
+      condition: 'Condition',
+      category: 'Category',
+      transaction_type: 'Transaction Type',
+      meeting_location: 'Meeting Location',
+      meeting_time: 'Meeting Time',
+      delivery_address: 'Delivery Address',
+      delivery_method: 'Delivery Method',
+      online_platform: 'Online Platform',
+      online_contact: 'Online Contact',
+      online_instructions: 'Online Instructions',
+    };
+    return displayNames[field] || field;
   };
 
   // Escrow data
@@ -212,9 +429,205 @@ export function CreateTransactionForm({
     arbiter_required: false,
   });
 
+  // Track last switch change timestamps to prevent circular updates
+  const lastSwitchChangeRef = React.useRef<{
+    escrowEnabled?: number;
+    arbiterEnabled?: number;
+  }>({});
+
+  // Sync escrowEnabled state changes
+  const updateEscrowEnabled = useCallback(
+    (enabled: boolean) => {
+      setEscrowEnabled(enabled);
+
+      // Record timestamp
+      lastSwitchChangeRef.current.escrowEnabled = Date.now();
+
+      // Sync to PartyKit if in Step 5
+      if (conflictResolution && currentUserId && currentStep === 5) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            'escrowEnabled' as keyof AnalysisData,
+            {
+              value: enabled,
+              userId: currentUserId,
+              timestamp:
+                lastSwitchChangeRef.current.escrowEnabled || Date.now(),
+            }
+          );
+        }, 0);
+      }
+    },
+    [conflictResolution, currentUserId, currentStep]
+  );
+
+  // Sync arbiterEnabled state changes
+  const updateArbiterEnabled = useCallback(
+    (enabled: boolean) => {
+      setArbiterEnabled(enabled);
+      setEscrowData((prev) => ({
+        ...prev,
+        arbiter_required: enabled,
+      }));
+
+      // Record timestamp
+      lastSwitchChangeRef.current.arbiterEnabled = Date.now();
+
+      // Sync to PartyKit if in Step 5
+      if (conflictResolution && currentUserId && currentStep === 5) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            'arbiterEnabled' as keyof AnalysisData,
+            {
+              value: enabled,
+              userId: currentUserId,
+              timestamp:
+                lastSwitchChangeRef.current.arbiterEnabled || Date.now(),
+            }
+          );
+        }, 0);
+      }
+    },
+    [conflictResolution, currentUserId, currentStep]
+  );
+
+  // Listen for escrowEnabled/arbiterEnabled changes from other party
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep !== 5) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    // Check escrowEnabled
+    const escrowSelection =
+      sharedSelections['escrowEnabled' as keyof AnalysisData];
+    if (escrowSelection) {
+      const data = escrowSelection.value as {
+        value: boolean;
+        userId: string;
+        timestamp: number;
+      };
+
+      // Only apply if from other user AND timestamp is newer than our last change
+      if (data.userId !== currentUserId) {
+        const lastChange = lastSwitchChangeRef.current.escrowEnabled || 0;
+        // Only update if incoming change is newer (with 100ms tolerance to prevent race conditions)
+        if (data.timestamp > lastChange + 100) {
+          setEscrowEnabled(data.value);
+        }
+      }
+    }
+
+    // Check arbiterEnabled
+    const arbiterSelection =
+      sharedSelections['arbiterEnabled' as keyof AnalysisData];
+    if (arbiterSelection) {
+      const data = arbiterSelection.value as {
+        value: boolean;
+        userId: string;
+        timestamp: number;
+      };
+
+      // Only apply if from other user AND timestamp is newer than our last change
+      if (data.userId !== currentUserId) {
+        const lastChange = lastSwitchChangeRef.current.arbiterEnabled || 0;
+        // Only update if incoming change is newer (with 100ms tolerance to prevent race conditions)
+        if (data.timestamp > lastChange + 100) {
+          setArbiterEnabled(data.value);
+          setEscrowData((prev) => ({
+            ...prev,
+            arbiter_required: data.value,
+          }));
+        }
+      }
+    }
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+  ]);
+
+  // Track debounce timers for field changes
+  const debounceTimersRef = React.useRef<Map<string, NodeJS.Timeout>>(
+    new Map()
+  );
+
   const updateFormData = (field: keyof TransactionFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Broadcast form field change to other party if in collaborative mode (Step 3+)
+    // Use debounce to avoid sending on every keystroke
+    if (conflictResolution && currentUserId && currentStep >= 3) {
+      // Clear existing debounce timer for this field
+      const existingTimer = debounceTimersRef.current.get(field);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+
+      // Set new debounce timer (500ms delay)
+      const timer = setTimeout(() => {
+        const messageId = `change-formField_${field}-${Date.now()}`;
+        conflictResolution.selectField(
+          `formField_${field}` as keyof AnalysisData,
+          {
+            field,
+            value,
+            userId: currentUserId,
+            timestamp: Date.now(),
+            messageId, // Include message ID for approval tracking
+          }
+        );
+        debounceTimersRef.current.delete(field);
+      }, 500); // Wait 500ms after user stops typing
+
+      debounceTimersRef.current.set(field, timer);
+    }
   };
+
+  // Handle approval of field changes from other party
+  const handleApproveChange = useCallback((field: string, value: unknown) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value as string,
+    }));
+
+    // Auto-lock the field after approving change
+    setFieldLocks((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+
+    toast.success(`Applied change to ${getFieldDisplayName(field)}`, {
+      description: 'Field has been locked',
+    });
+  }, []);
+
+  // Handle rejection of field changes from other party
+  const handleRejectChange = useCallback((field: string) => {
+    toast.info(`Kept your value for ${getFieldDisplayName(field)}`);
+    // No action needed - keep current value
+  }, []);
+
+  // Handle response to change confirmation (approve/reject)
+  const handleChangeResponse = useCallback(
+    (messageId: string, confirmed: boolean) => {
+      // Broadcast response back to other party
+      if (conflictResolution && currentUserId) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            `changeResponse_${messageId}` as keyof AnalysisData,
+            {
+              messageId,
+              confirmed,
+              userId: currentUserId,
+              timestamp: Date.now(),
+            }
+          );
+        }, 0);
+      }
+    },
+    [conflictResolution, currentUserId]
+  );
 
   // Transform extracted analysis data to form data
   const transformExtractedData = (data: AnalysisData) => {
@@ -504,7 +917,16 @@ export function CreateTransactionForm({
   const handleAnalysisComplete = (
     data: AnalysisData | AnalysisWithSource[]
   ) => {
+    // Only process if we haven't already completed analysis
+    if (analysisCompleted) {
+      console.log('📊 Analysis already processed, skipping');
+      return;
+    }
+
     console.log('📊 Received analysis data:', data);
+
+    // Mark analysis as completed to prevent re-running
+    setAnalysisCompleted(true);
 
     // Check if we received multiple analyses
     if (Array.isArray(data)) {
@@ -522,11 +944,17 @@ export function CreateTransactionForm({
     }
   };
 
+  // Memoize the onAllReady callback to prevent recreating on every render
+  const handleAllReadyCallback = useCallback((isReady: boolean) => {
+    setBothPartiesReady(isReady);
+  }, []);
+
   // Callback for when conflicts are resolved
   const handleConflictsResolved = (resolvedData: AnalysisData) => {
     console.log('✅ Conflicts resolved:', resolvedData);
     setExtractedData(resolvedData);
     setHasConflicts(false);
+    setConflictsWereResolved(true); // Track that conflicts existed and were resolved
     transformExtractedData(resolvedData);
   };
 
@@ -541,26 +969,46 @@ export function CreateTransactionForm({
     return missing;
   };
 
-  const canProceedToNext = () => {
+  const canProceedToNext = useMemo(() => {
     switch (currentStep) {
       case 1:
         // Screenshot analysis step - only allow proceeding if we have a transactionId
         // This ensures the analysis can be performed
         return !!transactionId;
       case 2:
-        // Conflict resolution step - only proceed if conflicts are resolved or no conflicts exist
-        if (hasConflicts) {
-          return false; // Must resolve conflicts first
-        }
-        return true; // No conflicts or already resolved
+        // Conflict resolution step - always require both parties to be ready
+        // This ensures mutual confirmation before proceeding
+        return bothPartiesReady && (hasConflicts ? true : !!extractedData);
       case 3:
-        return (
+        // Check that all required fields are filled
+        const hasRequiredFields =
           formData.item_name &&
           formData.item_description &&
           formData.price &&
           formData.quantity &&
-          formData.category
-        );
+          formData.category;
+
+        // Check that all filled fields are locked
+        const requiredFieldNames: (keyof TransactionFormData)[] = [
+          'item_name',
+          'item_description',
+          'price',
+          'quantity',
+          'category',
+          'condition',
+          'product_model',
+        ];
+
+        const allRequiredFieldsLocked = requiredFieldNames.every((field) => {
+          // If field has a value, it must be locked
+          if (formData[field]) {
+            return fieldLocks[field];
+          }
+          // If field is empty, we don't care if it's locked
+          return true;
+        });
+
+        return hasRequiredFields && allRequiredFieldsLocked;
       case 4:
         if (formData.transaction_type === 'meetup') {
           return formData.meeting_location && formData.meeting_time;
@@ -603,10 +1051,21 @@ export function CreateTransactionForm({
       default:
         return false;
     }
-  };
+  }, [
+    currentStep,
+    transactionId,
+    hasConflicts,
+    bothPartiesReady,
+    extractedData,
+    formData,
+    escrowEnabled,
+    escrowData,
+    arbiterEnabled,
+    fieldLocks,
+  ]);
 
   const handleNext = () => {
-    if (canProceedToNext()) {
+    if (canProceedToNext) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
     } else {
       // Provide feedback on what's missing
@@ -640,11 +1099,27 @@ export function CreateTransactionForm({
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => {
+      const newStep = prev - 1;
+
+      // Prevent going back to step 1 if user has confirmed (on step 2)
+      if (prev === 2 && newStep === 1 && currentUserConfirmed) {
+        toast.info('Cannot go back after confirming. Please unconfirm first.');
+        return prev; // Stay on current step
+      }
+
+      // Prevent going back to conflict resolution (step 2) if already resolved
+      if (newStep === 2 && conflictsWereResolved) {
+        toast.info('Cannot return to conflict resolution after proceeding');
+        return prev; // Stay on current step
+      }
+
+      return Math.max(newStep, 1);
+    });
   };
 
   const handleSubmit = async () => {
-    if (!canProceedToNext()) return;
+    if (!canProceedToNext) return;
 
     setIsSubmitting(true);
     try {
@@ -760,6 +1235,10 @@ export function CreateTransactionForm({
             </Alert>
           );
         }
+
+        // Always show ScreenshotAnalysis - it handles its own state
+        // If analysis is completed, it will show the results
+        // If not completed, it will run the analysis
         return (
           <ScreenshotAnalysis
             transactionId={transactionId}
@@ -789,28 +1268,60 @@ export function CreateTransactionForm({
         }
 
         // If we have extracted data and no conflicts, show success
-        if (extractedData && !hasConflicts) {
-          return (
-            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800 dark:text-green-200">
-                ✅ Data extracted successfully with no conflicts. Click Next to
-                continue.
-              </AlertDescription>
-            </Alert>
-          );
-        }
+        // if (extractedData && !hasConflicts) {
+        //   return (
+        //     <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+        //       <CheckCircle2 className="h-4 w-4 text-green-600" />
+        //       <AlertDescription className="text-green-800 dark:text-green-200">
+        //         ✅ Data extracted successfully with no conflicts. Click Next to
+        //         continue.
+        //       </AlertDescription>
+        //     </Alert>
+        //   );
+        // }
 
         // Show conflict resolver
         return (
           <DataConflictResolver
             analyses={multipleAnalyses}
             onResolve={handleConflictsResolved}
+            transactionId={transactionId || 'temp-' + Date.now()}
+            userId={
+              currentUserId ||
+              userId ||
+              'tab-' + Math.random().toString(36).slice(2, 9)
+            }
+            userName={currentUserName || userName || 'Guest'}
+            onAllReady={handleAllReadyCallback}
+            conflictResolution={conflictResolution}
           />
         );
       case 3:
         return (
           <div className="space-y-6">
+            {/* Live Collaboration Status */}
+            {conflictResolution && (
+              <Alert
+                className={`${
+                  conflictResolution.isConnected
+                    ? 'border-blue-500/30 bg-blue-900/20'
+                    : 'border-yellow-500/30 bg-yellow-900/20'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <AlertDescription>
+                  {conflictResolution.isConnected ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+                      Live collaboration active - changes sync in real-time
+                    </span>
+                  ) : (
+                    'Connecting to collaboration session...'
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {isDataExtracted && extractedData && (
               <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
                 <AlertDescription className="text-blue-800 dark:text-blue-200">
@@ -860,6 +1371,35 @@ export function CreateTransactionForm({
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Unlocked Fields Alert */}
+            {(() => {
+              const requiredFieldNames: (keyof TransactionFormData)[] = [
+                'item_name',
+                'item_description',
+                'price',
+                'quantity',
+                'category',
+                'condition',
+              ];
+
+              const unlockedFields = requiredFieldNames.filter(
+                (field) => formData[field] && !fieldLocks[field]
+              );
+
+              if (unlockedFields.length > 0) {
+                return (
+                  <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
+                    <Lock className="h-4 w-4" />
+                    <AlertDescription className="text-red-800 dark:text-red-200">
+                      🔓 Please lock the following fields before proceeding:{' '}
+                      {unlockedFields.map(getFieldDisplayName).join(', ')}
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -1192,6 +1732,29 @@ export function CreateTransactionForm({
       case 4:
         return (
           <div className="space-y-6">
+            {/* Live Collaboration Status */}
+            {conflictResolution && (
+              <Alert
+                className={`${
+                  conflictResolution.isConnected
+                    ? 'border-blue-500/30 bg-blue-900/20'
+                    : 'border-yellow-500/30 bg-yellow-900/20'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <AlertDescription>
+                  {conflictResolution.isConnected ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+                      Live collaboration active - changes sync in real-time
+                    </span>
+                  ) : (
+                    'Connecting to collaboration session...'
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Extraction Status Banner */}
             {isDataExtracted &&
               (fieldLocks.transaction_type ||
@@ -1640,6 +2203,29 @@ export function CreateTransactionForm({
       case 5:
         return (
           <div className="space-y-0">
+            {/* Live Collaboration Status */}
+            {conflictResolution && (
+              <Alert
+                className={`mb-4 ${
+                  conflictResolution.isConnected
+                    ? 'border-blue-500/30 bg-blue-900/20'
+                    : 'border-yellow-500/30 bg-yellow-900/20'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <AlertDescription>
+                  {conflictResolution.isConnected ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+                      Live collaboration active - changes sync in real-time
+                    </span>
+                  ) : (
+                    'Connecting to collaboration session...'
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Main Content - Responsive Layout */}
             <div className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-2 xl:gap-4">
               {/* Escrow Protection Section */}
@@ -1647,11 +2233,11 @@ export function CreateTransactionForm({
                 <Card className="border-2 shadow-lg">
                   <EscrowProtectionEnhanced
                     enabled={escrowEnabled}
-                    onEnabledChange={setEscrowEnabled}
+                    onEnabledChange={updateEscrowEnabled}
                     onEscrowDataChange={(data) => {
                       setEscrowData(data);
                       // Don't auto-enable arbiter from escrow
-                      setArbiterEnabled(false);
+                      updateArbiterEnabled(false);
                     }}
                     agreementTitle={formData.item_name}
                     agreementTerms={formData.item_description}
@@ -1667,6 +2253,9 @@ export function CreateTransactionForm({
                     participantId={otherUserId || ''}
                     initiatorName={currentUserName}
                     participantName={otherUserName}
+                    conflictResolution={conflictResolution}
+                    currentUserId={currentUserId || undefined}
+                    currentStep={currentStep}
                   />
                 </Card>
               </div>
@@ -1691,13 +2280,7 @@ export function CreateTransactionForm({
                       </div>
                       <Switch
                         checked={arbiterEnabled}
-                        onCheckedChange={(checked) => {
-                          setArbiterEnabled(checked);
-                          setEscrowData((prev) => ({
-                            ...prev,
-                            arbiter_required: checked,
-                          }));
-                        }}
+                        onCheckedChange={updateArbiterEnabled}
                         aria-label="Enable arbiter oversight"
                         className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
                       />
@@ -1747,6 +2330,29 @@ export function CreateTransactionForm({
       case 6:
         return (
           <div className="space-y-6">
+            {/* Live Collaboration Status */}
+            {conflictResolution && (
+              <Alert
+                className={`${
+                  conflictResolution.isConnected
+                    ? 'border-blue-500/30 bg-blue-900/20'
+                    : 'border-yellow-500/30 bg-yellow-900/20'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <AlertDescription>
+                  {conflictResolution.isConnected ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+                      Live collaboration active - both parties reviewing
+                    </span>
+                  ) : (
+                    'Connecting to collaboration session...'
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Transaction Summary</CardTitle>
@@ -1978,7 +2584,11 @@ export function CreateTransactionForm({
                 <Button
                   variant="outline"
                   onClick={handleBack}
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    (currentStep === 2 && currentUserConfirmed) ||
+                    (currentStep === 3 && conflictsWereResolved)
+                  }
                   className="h-11 flex-1"
                   size="lg"
                 >
@@ -1989,7 +2599,7 @@ export function CreateTransactionForm({
               {currentStep < STEPS.length ? (
                 <Button
                   onClick={handleNext}
-                  disabled={!canProceedToNext()}
+                  disabled={!canProceedToNext}
                   className="h-11 flex-1 shadow-md"
                   size="lg"
                 >
@@ -1999,7 +2609,7 @@ export function CreateTransactionForm({
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={!canProceedToNext() || isSubmitting}
+                  disabled={!canProceedToNext || isSubmitting}
                   className="h-11 flex-1 shadow-md"
                   size="lg"
                 >
@@ -2022,6 +2632,15 @@ export function CreateTransactionForm({
           </CardContent>
         </Card>
       </div>
+
+      {/* Field Change Approval Dialog */}
+      {currentStep >= 3 && (
+        <FieldChangeApproval
+          onRespond={handleChangeResponse}
+          onApprove={handleApproveChange}
+          onReject={handleRejectChange}
+        />
+      )}
     </div>
   );
 }
