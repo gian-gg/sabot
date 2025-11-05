@@ -25,8 +25,6 @@ import {
   formatSupply,
 } from '@/lib/blockchain/readFunctions';
 
-declare function createClient(): any;
-
 interface TokenStats {
   circulatingSupply: number;
   price: number;
