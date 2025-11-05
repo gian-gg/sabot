@@ -9,10 +9,12 @@ import {
   TrendingUp,
   ChevronRight,
   Sparkles,
+  ShoppingBag, // Added icon for the input area
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Ensure CardHeader/Title are imported if used
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input'; // Assuming you have a standard Input component
 import { WalletBalance } from '@/components/wallet/wallet-balance';
 import { useSabotBalance } from '@/hooks/useSabotBalance';
 import {
@@ -34,14 +36,17 @@ export default function BuyTokensPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const { balance } = useSabotBalance();
+  // 2. NEW STATE FOR AMOUNT TO BUY
+  const [amountToBuy, setAmountToBuy] = useState<string>('100');
+  const { balance, refresh: refetchSabotBalance } = useSabotBalance(); // Added refetch
 
+  // --- Data Fetching Functions (Unchanged for brevity) ---
   const fetchTokenData = useCallback(async () => {
     setIsLoading(true);
     try {
       const circulatingSupply = await fetchLiskCirculatingSupply();
-      const userBalance = await fetchUserTokenBalance();
-      const price = await fetchTokenPrice();
+      const userBalance = await fetchUserTokenBalance(); // Note: This uses a mock
+      const price = await fetchTokenPrice(); // Note: This uses a mock
 
       setTokenStats({
         circulatingSupply,
@@ -76,28 +81,42 @@ export default function BuyTokensPage() {
       setTimeout(() => resolve(0.0042), 500);
     });
   }
+  // --- End Data Fetching ---
 
-  function handleBuyTokens() {
+  // 3. UPDATED HANDLE BUY TOKENS FUNCTION
+  async function handleBuyTokens() {
+    const amount = Number(amountToBuy);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount to buy.');
+      return;
+    }
+
     setIsPurchasing(true);
-    toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
-      loading: 'Opening purchase flow...',
-      success: () => {
-        setIsPurchasing(false);
-        return 'Redirecting to payment gateway';
-      },
-      error: () => {
-        setIsPurchasing(false);
-        return 'Failed to initiate purchase';
-      },
-    });
-  }
 
-  // function formatNumber(num: number): string {
-  //   return new Intl.NumberFormat('en-US', {
-  //     minimumFractionDigits: 0,
-  //     maximumFractionDigits: 2,
-  //   }).format(num);
-  // }
+    try {
+      const response = await fetch('/api/buy-tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.txHash) {
+        toast.success(
+          `Purchase successful! Tx: ${data.txHash.substring(0, 10)}...`
+        );
+        refetchSabotBalance();
+      } else {
+        toast.error(data.error || 'Transaction failed or was rejected.');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('An unexpected error occurred during purchase.');
+    } finally {
+      setIsPurchasing(false);
+    }
+  }
 
   function formatCurrency(num: number): string {
     return new Intl.NumberFormat('en-US', {
@@ -108,10 +127,14 @@ export default function BuyTokensPage() {
     }).format(num);
   }
 
+  // Calculate total cost based on the input field
+  const totalCost = Number(amountToBuy) * tokenStats.price;
+
   return (
     <div className="container mx-auto max-w-5xl space-y-12 p-6">
       {/* Hero Section */}
       <div className="space-y-6 pt-18 text-center">
+        {/* ... (Hero section JSX remains the same) ... */}
         <div className="bg-primary/10 border-primary/20 text-primary mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium">
           <Sparkles className="size-4" />
           Powered by Lisk Blockchain
@@ -145,19 +168,54 @@ export default function BuyTokensPage() {
                 </p>
               )}
             </div>
-            <Button
-              size="lg"
-              onClick={handleBuyTokens}
-              disabled={isPurchasing}
-              className="h-14 gap-2 px-8 text-lg shadow-lg transition-shadow hover:shadow-xl"
-            >
-              <Coins className="size-5" />
-              Buy $SBT Now
-              <ChevronRight className="size-5" />
-            </Button>
+
+            {/* 4. BUY TOKENS INPUT AND BUTTON AREA */}
+            <Card className="w-full p-4 md:w-auto">
+              <CardHeader className="mb-3 p-0">
+                <CardTitle className="text-primary flex items-center gap-2 text-lg font-semibold">
+                  <ShoppingBag className="size-5" /> Buy $SBT
+                </CardTitle>
+              </CardHeader>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex flex-grow items-center space-x-2 rounded-lg border p-2">
+                  <Coins className="text-muted-foreground size-5 shrink-0" />
+                  <Input
+                    type="number"
+                    placeholder="Amount of $SBT"
+                    value={amountToBuy}
+                    onChange={(e) => setAmountToBuy(e.target.value)}
+                    className="w-full border-none p-0 text-lg shadow-none focus-visible:ring-0"
+                    min="1"
+                  />
+                  <span className="text-muted-foreground shrink-0 font-medium">
+                    $SBT
+                  </span>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={handleBuyTokens}
+                  disabled={
+                    isPurchasing || isLoading || Number(amountToBuy) <= 0
+                  }
+                  className="h-14 shrink-0 gap-2 px-8 text-lg shadow-lg transition-shadow hover:shadow-xl"
+                >
+                  {isPurchasing ? 'Processing...' : 'Execute Purchase'}
+                  <ChevronRight className="size-5" />
+                </Button>
+              </div>
+              {!isLoading && totalCost > 0 && (
+                <p className="text-muted-foreground mt-3 text-center text-sm">
+                  Total Estimated Cost:
+                  <span className="text-foreground ml-1 font-semibold">
+                    {formatCurrency(totalCost)}
+                  </span>
+                </p>
+              )}
+            </Card>
           </div>
         </CardContent>
       </Card>
+      {/* ... (Remaining JSX for Why Buy Section and Stats Bar) ... */}
 
       {/* Why Buy Section */}
       <div className="space-y-6">
