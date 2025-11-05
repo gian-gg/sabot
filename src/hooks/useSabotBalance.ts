@@ -67,6 +67,6 @@ export function useSabotBalance() {
     balance,
     isLoading,
     error,
-    refresh: () => setIsLoading(true), // Manual refresh function
+    refresh: () => setIsLoading(true),
   };
 }

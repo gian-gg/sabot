@@ -1,7 +1,5 @@
-import {
-  getWritableLedgerContract,
-  hostWritableLedgerContract,
-} from './contract';
+import { ethers } from 'ethers';
+import { hostWritableLedgerContract } from './contract';
 import { createClient } from '@/lib/supabase/server';
 import {
   getAllUserIds,
@@ -179,5 +177,47 @@ export async function pushTransactionToBlockchain(
       console.error('Stack trace:', error.stack);
     }
     return false;
+  }
+}
+
+export async function buyTokensfromHost(amount: number) {
+  const tokenAmount = ethers.parseUnits(String(amount), 18);
+  try {
+    const contract = await hostWritableLedgerContract();
+    if (!contract) {
+      console.error('buyTokensfromHost: Failed to get writable contract');
+      return;
+    }
+
+    const {
+      data: { user },
+      error,
+    } = await (await createClient()).auth.getUser();
+
+    if (error || !user) {
+      console.error('buyTokensfromHost: Failed to get user:', error?.message);
+      return;
+    }
+
+    const publicAddress = await getPublicAddress(user.id);
+    if (!publicAddress) {
+      console.error('buyTokensfromHost: No public address found for user');
+      return;
+    }
+
+    const transactionResponse = await contract.transfer(
+      publicAddress,
+      tokenAmount
+    );
+
+    await transactionResponse.wait();
+
+    console.log('buyTokensfromHost: Tokens bought successfully!');
+    console.log('Transaction Hash:', transactionResponse.hash);
+
+    return transactionResponse.hash;
+  } catch (error) {
+    console.error('buyTokensfromHost: Failed to buy tokens:', error);
+    return;
   }
 }
