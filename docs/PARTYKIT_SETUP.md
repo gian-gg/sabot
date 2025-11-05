@@ -38,7 +38,7 @@
 
 ### 6. **Environment Setup**
 
-- Added `NEXT_PUBLIC_PARTYKIT_HOST=localhost:1999` to `.env.local`
+- Added `NEXT_PUBLIC_PARTYKIT_HOST=localhost:1999` to `.env`
 
 ## 🚀 How to Run
 
@@ -106,7 +106,7 @@ You're ready to go! Just run `bun run dev:all`
    npx partykit deploy
    ```
 
-2. Update `.env.local` with your PartyKit URL:
+2. Update `.env` with your PartyKit URL:
 
    ```env
    NEXT_PUBLIC_PARTYKIT_HOST=your-app.partykit.dev
@@ -120,7 +120,7 @@ You're ready to go! Just run `bun run dev:all`
 - `src/lib/collaboration/use-collaboration.ts` - Client hook
 - `src/components/shared/collaborative-editor.tsx` - Editor component
 - `partykit.json` - PartyKit config
-- `.env.local` - Environment variables
+- `.env` - Environment variables
 
 ## 💡 Features
 

@@ -11,7 +11,7 @@ bun install
 
 2. Environment variables
 
-Create a `.env.local` at the repository root with at least the following values:
+Create a `.env` at the repository root with at least the following values:
 
 - `SUPABASE_URL` — URL for your Supabase project
 - `SUPABASE_ANON_KEY` — Anon key for your Supabase project

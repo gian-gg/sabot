@@ -61,7 +61,7 @@ src/components/shared/
 
 ### Environment Variables
 
-Add to `.env.local`:
+Add to `.env`:
 
 ```env
 NEXT_PUBLIC_PARTYKIT_HOST=localhost:1999
@@ -137,7 +137,7 @@ npx partykit deploy
 
 ### Update Environment Variable
 
-After deployment, update `.env.local`:
+After deployment, update `.env`:
 
 ```env
 NEXT_PUBLIC_PARTYKIT_HOST=your-app.partykit.dev

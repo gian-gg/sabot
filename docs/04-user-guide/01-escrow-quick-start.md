@@ -242,7 +242,7 @@ bun install
 
 ### 1. Enable Debug Logging
 
-Add to your `.env.local`:
+Add to your `.env`:
 
 ```bash
 NEXT_PUBLIC_DEBUG=true
