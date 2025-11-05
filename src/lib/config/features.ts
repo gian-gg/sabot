@@ -2,7 +2,7 @@
  * Feature Flags Configuration
  *
  * Centralized configuration for enabling/disabling features.
- * Set flags in .env.local file.
+ * Set flags in .env file.
  */
 
 export const featureFlags = {
