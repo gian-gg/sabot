@@ -124,14 +124,16 @@ export function TransactionHistoryList({
     if (activeTab === 'all') return true;
     if (activeTab === 'completed') return tx.status === 'completed';
     if (activeTab === 'active')
-      return [
+      return ['active', 'both_joined', 'screenshots_uploaded'].includes(
+        tx.status
+      );
+    if (activeTab === 'pending')
+      return ![
+        'completed',
         'active',
-        'pending',
         'both_joined',
         'screenshots_uploaded',
       ].includes(tx.status);
-    if (activeTab === 'issues')
-      return ['reported', 'disputed'].includes(tx.status);
     return true;
   });
 
@@ -168,8 +170,8 @@ export function TransactionHistoryList({
               <TabsTrigger value="active" className="text-xs sm:text-sm">
                 Active
               </TabsTrigger>
-              <TabsTrigger value="issues" className="text-xs sm:text-sm">
-                Issues
+              <TabsTrigger value="pending" className="text-xs sm:text-sm">
+                Pending
               </TabsTrigger>
             </TabsList>
           </Tabs>
