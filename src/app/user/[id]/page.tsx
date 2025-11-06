@@ -9,7 +9,11 @@ import {
 } from '@/components/profile/profile-alert';
 import { getUserProfile } from '@/lib/supabase/db/profile';
 
-const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+interface ProfilePageProps {
+  params: Promise<{ id: string }>;
+}
+
+const UserPage = async ({ params }: ProfilePageProps) => {
   const { id } = await params;
   const profile = await getUserProfile(id);
 
