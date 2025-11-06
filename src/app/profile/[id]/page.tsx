@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { BackButton } from '@/components/core/back-button';
 import { ProfileHeader } from '@/components/profile/profile-header';
 import { ProfileStats } from '@/components/profile/profile-stats';
@@ -8,8 +9,18 @@ import {
   ProfileNotFound,
 } from '@/components/profile/profile-alert';
 import { getUserProfile } from '@/lib/supabase/db/profile';
+import { createClient } from '@/lib/supabase/server';
 
 const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/');
+  }
+
   const { id } = await params;
   const profile = await getUserProfile(id);
 
