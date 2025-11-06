@@ -23,9 +23,7 @@ export interface UserProfileStats {
   completedTransactions: number;
   activeTransactions: number;
   trustScore: number;
-  rating: number;
   joinDate: string;
-  responseTime?: string;
   completionRate?: number;
 }
 
