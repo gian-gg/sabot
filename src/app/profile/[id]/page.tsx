@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { BackButton } from '@/components/core/back-button';
 import { ProfileHeader } from '@/components/profile/profile-header';
 import { ProfileStats } from '@/components/profile/profile-stats';
 import { TransactionHistoryList } from '@/components/profile/transaction-history-list';
@@ -26,8 +25,7 @@ const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!profile) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 md:px-8">
-        <BackButton />
+      <div className="container mx-auto mt-14 max-w-5xl px-4 py-6 sm:px-6 sm:py-8 md:px-8">
         <ProfileNotFound />
       </div>
     );
@@ -36,8 +34,7 @@ const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const hasTransactions = profile.recentTransactions.length > 0;
 
   return (
-    <div className="container mx-auto max-w-5xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 md:px-8">
-      <BackButton />
+    <div className="container mx-auto mt-14 max-w-5xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 md:px-8">
       <ProfileHeader profile={profile} showTrustScore={profile.isVerified} />
 
       <div className="flex justify-center sm:justify-start">

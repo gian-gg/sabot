@@ -21,6 +21,7 @@ interface AcceptTransactionPageProps {
 }
 
 interface Inviter {
+  id: string;
   name: string;
   email: string;
   avatar?: string;
@@ -85,6 +86,7 @@ export function AcceptTransactionPage({
 
         // Set inviter data from stored transaction fields
         setInviter({
+          id: data.creator_id,
           name: data.creator_name || 'User',
           email: data.creator_email || '',
           avatar: data.creator_avatar_url,
@@ -94,6 +96,7 @@ export function AcceptTransactionPage({
         });
 
         console.log('✅ Inviter state set:', {
+          id: data.creator_id,
           name: data.creator_name || 'User',
           email: data.creator_email || '',
           avatar: data.creator_avatar_url,
