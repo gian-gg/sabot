@@ -1,27 +1,25 @@
 import { notFound } from 'next/navigation';
+import { BackButton } from '@/components/core/back-button';
 import { ProfileHeader } from '@/components/profile/profile-header';
 import { ProfileStats } from '@/components/profile/profile-stats';
 import { TransactionHistoryList } from '@/components/profile/transaction-history-list';
 import { ProfileActions } from '@/components/profile/profile-actions';
-import { getUserProfileOrDefault } from '@/lib/mock-data/profiles';
+import { getUserProfile } from '@/lib/supabase/db/profile';
 
-interface ProfilePageProps {
-  params: Promise<{ id: string }>;
-}
-
-const UserPage = async ({ params }: ProfilePageProps) => {
+const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
-  const profile = getUserProfileOrDefault(id);
+  const profile = await getUserProfile(id);
 
-  if (!profile || profile.name === 'Unknown User') {
+  if (!profile) {
     notFound();
   }
 
   return (
-    <div className="container mx-auto mt-12 max-w-7xl space-y-6 px-4 py-8">
+    <div className="container mx-auto max-w-5xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 md:px-8">
+      <BackButton />
       <ProfileHeader profile={profile} showTrustScore={true} />
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex justify-center sm:justify-start">
         <ProfileActions
           userId={profile.id}
           userName={profile.name}
