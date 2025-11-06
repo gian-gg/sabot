@@ -119,21 +119,15 @@ export function TransactionHistoryList({
 }: TransactionHistoryListProps) {
   const [activeTab, setActiveTab] = useState<string>('all');
 
-  // Filter transactions by status
-  const filteredTransactions = transactions.filter((tx) => {
+  // Filter to only show completed transactions
+  const completedTransactions = transactions.filter(
+    (tx) => tx.status === 'completed'
+  );
+
+  // Filter transactions by status (from completed transactions only)
+  const filteredTransactions = completedTransactions.filter((tx) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'completed') return tx.status === 'completed';
-    if (activeTab === 'active')
-      return ['active', 'both_joined', 'screenshots_uploaded'].includes(
-        tx.status
-      );
-    if (activeTab === 'pending')
-      return ![
-        'completed',
-        'active',
-        'both_joined',
-        'screenshots_uploaded',
-      ].includes(tx.status);
     return true;
   });
 
@@ -141,42 +135,13 @@ export function TransactionHistoryList({
     <Card>
       <CardHeader className="px-4 sm:px-6">
         <CardTitle className="text-base sm:text-lg">
-          Recent Transactions
+          Completed Transactions
         </CardTitle>
         <CardDescription className="text-xs sm:text-sm">
-          Your latest transaction activity
-          {filteredTransactions.length !== transactions.length && (
-            <span className="text-primary ml-2">
-              ({filteredTransactions.length} of {transactions.length})
-            </span>
-          )}
+          Transaction history
         </CardDescription>
       </CardHeader>
       <CardContent className="px-3 sm:px-4 md:px-6">
-        {/* Tabs for filtering */}
-        {showFilter && (
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="mb-3 sm:mb-4"
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all" className="text-xs sm:text-sm">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="text-xs sm:text-sm">
-                Completed
-              </TabsTrigger>
-              <TabsTrigger value="active" className="text-xs sm:text-sm">
-                Active
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="text-xs sm:text-sm">
-                Pending
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
-
         {/* Transaction List */}
         <div className="space-y-2 sm:space-y-3">
           {filteredTransactions.length > 0 ? (
@@ -188,9 +153,7 @@ export function TransactionHistoryList({
               <Search className="mb-2 h-10 w-10 opacity-20 sm:mb-3 sm:h-12 sm:w-12" />
               <p className="text-xs sm:text-sm">No transactions found</p>
               <p className="text-[10px] sm:text-xs">
-                {activeTab === 'all'
-                  ? 'This user has not completed any transactions yet'
-                  : `No ${activeTab} transactions`}
+                This user has not completed any transactions yet
               </p>
             </div>
           )}
