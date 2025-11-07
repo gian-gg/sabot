@@ -21,6 +21,7 @@ interface AcceptTransactionPageProps {
 }
 
 interface Inviter {
+  id: string;
   name: string;
   email: string;
   avatar?: string;
@@ -56,7 +57,22 @@ export function AcceptTransactionPage({
         const response = await fetch(`/api/transaction/${transactionId}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch transaction details');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Transaction fetch failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
+
+          if (response.status === 401) {
+            throw new Error('Please sign in to view this transaction');
+          } else if (response.status === 404) {
+            throw new Error('Transaction not found');
+          } else {
+            throw new Error(
+              errorData.error || 'Failed to fetch transaction details'
+            );
+          }
         }
 
         const data = await response.json();
@@ -70,6 +86,7 @@ export function AcceptTransactionPage({
 
         // Set inviter data from stored transaction fields
         setInviter({
+          id: data.creator_id,
           name: data.creator_name || 'User',
           email: data.creator_email || '',
           avatar: data.creator_avatar_url,
@@ -79,6 +96,7 @@ export function AcceptTransactionPage({
         });
 
         console.log('✅ Inviter state set:', {
+          id: data.creator_id,
           name: data.creator_name || 'User',
           email: data.creator_email || '',
           avatar: data.creator_avatar_url,

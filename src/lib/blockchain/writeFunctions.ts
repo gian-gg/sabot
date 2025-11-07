@@ -1,11 +1,8 @@
-import {
-  getWritableLedgerContract,
-  hostWritableLedgerContract,
-} from './contract';
+import { ethers } from 'ethers';
+import { hostWritableLedgerContract } from './contract';
 import { createClient } from '@/lib/supabase/server';
 import {
   getAllUserIds,
-  getEncryptedKey,
   getPublicAddress,
   getTransactionDetails,
   postHashTransaction,
@@ -95,7 +92,28 @@ export async function pushTransactionToBlockchain(
 
     if (!invitedAddress || !creatorAddress) {
       console.error(
-        'pushTransactionToBlockchain: No public address found for invitee or creator'
+        `pushTransactionToBlockchain: No public address found for invitee or creator`
+      );
+      return false;
+    }
+
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      console.error('registerUser: Failed to get user:', error?.message);
+      return false;
+    }
+
+    const userId = user.id;
+
+    if (userId !== creatorUser.user_id) {
+      console.log(
+        `User ${userId} is not the creator of the transaction ${transactionId}, to block duplicate push`
       );
       return false;
     }
@@ -109,7 +127,6 @@ export async function pushTransactionToBlockchain(
       return false;
     }
 
-    // Step 5: Push to blockchain
     console.log(
       `pushTransactionToBlockchain: Sending transaction to blockchain...`
     );
@@ -160,5 +177,47 @@ export async function pushTransactionToBlockchain(
       console.error('Stack trace:', error.stack);
     }
     return false;
+  }
+}
+
+export async function buyTokensfromHost(amount: number) {
+  const tokenAmount = ethers.parseUnits(String(amount), 18);
+  try {
+    const contract = await hostWritableLedgerContract();
+    if (!contract) {
+      console.error('buyTokensfromHost: Failed to get writable contract');
+      return;
+    }
+
+    const {
+      data: { user },
+      error,
+    } = await (await createClient()).auth.getUser();
+
+    if (error || !user) {
+      console.error('buyTokensfromHost: Failed to get user:', error?.message);
+      return;
+    }
+
+    const publicAddress = await getPublicAddress(user.id);
+    if (!publicAddress) {
+      console.error('buyTokensfromHost: No public address found for user');
+      return;
+    }
+
+    const transactionResponse = await contract.transfer(
+      publicAddress,
+      tokenAmount
+    );
+
+    await transactionResponse.wait();
+
+    console.log('buyTokensfromHost: Tokens bought successfully!');
+    console.log('Transaction Hash:', transactionResponse.hash);
+
+    return transactionResponse.hash;
+  } catch (error) {
+    console.error('buyTokensfromHost: Failed to buy tokens:', error);
+    return;
   }
 }

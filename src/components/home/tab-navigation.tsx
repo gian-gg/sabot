@@ -1,14 +1,14 @@
 'use client';
 
 interface TabNavigationProps {
-  activeTab: 'transactions' | 'contracts';
-  onTabChange: (tab: 'transactions' | 'contracts') => void;
+  activeTab: 'transactions' | 'agreements';
+  onTabChange: (tab: 'transactions' | 'agreements') => void;
 }
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   const tabs = [
     { id: 'transactions' as const, label: 'Transactions' },
-    { id: 'contracts' as const, label: 'Active Contracts' },
+    { id: 'agreements' as const, label: 'Agreements' },
   ];
 
   return (
@@ -18,7 +18,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`relative pb-4 text-sm font-medium transition-colors ${
+            className={`relative cursor-pointer pb-4 text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

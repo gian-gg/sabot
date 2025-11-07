@@ -9,7 +9,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getBestValue, hasConflict } from '@/lib/utils/conflict-resolution';
 import type { AnalysisData } from '@/types/analysis';
 import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
+import { toast } from 'sonner';
+import { MutualConfirmation } from '@/components/transaction/invite/mutual-confirmation';
 
 interface AnalysisWithSource extends AnalysisData {
   source: string;
@@ -19,7 +22,11 @@ interface AnalysisWithSource extends AnalysisData {
 interface DataConflictResolverProps {
   analyses: AnalysisWithSource[];
   onResolve: (resolvedData: AnalysisData) => void;
-  onCancel?: () => void;
+  transactionId: string;
+  userId: string;
+  userName: string;
+  onAllReady?: (isReady: boolean) => void;
+  conflictResolution?: ReturnType<typeof useSharedConflictResolution>;
 }
 
 type FieldKey = keyof AnalysisData;
@@ -27,54 +34,103 @@ type FieldKey = keyof AnalysisData;
 export function DataConflictResolver({
   analyses,
   onResolve,
-  onCancel,
+  transactionId,
+  userId,
+  userName,
+  onAllReady,
+  conflictResolution: externalConflictResolution,
 }: DataConflictResolverProps) {
   const [selectedValues, setSelectedValues] = useState<Partial<AnalysisData>>(
     {}
   );
+  const prevSelectionsRef = useRef<Partial<Record<keyof AnalysisData, number>>>(
+    {}
+  );
+  const hasResolvedRef = useRef(false);
 
-  if (analyses.length === 0) {
-    return (
-      <Alert>
-        <AlertDescription>No analysis data available.</AlertDescription>
-      </Alert>
-    );
-  }
+  // Use PartyKit for real-time collaboration - either from parent or create own
+  const internalConflictResolution = useSharedConflictResolution(
+    transactionId,
+    userId,
+    userName
+  );
+  const {
+    sharedSelections,
+    participants,
+    isConnected,
+    selectField,
+    setUserReady,
+    allParticipantsReady,
+  } = externalConflictResolution || internalConflictResolution;
 
-  // If only one analysis, auto-resolve
-  if (analyses.length === 1) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { source, screenshotId, ...data } = analyses[0];
-    return (
-      <div className="space-y-4">
-        <Alert className="border-border">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>
-            Only one screenshot analyzed. No conflicts to resolve.
-          </AlertDescription>
-        </Alert>
-        <Button onClick={() => onResolve(data)} className="w-full" size="lg">
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          Continue with Extracted Data
-        </Button>
-      </div>
-    );
-  }
+  // Sync shared selections to local state and show notifications
+  useEffect(() => {
+    console.log('[Resolver] Shared selections updated:', sharedSelections);
 
-  // Define all fields in the specified order
-  const allFields: FieldKey[] = [
-    'productType',
-    'productModel',
-    'productCondition',
-    'quantity',
-    'itemDescription',
-    'proposedPrice',
-    'transactionType',
-    'meetingLocation',
-    'meetingSchedule',
-    'deliveryAddress',
-    'deliveryMethod',
-  ];
+    const newSelections: Partial<AnalysisData> = {};
+
+    Object.entries(sharedSelections).forEach(([field, selection]) => {
+      if (selection) {
+        const fieldKey = field as keyof AnalysisData;
+        // Use Record type to handle dynamic field assignment
+        (newSelections as Record<string, unknown>)[fieldKey] = selection.value;
+
+        // Check if this is a selection by another user that we haven't seen before
+        const prevSelection = prevSelectionsRef.current[fieldKey];
+        const isNewSelection =
+          !prevSelection || prevSelection !== selection.timestamp;
+        const isOtherUser = selection.userId !== userId;
+
+        console.log('[Resolver] Selection check:', {
+          field: fieldKey,
+          selectionUserId: selection.userId,
+          currentUserId: userId,
+          isOtherUser,
+          isNewSelection,
+          prevTimestamp: prevSelection,
+          newTimestamp: selection.timestamp,
+        });
+
+        if (isOtherUser && isNewSelection) {
+          const fieldLabel = getFieldLabel(fieldKey);
+          console.log('[Resolver] 🎯 SHOWING TOAST for:', fieldLabel);
+          toast.info(`Other party selected a value for ${fieldLabel}`, {
+            duration: 3000,
+          });
+        }
+      }
+    });
+
+    // Update previous selections with timestamps
+    const newPrevSelections: Partial<Record<keyof AnalysisData, number>> = {};
+    Object.entries(sharedSelections).forEach(([field, selection]) => {
+      if (selection) {
+        newPrevSelections[field as keyof AnalysisData] = selection.timestamp;
+      }
+    });
+    prevSelectionsRef.current = newPrevSelections;
+
+    setSelectedValues(newSelections);
+  }, [sharedSelections, userId]);
+
+  // Process all data BEFORE any conditional returns
+  // Define all fields in the specified order - memoized to prevent recreating on every render
+  const allFields: FieldKey[] = useMemo(
+    () => [
+      'productType',
+      'productModel',
+      'productCondition',
+      'quantity',
+      'itemDescription',
+      'proposedPrice',
+      'transactionType',
+      'meetingLocation',
+      'meetingSchedule',
+      'deliveryAddress',
+      'deliveryMethod',
+    ],
+    []
+  );
 
   // Determine transaction type to show relevant fields
   const transactionTypes = analyses
@@ -137,16 +193,34 @@ export function DataConflictResolver({
 
   const conflicts = fieldCategories.filter((fc) => fc.hasConflict);
 
-  const allRiskFlags = [...new Set(analyses.flatMap((a) => a.riskFlags || []))];
+  // Memoize allRiskFlags to prevent recreating on every render
+  const allRiskFlags = useMemo(
+    () => [...new Set(analyses.flatMap((a) => a.riskFlags || []))],
+    [analyses]
+  );
 
   const handleFieldSelect = (
     field: FieldKey,
     value: NonNullable<AnalysisData[FieldKey]>
   ) => {
-    setSelectedValues((prev) => ({ ...prev, [field]: value }));
+    // Broadcast selection to other participants via PartyKit
+    selectField(field, value);
   };
 
-  const handleResolve = () => {
+  // Check if we can resolve
+  const canResolve = conflicts.every(
+    (fc) => selectedValues[fc.field] !== undefined
+  );
+
+  // Check if all participants are ready to proceed
+  const allReady = allParticipantsReady();
+
+  // Check if current user has confirmed
+  const currentUserReady =
+    participants.find((p) => p.id === userId)?.isReady || false;
+
+  // Wrap handleResolve in useCallback to stabilize the function
+  const handleResolve = useCallback(() => {
     // Start with the first analysis as a base (it has all required fields)
     const baseAnalysis = analyses[0];
     const resolved: AnalysisData = {
@@ -248,11 +322,55 @@ export function DataConflictResolver({
     }
 
     onResolve(resolved);
-  };
+  }, [
+    allFields,
+    analyses,
+    fieldCategories,
+    onResolve,
+    selectedValues,
+    allRiskFlags,
+  ]);
 
-  const canResolve = conflicts.every(
-    (fc) => selectedValues[fc.field] !== undefined
+  // Memoize the handleAllReady callback with handleResolve in dependencies
+  const handleAllReady = useCallback(
+    (isReady: boolean) => {
+      if (isReady && canResolve && !hasResolvedRef.current) {
+        hasResolvedRef.current = true;
+        handleResolve();
+      }
+      onAllReady?.(isReady);
+    },
+    [canResolve, handleResolve, onAllReady]
   );
+
+  // Early returns AFTER all hooks
+  if (analyses.length === 0) {
+    return (
+      <Alert>
+        <AlertDescription>No analysis data available.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // If only one analysis, auto-resolve
+  if (analyses.length === 1) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { source, screenshotId, ...data } = analyses[0];
+    return (
+      <div className="space-y-4">
+        <Alert className="border-border">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>
+            Only one screenshot analyzed. No conflicts to resolve.
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => onResolve(data)} className="w-full" size="lg">
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          Continue with Extracted Data
+        </Button>
+      </div>
+    );
+  }
 
   const getFieldLabel = (field: FieldKey): string => {
     const labels: Partial<Record<FieldKey, string>> = {
@@ -378,6 +496,20 @@ export function DataConflictResolver({
                       : undefined
                   }
                   onValueChange={(value) => {
+                    // Prevent changes if current user has already confirmed
+                    if (currentUserReady) {
+                      toast.error('Cannot change selections after confirming');
+                      return;
+                    }
+
+                    // Prevent changes once both parties are ready
+                    if (allReady) {
+                      toast.error(
+                        'Cannot change selections - both parties already confirmed'
+                      );
+                      return;
+                    }
+
                     // Try to parse back to original type
                     const originalValue = values.find(
                       (v) => String(v.value) === value
@@ -387,6 +519,7 @@ export function DataConflictResolver({
                     }
                   }}
                   className="space-y-3"
+                  disabled={currentUserReady || allReady}
                 >
                   {values.map((item, idx) => {
                     if (
@@ -405,17 +538,20 @@ export function DataConflictResolver({
                         className={`flex items-start space-x-3 rounded-lg border p-3 transition-colors ${
                           isSelected
                             ? 'border-primary bg-primary/5'
-                            : 'border-muted hover:border-primary/50'
+                            : currentUserReady || allReady
+                              ? 'border-muted bg-muted/20 cursor-not-allowed opacity-60'
+                              : 'border-muted hover:border-primary/50'
                         }`}
                       >
                         <RadioGroupItem
                           value={stringValue}
                           id={`${field}-${idx}`}
                           className="mt-1"
+                          disabled={currentUserReady || allReady}
                         />
                         <Label
                           htmlFor={`${field}-${idx}`}
-                          className="flex-1 cursor-pointer"
+                          className={`flex-1 ${currentUserReady || allReady ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <div className="flex w-full items-center justify-between">
                             <div className="space-y-1">
@@ -438,7 +574,7 @@ export function DataConflictResolver({
                   })}
                 </RadioGroup>
               ) : (
-                <div className="border-border bg-muted/30 border-muted rounded-lg border p-3">
+                <div className="bg-muted/30 border-muted rounded-lg border p-3">
                   <p className="font-medium">
                     {formatValue(
                       bestValue || values.find((v) => v.value)?.value
@@ -457,27 +593,36 @@ export function DataConflictResolver({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
-        {onCancel && (
-          <Button variant="outline" onClick={onCancel} className="flex-1">
-            Cancel
-          </Button>
-        )}
-        <Button
-          onClick={handleResolve}
-          disabled={conflicts.length > 0 && !canResolve}
-          className="flex-1"
-          size="lg"
-        >
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          {conflicts.length > 0 ? 'Resolve & Continue' : 'Continue'}
-        </Button>
+      <div className="pt-4">
+        <MutualConfirmation
+          userId={userId}
+          participants={participants}
+          isConnected={isConnected}
+          canProceed={canResolve}
+          onConfirm={setUserReady}
+          onAllReady={handleAllReady}
+          onRetryConnection={() => {
+            // Simple retry: refresh the page to reconnect
+            if (typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }}
+        />
       </div>
 
       {conflicts.length > 0 && !canResolve && (
-        <p className="text-muted-foreground text-center text-sm">
+        <p className="text-muted-foreground pt-2 text-center text-sm">
           Please select a value for all conflicting fields to continue
         </p>
+      )}
+
+      {/* Show proceeding message when all participants are ready */}
+      {allReady && canResolve && (
+        <Alert className="border-primary bg-primary/10">
+          <AlertDescription className="text-primary">
+            Both parties confirmed. Click &ldquo;Next&rdquo; to proceed.
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

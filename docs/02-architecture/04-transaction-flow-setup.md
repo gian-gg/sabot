@@ -157,7 +157,7 @@ In Supabase Dashboard → Storage → Configuration:
 
 ## Environment Variables
 
-Add to your `.env.local`:
+Add to your `.env`:
 
 ```bash
 # Supabase Configuration

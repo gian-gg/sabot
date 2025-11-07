@@ -7,12 +7,14 @@ import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
 import { SignatureModal } from '@/components/agreement/editor/signature-modal';
 import { CommandPalette } from '@/components/agreement/editor/command-palette';
 import { TemplateSelector } from '@/components/agreement/editor/template-selector';
+import { CursorOverlay } from '@/components/agreement/editor/cursor-overlay';
 import {
   exportAgreementToPDF,
   generateFileName,
 } from '@/lib/pdf/export-agreement';
 import { type Template } from '@/lib/templates/template-loader';
 import { useDocumentStore } from '@/store/document/documentStore';
+import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { toast } from 'sonner';
 
 interface EditorLayoutProps {
@@ -40,6 +42,12 @@ export function EditorLayout({
   const [isConnected, setIsConnected] = useState(false);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
 
+  // Get collaboration awareness for cursor tracking
+  const { awareness } = useCollaboration({
+    documentId,
+    enabled: true,
+  });
+
   // Document store
   const { setDocumentId, setTitle, setContent, setIdeaBlocks } =
     useDocumentStore();
@@ -60,6 +68,31 @@ export function EditorLayout({
     setContent,
     setIdeaBlocks,
   ]);
+
+  // Track mouse position and broadcast to awareness
+  useEffect(() => {
+    if (!awareness) return;
+
+    let lastUpdate = 0;
+    const throttleMs = 50;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastUpdate < throttleMs) return;
+
+      lastUpdate = now;
+      awareness.setLocalStateField('cursor', {
+        x: e.clientX,
+        y: e.clientY,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [awareness]);
 
   // Combine legal blocks with any initial idea blocks
   const legalBlocks = [
@@ -179,7 +212,8 @@ export function EditorLayout({
   };
 
   return (
-    <div className="bg-background flex h-screen flex-col">
+    <div className="bg-background relative flex h-screen flex-col">
+      <CursorOverlay awareness={awareness} />
       {/* Simplified Header */}
       <EditorHeader
         documentId={documentId}
