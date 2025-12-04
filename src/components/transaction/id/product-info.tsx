@@ -162,7 +162,7 @@ export function ProductInfoCard({
         <div className="space-y-4">
           {/* Transaction Method */}
           <div className="flex items-start gap-4 rounded-lg border border-neutral-700/50 bg-neutral-900/30 p-4">
-            <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-neutral-400" />
+            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-neutral-400" />
             <div className="space-y-1">
               <p className="text-base leading-relaxed font-semibold text-white">
                 {transaction.method === 'meetup'

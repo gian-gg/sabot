@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
@@ -97,7 +96,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
             </div>
 
             {/* Lisk Blockchain Link */}
-            <Link
+            <a
               href="https://sepolia-blockscout.lisk.com/address/0x1f5b3538E15b39546f31B51183dEe09ed71c300a?tab=txs"
               target="_blank"
               rel="noopener noreferrer"
@@ -135,7 +134,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
               </div>
 
               <ExternalLink className="h-3.5 w-3.5 text-neutral-500 group-hover:text-purple-400" />
-            </Link>
+            </a>
           </div>
         </div>
 

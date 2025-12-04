@@ -136,11 +136,11 @@ export function InvitationLink({
 
         {showContinueButton && (
           <div className="border-t pt-4">
-            <Link href={continueUrl}>
-              <Button className="w-full" size="lg">
+            <Button asChild className="w-full" size="lg">
+              <Link href={continueUrl}>
                 Continue to {isAgreement ? 'Agreement' : 'Transaction'} Setup
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         )}
       </CardContent>

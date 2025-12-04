@@ -98,7 +98,7 @@ export default function TransactionActive({
         router.push('/');
       }, 2000);
     }
-  }, [status?.participants, status?.transaction?.id, router]);
+  }, [status?.participants, status?.transaction?.id, router, id]);
 
   // Get participant profiles from status
   const buyer = status?.participants.find((p) => p.role === 'invitee');

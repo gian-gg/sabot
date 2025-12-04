@@ -144,9 +144,12 @@ export function TransactionDetailsModal({
             transaction.status === 'both_joined' ||
             transaction.status === 'screenshots_uploaded') && (
             <Button variant="default" className="w-full" size="lg" asChild>
-              <Link href={`/transaction/invite?id=${transaction.id}`}>
+              <Link
+                href={`/transaction/invite?id=${transaction.id}`}
+                className="flex items-center justify-center gap-2"
+              >
                 Go to Transaction
-                <ArrowUpRight className="mr-2 h-5 w-5" />
+                <ArrowUpRight className="h-5 w-5" />
               </Link>
             </Button>
           )}
@@ -706,8 +709,9 @@ export function TransactionDetailsModal({
               <Button variant="outline" className="flex-1" asChild>
                 <Link
                   href={`mailto:${transaction.transaction_participants[1].participant_email}`}
+                  className="flex items-center gap-2"
                 >
-                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <MessageSquare className="h-4 w-4" />
                   Contact Counterparty
                 </Link>
               </Button>
@@ -722,8 +726,9 @@ export function TransactionDetailsModal({
                       href={`https://sepolia-blockscout.lisk.com/tx/${transaction.hash}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="flex items-center gap-2"
                     >
-                      <ExternalLink className="mr-2 h-4 w-4" />
+                      <ExternalLink className="h-4 w-4" />
                       View on Blockchain
                     </Link>
                   </Button>

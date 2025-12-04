@@ -22,7 +22,7 @@ export function SellerInfoCard({ seller, transaction }: SellerInfoProps) {
       <Card>
         <CardContent className="space-y-3 pt-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-semibold text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-purple-600 font-semibold text-white">
               {(seller?.name || transaction.sellerName).charAt(0)}
             </div>
             <div className="flex-1">

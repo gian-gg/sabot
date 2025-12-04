@@ -64,10 +64,7 @@ const UserPage = async ({ params }: { params: Promise<{ id: string }> }) => {
       {profile.isVerified && hasTransactions && (
         <>
           <ProfileStats stats={profile.stats} />
-          <TransactionHistoryList
-            transactions={profile.recentTransactions}
-            showFilter={true}
-          />
+          <TransactionHistoryList transactions={profile.recentTransactions} />
         </>
       )}
     </div>

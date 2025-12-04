@@ -33,14 +33,14 @@ export default async function Home() {
       {/* Light Source Effect - Fixed at top, behind header */}
       <div className="pointer-events-none fixed -top-[200px] left-1/2 z-0 h-[350px] w-[500px] -translate-x-1/2">
         <div className="absolute top-0 left-1/2 h-[300px] w-[400px] -translate-x-1/2 rounded-full bg-white/10 blur-[100px]" />
-        <div className="absolute top-[20px] left-1/2 h-[200px] w-[250px] -translate-x-1/2 rounded-full bg-white/15 blur-[70px]" />
-        <div className="absolute top-[40px] left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-[40px]" />
+        <div className="absolute top-5 left-1/2 h-[200px] w-[250px] -translate-x-1/2 rounded-full bg-white/15 blur-[70px]" />
+        <div className="absolute top-10 left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-2xl" />
       </div>
 
       {/* Main Content - Scrollable with top padding for fixed header */}
       <div className="flex flex-col gap-20 overflow-x-hidden">
         {/* Hero Section */}
-        <section className="relative flex-shrink-0 px-6 pt-24 pb-8">
+        <section className="relative shrink-0 px-6 pt-24 pb-8">
           <div className="relative mx-auto max-w-[500px] text-center">
             <h1 className="mb-3 leading-[1.2] font-medium tracking-tight text-white sm:text-5xl">
               When trust is uncertain, bring in Sabot
@@ -70,7 +70,7 @@ export default async function Home() {
         {/* Marketplace Carousel */}
         <MarketplaceCarousel />
       </div>
-      <div className="min-h-screen bg-gradient-to-b from-black to-neutral-950">
+      <div className="min-h-screen bg-linear-to-b from-black to-neutral-950">
         <section className="border-b border-neutral-800/50 px-6 pt-32 pb-16">
           <div className="mx-auto max-w-6xl text-center">
             <Badge className="border-primary/50 bg-primary/20 text-primary mb-4">
@@ -199,7 +199,7 @@ export default async function Home() {
             <div className="space-y-8">
               {/* Step 1 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">1</span>
                 </div>
                 <div>
@@ -217,7 +217,7 @@ export default async function Home() {
 
               {/* Step 2 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">2</span>
                 </div>
                 <div>
@@ -235,7 +235,7 @@ export default async function Home() {
 
               {/* Step 3 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">3</span>
                 </div>
                 <div>
@@ -253,7 +253,7 @@ export default async function Home() {
 
               {/* Step 4 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">4</span>
                 </div>
                 <div>
@@ -270,7 +270,7 @@ export default async function Home() {
 
               {/* Step 5 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">5</span>
                 </div>
                 <div>
@@ -288,7 +288,7 @@ export default async function Home() {
 
               {/* Step 6 */}
               <div className="flex gap-6">
-                <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+                <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                   <span className="text-xl font-bold">6</span>
                 </div>
                 <div>
@@ -336,15 +336,15 @@ export default async function Home() {
                   </p>
                   <ul className="space-y-2 pl-4">
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Privacy-protected blurred names</span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Real-time transaction updates</span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Verified transaction history</span>
                     </li>
                   </ul>
@@ -363,15 +363,15 @@ export default async function Home() {
                   </p>
                   <ul className="space-y-2 pl-4">
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Automated incident reports</span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Case tracking dashboard</span>
                     </li>
                     <li className="flex items-start">
-                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Direct forwarding to authorities</span>
                     </li>
                   </ul>
@@ -419,19 +419,19 @@ export default async function Home() {
                 <CardContent className="space-y-4">
                   <ul className="space-y-3 text-sm text-neutral-400">
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>10 verified transactions</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>AI fraud detection</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Market comparison</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Emergency alerts</span>
                     </li>
                   </ul>
@@ -463,19 +463,19 @@ export default async function Home() {
                 <CardContent className="space-y-4">
                   <ul className="space-y-3 text-sm text-neutral-400">
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>50 verified transactions</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>AI fraud detection</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Market comparison</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Priority support</span>
                     </li>
                   </ul>
@@ -500,19 +500,19 @@ export default async function Home() {
                 <CardContent className="space-y-4">
                   <ul className="space-y-3 text-sm text-neutral-400">
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>200 verified transactions</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>All features included</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>Account manager</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                      <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                       <span>API access</span>
                     </li>
                   </ul>

@@ -3,7 +3,7 @@ import { buyTokensfromHost } from '@/lib/blockchain/writeFunctions';
 
 export async function POST(request: Request) {
   try {
-    const { amount, userId } = await request.json();
+    const { amount } = await request.json();
 
     if (!amount || typeof amount !== 'number' || amount <= 0) {
       return NextResponse.json({ error: 'Invalid amount.' }, { status: 400 });

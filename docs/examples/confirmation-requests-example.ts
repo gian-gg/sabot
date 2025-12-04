@@ -14,8 +14,7 @@ export function usePriceChangeWithConfirmation(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
-  currentUserId: string,
-  currentStep: number
+  currentUserId: string
 ) {
   const handlePriceChange = (
     newPrice: string,
@@ -55,8 +54,7 @@ export function useBatchFieldConfirmation(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
-  currentUserId: string,
-  currentStep: number
+  currentUserId: string
 ) {
   const requestBatchConfirmation = (
     changes: Array<{
@@ -193,8 +191,7 @@ export function useFieldChangeHandler(
   conflictResolution:
     | ReturnType<typeof useSharedConflictResolution>
     | undefined,
-  currentUserId: string,
-  currentStep: number
+  currentUserId: string
 ) {
   const handleFieldChange = (field: keyof AnalysisData, value: unknown) => {
     if (!conflictResolution) return;

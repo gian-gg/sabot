@@ -66,7 +66,7 @@ export default class CollaborationServer implements Party.Server {
     await this.room.storage.put('state', state);
   }
 
-  onConnect(conn: Party.Connection, _ctx: Party.ConnectionContext) {
+  onConnect(conn: Party.Connection) {
     // Handle Y.js collaboration for document editing rooms
     if (this.room.id.startsWith('conflict-resolution:')) {
       this.logger.log(
@@ -178,7 +178,7 @@ export default class CollaborationServer implements Party.Server {
 
       try {
         parsed = JSON.parse(message);
-      } catch (_error) {
+      } catch {
         this.logger.log(` Invalid JSON, ignoring message`);
         return;
       }

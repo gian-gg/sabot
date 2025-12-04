@@ -18,16 +18,19 @@ const GetStartedButton = () => {
 
   if (user.id) {
     return (
-      <Link href="/home">
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
-        >
-          <CirclePlus />
-          Create Transaction
-        </Button>
-      </Link>
+      <Button
+        type="button"
+        variant="ghost"
+        className="h-10 bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+        asChild
+      >
+        <Link href="/home">
+          <span className="flex items-center gap-2">
+            <CirclePlus />
+            Create Transaction
+          </span>
+        </Link>
+      </Button>
     );
   }
 

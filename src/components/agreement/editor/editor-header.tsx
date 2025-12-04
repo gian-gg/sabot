@@ -135,23 +135,27 @@ export function EditorHeader({
             {isExporting ? 'Exporting...' : 'Export'}
           </Button>
 
-          <Link href={`/agreement/${documentId}/finalize`}>
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Finalize agreement"
-              className="text-sm"
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Finalize agreement"
+            className="text-sm"
+            asChild
+          >
+            <Link
+              href={`/agreement/${documentId}/finalize`}
+              className="flex items-center gap-2"
             >
-              <Check className="mr-2 h-4 w-4" />
+              <Check className="h-4 w-4" />
               Finalize
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
       {/* Mouse-Reactive Border */}
       <div
-        className="pointer-events-none absolute right-0 bottom-0 left-0 h-[1px]"
+        className="pointer-events-none absolute right-0 bottom-0 left-0 h-px"
         style={{
           background: `linear-gradient(90deg,
             rgba(255,255,255,0.1) 0%,

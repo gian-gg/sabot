@@ -35,6 +35,9 @@ export function Header() {
         top: offsetPosition,
         behavior: 'smooth',
       });
+    } else {
+      // If section doesn't exist on current page, redirect to landing page with hash
+      window.location.href = `/#${id}`;
     }
   };
 

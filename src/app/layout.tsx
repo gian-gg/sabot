@@ -5,6 +5,7 @@ import { Header } from '@/components/core/header';
 import { FooterWrapper } from '@/components/core/footer-wrapper';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
+import { ErrorBoundary } from '@/components/error-boundary';
 import React from 'react';
 
 export const metadata: Metadata = {
@@ -27,13 +28,15 @@ export default async function RootLayout({
       <body className="flex min-h-screen min-w-screen flex-col justify-between antialiased">
         <HydrateUser user={user as AuthUser | null} />
 
-        <Header />
+        <ErrorBoundary>
+          <Header />
 
-        <main className="flex min-h-[600px] flex-col overflow-x-hidden">
-          {children}
-        </main>
+          <main className="flex min-h-[600px] flex-col overflow-x-hidden">
+            {children}
+          </main>
 
-        <FooterWrapper />
+          <FooterWrapper />
+        </ErrorBoundary>
 
         <Toaster richColors theme="dark" />
       </body>

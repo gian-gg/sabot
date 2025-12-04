@@ -6,7 +6,7 @@ import Logo from '@/components/core/logo';
 
 const Footer = () => {
   return (
-    <footer className="border-t border-neutral-800/50 bg-gradient-to-b from-black to-neutral-950">
+    <footer className="border-t border-neutral-800/50 bg-linear-to-b from-black to-neutral-950">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand Column */}

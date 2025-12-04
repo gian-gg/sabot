@@ -136,9 +136,11 @@ export function TransactionReportsModal({ txId }: { txId: string }) {
       </div>
 
       <DialogFooter className="mt-2">
-        <Link href={ROUTES.TRANSACTION.VIEW(txId)}>
-          <Button variant="outline">Open full transaction</Button>
-        </Link>
+        <Button variant="outline" asChild>
+          <Link href={ROUTES.TRANSACTION.VIEW(txId)}>
+            Open full transaction
+          </Link>
+        </Button>
       </DialogFooter>
     </div>
   );
