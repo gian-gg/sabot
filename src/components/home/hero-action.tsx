@@ -32,11 +32,9 @@ const HeroAction = () => {
   if (user.verificationStatus === 'not-started') {
     return (
       <Button asChild>
-        <Link href={ROUTES.HOME.VERIFY} className="flex items-center">
-          <>
-            <BadgeCheck className="mr-2 h-4 w-4" />
-            <span>Verify Account</span>
-          </>
+        <Link href={ROUTES.HOME.VERIFY} className="flex items-center gap-2">
+          <BadgeCheck className="h-4 w-4" />
+          Verify Account
         </Link>
       </Button>
     );
@@ -71,19 +69,21 @@ const HeroAction = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="bottom">
           <DropdownMenuItem asChild>
-            <Link href={ROUTES.TRANSACTION.INVITE}>
-              <>
-                <BadgeCheck />
-                Transaction
-              </>
+            <Link
+              href={ROUTES.TRANSACTION.INVITE}
+              className="flex items-center gap-2"
+            >
+              <BadgeCheck className="h-4 w-4" />
+              Transaction
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={ROUTES.AGREEMENT.INVITE}>
-              <>
-                <Handshake />
-                Agreement
-              </>
+            <Link
+              href={ROUTES.AGREEMENT.INVITE}
+              className="flex items-center gap-2"
+            >
+              <Handshake className="h-4 w-4" />
+              Agreement
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>

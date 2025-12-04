@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,18 +20,12 @@ export default function NotFound() {
           </p>
           <div className="flex justify-center gap-2">
             <Button asChild variant="outline">
-              <Link href="/">
-                <>
-                  <Home className="mr-2 h-4 w-4" />
-                  Go Home
-                </>
+              <Link href="/" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Go Home
               </Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              onClick={() => window.history.back()}
-            >
+            <Button variant="outline" onClick={() => window.history.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Go Back
             </Button>

@@ -142,11 +142,12 @@ export function EditorHeader({
             className="text-sm"
             asChild
           >
-            <Link href={`/agreement/${documentId}/finalize`}>
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Finalize
-              </>
+            <Link
+              href={`/agreement/${documentId}/finalize`}
+              className="flex items-center gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Finalize
             </Link>
           </Button>
         </div>

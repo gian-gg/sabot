@@ -25,10 +25,10 @@ const GetStartedButton = () => {
         asChild
       >
         <Link href="/home">
-          <>
+          <span className="flex items-center gap-2">
             <CirclePlus />
             Create Transaction
-          </>
+          </span>
         </Link>
       </Button>
     );
