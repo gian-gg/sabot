@@ -40,10 +40,15 @@ export async function POST(
       );
     }
 
-    // Update current user's confirmation status
+    // Update current user's confirmation and signing status
     const { error: updateError } = await supabase
       .from('agreement_participants')
-      .update({ has_confirmed: true })
+      .update({
+        has_confirmed: true,
+        confirmed_at: new Date().toISOString(),
+        has_signed: true,
+        signed_at: new Date().toISOString(),
+      })
       .eq('id', participant.id);
 
     if (updateError) {

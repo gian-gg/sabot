@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ export function CreateInvitationPage() {
   const [loading, setLoading] = useState(false);
   const [agreementId, setAgreementId] = useState<string | null>(null);
   const [isWaiting, setIsWaiting] = useState(false);
+  const createInProgressRef = useRef(false);
 
   const agreementLink = agreementId
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/agreement/accept?id=${agreementId}`
@@ -40,6 +41,13 @@ export function CreateInvitationPage() {
 
   // Initialize agreement creation
   useEffect(() => {
+    // Prevent duplicate creation requests during strict mode
+    if (createInProgressRef.current) {
+      return;
+    }
+
+    createInProgressRef.current = true;
+
     const createAgreement = async () => {
       try {
         setLoading(true);
@@ -68,6 +76,7 @@ export function CreateInvitationPage() {
         router.push('/home');
       } finally {
         setLoading(false);
+        createInProgressRef.current = false;
       }
     };
 
