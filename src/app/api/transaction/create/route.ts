@@ -27,20 +27,34 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const payload: CreateTransactionPayload = await request.json();
 
+    // Get creator info from user metadata
+    const creatorName =
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split('@')[0] ||
+      'User';
+    const creatorEmail = user.email || '';
+    const creatorAvatarUrl =
+      user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+    console.log('Create - Creator data to store:', {
+      creatorName,
+      creatorEmail,
+      creatorAvatarUrl,
+    });
+
     // Create transaction
-    console.log('Creating transaction for user:', user.id);
+    console.log('Creating transaction for user:', user.id, {
+      name: creatorName,
+      email: creatorEmail,
+    });
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .insert({
         creator_id: user.id,
-        creator_name:
-          user.user_metadata?.name ||
-          user.user_metadata?.full_name ||
-          user.email?.split('@')[0] ||
-          'User',
-        creator_email: user.email || '',
-        creator_avatar_url:
-          user.user_metadata?.avatar_url || user.user_metadata?.picture,
+        creator_name: creatorName,
+        creator_email: creatorEmail,
+        creator_avatar_url: creatorAvatarUrl,
         status: 'waiting_for_participant',
         item_name: payload.item_name,
         item_description: payload.item_description,
@@ -75,13 +89,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Transaction created successfully:', transaction.id);
 
-    // Add creator as participant
+    // Add creator as participant with profile data
     const { error: participantError } = await supabase
       .from('transaction_participants')
       .insert({
         transaction_id: transaction.id,
         user_id: user.id,
         role: 'creator',
+        participant_name: creatorName,
+        participant_email: creatorEmail,
+        participant_avatar_url: creatorAvatarUrl,
       });
 
     if (participantError) {

@@ -140,9 +140,9 @@ export default function FinalizePage({
             participant: {
               id: string;
               user_id: string;
-              name: string;
-              email: string;
-              avatar?: string;
+              participant_name: string;
+              participant_email: string;
+              participant_avatar_url?: string;
               role: string;
               has_confirmed?: boolean;
             },
@@ -150,9 +150,9 @@ export default function FinalizePage({
           ) => ({
             id: participant.id,
             user_id: participant.user_id,
-            name: participant.name,
-            email: participant.email,
-            avatar: participant.avatar,
+            name: participant.participant_name,
+            email: participant.participant_email,
+            avatar: participant.participant_avatar_url,
             color: colors[index % colors.length],
             role: participant.role,
             verified: true,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,11 +35,17 @@ export function CreateTransactionPage() {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [transactionLink, setTransactionLink] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const createInProgressRef = useRef(false);
 
   const { status } = useTransactionStatus(transactionId);
 
   // Check for existing transaction ID in URL first, then create if needed
   useEffect(() => {
+    // Prevent duplicate creation requests during strict mode
+    if (createInProgressRef.current) {
+      return;
+    }
+
     const existingId = searchParams.get('id');
     if (existingId) {
       console.log('Reusing existing transaction ID:', existingId);
@@ -50,6 +56,8 @@ export function CreateTransactionPage() {
       toast.info('Resumed existing transaction');
       return;
     }
+
+    createInProgressRef.current = true;
 
     const createTransaction = async () => {
       try {
@@ -116,6 +124,8 @@ export function CreateTransactionPage() {
             : 'Failed to create transaction';
         setError('generic');
         toast.error(errorMessage);
+      } finally {
+        createInProgressRef.current = false;
       }
     };
 

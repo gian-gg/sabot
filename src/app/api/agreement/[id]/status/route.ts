@@ -19,12 +19,6 @@ export async function GET(
     }
 
     const { id: agreementId } = await params;
-    console.log(
-      'Status - Fetching agreement:',
-      agreementId,
-      'for user:',
-      user.id
-    );
 
     // Get agreement
     const { data: agreement, error: agreementError } = await supabase
@@ -50,10 +44,13 @@ export async function GET(
         agreement_id,
         user_id,
         role,
-        name,
-        email,
-        avatar,
+        participant_name,
+        participant_email,
+        participant_avatar_url,
         has_confirmed,
+        confirmed_at,
+        has_signed,
+        signed_at,
         joined_at
       `
       )
@@ -76,19 +73,29 @@ export async function GET(
         // Use creator data from agreement table
         return {
           ...participant,
-          name:
-            participant.name || agreement.creator_name || 'Agreement Creator',
-          email: participant.email || agreement.creator_email || '',
-          avatar:
-            participant.avatar || agreement.creator_avatar_url || undefined,
+          participant_name:
+            participant.participant_name ||
+            agreement.creator_name ||
+            'Agreement Creator',
+          participant_email:
+            participant.participant_email || agreement.creator_email || '',
+          participant_avatar_url:
+            participant.participant_avatar_url ||
+            agreement.creator_avatar_url ||
+            undefined,
         };
       }
       // Use invitee data from agreement table
       return {
         ...participant,
-        name: participant.name || agreement.invitee_name || 'Invitee',
-        email: participant.email || agreement.invitee_email || '',
-        avatar: participant.avatar || agreement.invitee_avatar_url || undefined,
+        participant_name:
+          participant.participant_name || agreement.invitee_name || 'Invitee',
+        participant_email:
+          participant.participant_email || agreement.invitee_email || '',
+        participant_avatar_url:
+          participant.participant_avatar_url ||
+          agreement.invitee_avatar_url ||
+          undefined,
       };
     });
 
@@ -100,12 +107,16 @@ export async function GET(
 
     // Check if ready for next step (both joined)
     const isReadyForNextStep = participantsData?.length === 2;
+    const bothJoined = participantsData?.length === 2;
 
-    console.log('Status - Response:', {
-      agreementId,
+    console.log(`📊 Status API [${agreementId.slice(0, 8)}]:`, {
       status: agreement.status,
       participantCount: participantsData?.length,
-      isReadyForNextStep,
+      bothJoined,
+      is_ready_for_next_step: isReadyForNextStep,
+      user: user.id.slice(0, 8),
+      hasTerms: !!agreement.terms,
+      hasDeliverables: !!agreement.deliverables,
     });
 
     return NextResponse.json({

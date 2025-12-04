@@ -53,7 +53,7 @@ export function useAgreementRealtime({
       const { data, error: fetchError } = await supabaseRef.current
         .from('agreement_participants')
         .select(
-          'id, user_id, agreement_id, role, has_confirmed, joined_at, name, email, avatar'
+          'id, user_id, agreement_id, role, has_confirmed, joined_at, participant_name, participant_email, participant_avatar_url'
         )
         .eq('agreement_id', agreementId);
 
@@ -74,7 +74,7 @@ export function useAgreementRealtime({
           id: p.id,
           user_id: p.user_id,
           has_confirmed: p.has_confirmed,
-          name: p.name,
+          participant_name: p.participant_name,
           role: p.role,
         }))
       );
@@ -124,7 +124,7 @@ export function useAgreementRealtime({
         const { data, error: fetchError } = await supabase
           .from('agreement_participants')
           .select(
-            'id, user_id, agreement_id, role, has_confirmed, joined_at, name, email, avatar'
+            'id, user_id, agreement_id, role, has_confirmed, joined_at, participant_name, participant_email, participant_avatar_url'
           )
           .eq('agreement_id', agreementId);
 
@@ -171,7 +171,7 @@ export function useAgreementRealtime({
         const { data, error: fetchError } = await supabaseRef.current
           .from('agreement_participants')
           .select(
-            'id, user_id, agreement_id, role, has_confirmed, joined_at, name, email, avatar'
+            'id, user_id, agreement_id, role, has_confirmed, joined_at, participant_name, participant_email, participant_avatar_url'
           )
           .eq('agreement_id', agreementId);
 

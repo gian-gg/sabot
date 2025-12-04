@@ -95,9 +95,9 @@ export async function POST(request: NextRequest) {
         agreement_id: payload.agreement_id,
         user_id: user.id,
         role: 'invitee',
-        name: inviteeName,
-        email: inviteeEmail,
-        avatar: inviteeAvatarUrl,
+        participant_name: inviteeName,
+        participant_email: inviteeEmail,
+        participant_avatar_url: inviteeAvatarUrl,
       })
       .select()
       .single();

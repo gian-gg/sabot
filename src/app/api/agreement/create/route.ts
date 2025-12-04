@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
 
     // Get creator info from user metadata
     const creatorName =
-      user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split('@')[0] ||
+      'User';
     const creatorEmail = user.email || '';
     // Use avatar_url from user metadata
     const creatorAvatarUrl =
@@ -82,9 +85,9 @@ export async function POST(request: NextRequest) {
         agreement_id: agreement.id,
         user_id: user.id,
         role: 'creator',
-        name: creatorName,
-        email: creatorEmail,
-        avatar: creatorAvatarUrl,
+        participant_name: creatorName,
+        participant_email: creatorEmail,
+        participant_avatar_url: creatorAvatarUrl,
       });
 
     if (participantError) {

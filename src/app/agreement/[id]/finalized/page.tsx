@@ -29,8 +29,10 @@ interface Party {
   avatar?: string;
   color: string;
   signature?: string;
-  signedAt?: string;
   has_confirmed?: boolean;
+  confirmedAt?: string;
+  has_signed?: boolean;
+  signedAt?: string;
   role?: 'creator' | 'invitee';
 }
 
@@ -80,24 +82,28 @@ export default function FinalizedPage({
             participant: {
               id: string;
               user_id: string;
-              name: string;
-              email: string;
-              avatar?: string;
+              participant_name: string;
+              participant_email: string;
+              participant_avatar_url?: string;
               role: 'creator' | 'invitee';
               has_confirmed?: boolean;
+              confirmed_at?: string;
+              has_signed?: boolean;
               signed_at?: string;
             },
             index: number
           ) => ({
             id: participant.id,
             user_id: participant.user_id,
-            name: participant.name,
-            email: participant.email,
-            avatar: participant.avatar,
+            name: participant.participant_name,
+            email: participant.participant_email,
+            avatar: participant.participant_avatar_url,
             color: colors[index % colors.length],
             role: participant.role,
             has_confirmed: participant.has_confirmed,
-            signed_at: participant.signed_at,
+            confirmedAt: participant.confirmed_at,
+            has_signed: participant.has_signed,
+            signedAt: participant.signed_at,
           })
         );
 
