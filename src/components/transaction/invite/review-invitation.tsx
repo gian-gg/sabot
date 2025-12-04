@@ -36,28 +36,29 @@ export function ReviewTransactionInvitation({
           href={`/profile/${inviter.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-muted/50 hover:bg-muted/70 group flex w-full items-center gap-4 rounded-lg p-8 py-6 text-left transition-colors"
         >
-          <Avatar className="ring-primary/20 h-16 w-16 ring-2">
-            <AvatarImage
-              src={inviter.avatar || '/placeholder.svg'}
-              alt={inviter.name}
-            />
-            <AvatarFallback>{inviter.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">{inviter.name}</h3>
-              {inviter.isVerified && (
-                <CheckCircle2 className="text-primary h-5 w-5" />
-              )}
+          <div className="bg-muted/50 hover:bg-muted/70 group flex w-full items-center gap-4 rounded-lg p-8 py-6 text-left transition-colors">
+            <Avatar className="ring-primary/20 h-16 w-16 ring-2">
+              <AvatarImage
+                src={inviter.avatar || '/placeholder.svg'}
+                alt={inviter.name}
+              />
+              <AvatarFallback>{inviter.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">{inviter.name}</h3>
+                {inviter.isVerified && (
+                  <CheckCircle2 className="text-primary h-5 w-5" />
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm">{inviter.email}</p>
+              <p className="text-primary mt-1 text-xs font-medium">
+                View Profile →
+              </p>
             </div>
-            <p className="text-muted-foreground text-sm">{inviter.email}</p>
-            <p className="text-primary mt-1 text-xs font-medium">
-              View Profile →
-            </p>
+            <Info className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
           </div>
-          <Info className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
         </Link>
 
         <div className="space-y-3">

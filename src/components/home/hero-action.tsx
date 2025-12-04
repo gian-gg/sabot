@@ -33,8 +33,10 @@ const HeroAction = () => {
     return (
       <Button asChild>
         <Link href={ROUTES.HOME.VERIFY} className="flex items-center">
-          <BadgeCheck className="mr-2 h-4 w-4" />
-          <span>Verify Account</span>
+          <>
+            <BadgeCheck className="mr-2 h-4 w-4" />
+            <span>Verify Account</span>
+          </>
         </Link>
       </Button>
     );
@@ -70,14 +72,18 @@ const HeroAction = () => {
         <DropdownMenuContent align="start" side="bottom">
           <DropdownMenuItem asChild>
             <Link href={ROUTES.TRANSACTION.INVITE}>
-              <BadgeCheck />
-              Transaction
+              <>
+                <BadgeCheck />
+                Transaction
+              </>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={ROUTES.AGREEMENT.INVITE}>
-              <Handshake />
-              Agreement
+              <>
+                <Handshake />
+                Agreement
+              </>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>

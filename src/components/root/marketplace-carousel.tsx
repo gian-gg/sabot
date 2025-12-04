@@ -13,7 +13,7 @@ const marketplaces = [
 
 export function MarketplaceCarousel() {
   return (
-    <div className="w-full overflow-x-hidden bg-gradient-to-b from-black via-neutral-950 to-black py-12">
+    <div className="w-full overflow-x-hidden bg-linear-to-b from-black via-neutral-950 to-black py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
           <h2 className="text-md text-lg text-neutral-400 sm:text-lg">
@@ -24,8 +24,8 @@ export function MarketplaceCarousel() {
         {/* Infinite scroll animation */}
         <div className="relative flex overflow-x-hidden">
           {/* Gradient overlays for fade effect */}
-          <div className="absolute top-0 bottom-0 left-0 z-10 w-24 bg-gradient-to-r from-black to-transparent" />
-          <div className="absolute top-0 right-0 bottom-0 z-10 w-24 bg-gradient-to-l from-black to-transparent" />
+          <div className="absolute top-0 bottom-0 left-0 z-10 w-24 bg-linear-to-r from-black to-transparent" />
+          <div className="absolute top-0 right-0 bottom-0 z-10 w-24 bg-linear-to-l from-black to-transparent" />
 
           {/* Scrolling container */}
           <div className="animate-scroll flex items-center">
@@ -33,7 +33,7 @@ export function MarketplaceCarousel() {
             {marketplaces.map((marketplace, index) => (
               <div
                 key={`first-${index}`}
-                className="mx-8 flex-shrink-0 transition-opacity hover:opacity-80"
+                className="mx-8 shrink-0 transition-opacity hover:opacity-80"
               >
                 <Image
                   src={marketplace.logo}
@@ -48,7 +48,7 @@ export function MarketplaceCarousel() {
             {marketplaces.map((marketplace, index) => (
               <div
                 key={`second-${index}`}
-                className="mx-8 flex-shrink-0 transition-opacity hover:opacity-80"
+                className="mx-8 shrink-0 transition-opacity hover:opacity-80"
               >
                 <Image
                   src={marketplace.logo}

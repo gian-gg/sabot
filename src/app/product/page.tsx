@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 
 export default function ProductPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-neutral-950">
+    <div className="min-h-screen bg-linear-to-b from-black to-neutral-950">
       {/* Hero Section */}
       <section className="border-b border-neutral-800/50 px-6 pt-32 pb-16">
         <div className="mx-auto max-w-6xl text-center">
@@ -142,7 +142,7 @@ export default function ProductPage() {
           <div className="space-y-8">
             {/* Step 1 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">1</span>
               </div>
               <div>
@@ -160,7 +160,7 @@ export default function ProductPage() {
 
             {/* Step 2 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">2</span>
               </div>
               <div>
@@ -178,7 +178,7 @@ export default function ProductPage() {
 
             {/* Step 3 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">3</span>
               </div>
               <div>
@@ -196,7 +196,7 @@ export default function ProductPage() {
 
             {/* Step 4 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">4</span>
               </div>
               <div>
@@ -213,7 +213,7 @@ export default function ProductPage() {
 
             {/* Step 5 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">5</span>
               </div>
               <div>
@@ -231,7 +231,7 @@ export default function ProductPage() {
 
             {/* Step 6 */}
             <div className="flex gap-6">
-              <div className="bg-primary/20 text-primary flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full">
+              <div className="bg-primary/20 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
                 <span className="text-xl font-bold">6</span>
               </div>
               <div>
@@ -279,15 +279,15 @@ export default function ProductPage() {
                 </p>
                 <ul className="space-y-2 pl-4">
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Privacy-protected blurred names</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Real-time transaction updates</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Verified transaction history</span>
                   </li>
                 </ul>
@@ -306,15 +306,15 @@ export default function ProductPage() {
                 </p>
                 <ul className="space-y-2 pl-4">
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Automated incident reports</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Case tracking dashboard</span>
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <CheckCircle className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Direct forwarding to authorities</span>
                   </li>
                 </ul>

@@ -26,7 +26,7 @@ export function HeroSection() {
         <div className="space-y-4">
           <h1 className="text-foreground text-4xl leading-tight font-bold text-balance lg:text-5xl">
             Hello,{' '}
-            <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+            <span className="from-primary to-accent bg-linear-to-r bg-clip-text text-transparent">
               {user.name.split(' ')[0]}
             </span>
           </h1>
@@ -58,7 +58,7 @@ export function HeroSection() {
             </p>
           </div>
         </div>
-        <div className="from-primary/10 to-accent/10 absolute inset-0 bg-gradient-to-br via-transparent" />
+        <div className="from-primary/10 to-accent/10 absolute inset-0 bg-linear-to-br via-transparent" />
       </Card>
     </div>
   );

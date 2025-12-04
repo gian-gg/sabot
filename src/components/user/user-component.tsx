@@ -58,13 +58,17 @@ export default function HeaderAction({ user }: { user: User }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="cursor-pointer" asChild>
-        <Avatar className="h-8 w-8 rounded-lg text-xs">
-          {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-          <AvatarFallback className="rounded-lg">
-            {getInitials(user.name)}
-          </AvatarFallback>
-        </Avatar>
+      <DropdownMenuTrigger asChild>
+        <button className="rounded-lg focus:outline-none">
+          <Avatar className="h-8 w-8 rounded-lg text-xs">
+            {user.image ? (
+              <AvatarImage src={user.image} alt={user.name} />
+            ) : null}
+            <AvatarFallback className="rounded-lg">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"

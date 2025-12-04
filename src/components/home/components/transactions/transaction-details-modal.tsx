@@ -145,8 +145,10 @@ export function TransactionDetailsModal({
             transaction.status === 'screenshots_uploaded') && (
             <Button variant="default" className="w-full" size="lg" asChild>
               <Link href={`/transaction/invite?id=${transaction.id}`}>
-                Go to Transaction
-                <ArrowUpRight className="mr-2 h-5 w-5" />
+                <>
+                  Go to Transaction
+                  <ArrowUpRight className="mr-2 h-5 w-5" />
+                </>
               </Link>
             </Button>
           )}
@@ -707,8 +709,10 @@ export function TransactionDetailsModal({
                 <Link
                   href={`mailto:${transaction.transaction_participants[1].participant_email}`}
                 >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Contact Counterparty
+                  <>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Contact Counterparty
+                  </>
                 </Link>
               </Button>
             )}
@@ -723,8 +727,10 @@ export function TransactionDetailsModal({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      View on Blockchain
+                      <>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View on Blockchain
+                      </>
                     </Link>
                   </Button>
                 )}

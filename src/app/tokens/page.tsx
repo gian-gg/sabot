@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 
 export default function TokensPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-neutral-950">
+    <div className="min-h-screen bg-linear-to-b from-black to-neutral-950">
       {/* Hero Section */}
       <section className="border-b border-neutral-800/50 px-6 pt-32 pb-16">
         <div className="mx-auto max-w-6xl text-center">
@@ -136,23 +136,23 @@ export default function TokensPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-3 text-sm text-neutral-400">
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>10 verified transactions</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>AI fraud detection</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Market comparison analysis</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Emergency alerts</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Dispute reporting</span>
                   </li>
                 </ul>
@@ -184,27 +184,27 @@ export default function TokensPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-3 text-sm text-neutral-400">
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>50 verified transactions</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>AI fraud detection</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Market comparison analysis</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Emergency alerts</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Dispute reporting</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span className="font-semibold text-white">
                       Priority support
                     </span>
@@ -231,39 +231,39 @@ export default function TokensPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-3 text-sm text-neutral-400">
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>200 verified transactions</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>AI fraud detection</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Market comparison analysis</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Emergency alerts</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span>Dispute reporting</span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span className="font-semibold text-white">
                       Priority support
                     </span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span className="font-semibold text-white">
                       Dedicated account manager
                     </span>
                   </li>
                   <li className="flex items-start">
-                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+                    <Check className="text-primary mt-0.5 mr-2 h-4 w-4 shrink-0" />
                     <span className="font-semibold text-white">API access</span>
                   </li>
                 </ul>
