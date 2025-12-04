@@ -41,7 +41,7 @@ export default function BuyTokensPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amountToBuy, setAmountToBuy] = useState<string>('100');
-  const { balance, refresh: refetchSabotBalance } = useSabotBalance();
+  const { balance } = useSabotBalance();
 
   const fetchTokenData = useCallback(async () => {
     setIsLoading(true);
@@ -124,7 +124,6 @@ export default function BuyTokensPage() {
         toast.success(
           `Purchase successful! Tx: ${data.txHash.substring(0, 10)}...`
         );
-        refetchSabotBalance();
       } else {
         toast.error(data.error || 'Transaction failed or was rejected.');
       }

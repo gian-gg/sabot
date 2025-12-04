@@ -10,7 +10,6 @@ export function useSabotBalance() {
   const [balance, setBalance] = useState<string>('0');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
   const user = useUserStore();
 
   const fetchBalance = useCallback(async () => {
@@ -54,7 +53,7 @@ export function useSabotBalance() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, refreshKey]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchBalance();
@@ -64,14 +63,9 @@ export function useSabotBalance() {
     return () => clearInterval(interval);
   }, [fetchBalance]);
 
-  const refresh = useCallback(() => {
-    setRefreshKey((prevKey) => prevKey + 1);
-  }, []);
-
   return {
     balance,
     isLoading,
     error,
-    refresh,
   };
 }

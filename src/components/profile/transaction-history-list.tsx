@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -20,13 +19,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import type { ProfileTransaction } from '@/types/profile';
 import type { TransactionStatus } from '@/types/transaction';
 
 interface TransactionHistoryListProps {
   transactions: ProfileTransaction[];
-  showFilter?: boolean;
 }
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
@@ -115,21 +113,13 @@ function TransactionItem({ transaction }: { transaction: ProfileTransaction }) {
 
 export function TransactionHistoryList({
   transactions,
-  showFilter = true,
 }: TransactionHistoryListProps) {
-  const [activeTab, setActiveTab] = useState<string>('all');
-
   // Filter to only show completed transactions
   const completedTransactions = transactions.filter(
     (tx) => tx.status === 'completed'
   );
 
-  // Filter transactions by status (from completed transactions only)
-  const filteredTransactions = completedTransactions.filter((tx) => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'completed') return tx.status === 'completed';
-    return true;
-  });
+  const filteredTransactions = completedTransactions;
 
   return (
     <Card>
