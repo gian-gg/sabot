@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import type { TransactionDetails } from '@/types/transaction';
+import { formatStatusLabel } from '@/lib/utils/helpers';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -95,7 +96,7 @@ const TransactionItem = ({
             variant="outline"
             className={cn('text-xs', statusColors[transaction.status])}
           >
-            {transaction.status}
+            {formatStatusLabel(transaction.status)}
           </Badge>
         </div>
       </div>

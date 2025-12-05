@@ -27,3 +27,18 @@ export const formatDate = (dateString: string): string => {
     day: 'numeric',
   });
 };
+
+export const formatStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    waiting_for_participant: 'Waiting for participant',
+    both_joined: 'Both joined',
+    screenshots_uploaded: 'Screenshots uploaded',
+    completed: 'Completed',
+    active: 'Active',
+    pending: 'Pending',
+    reported: 'Reported',
+    disputed: 'Disputed',
+    cancelled: 'Cancelled',
+  };
+  return statusMap[status] || status;
+};

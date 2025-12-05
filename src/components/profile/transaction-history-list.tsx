@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 
 import type { ProfileTransaction } from '@/types/profile';
 import type { TransactionStatus } from '@/types/transaction';
+import { formatStatusLabel } from '@/lib/utils/helpers';
 
 interface TransactionHistoryListProps {
   transactions: ProfileTransaction[];
@@ -104,7 +105,7 @@ function TransactionItem({ transaction }: { transaction: ProfileTransaction }) {
             statusColors[transaction.status]
           )}
         >
-          {transaction.status}
+          {formatStatusLabel(transaction.status)}
         </Badge>
       </div>
     </div>

@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { formatDate } from '@/lib/utils/helpers';
+import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
 import type { TransactionDetails } from '@/types/transaction';
 import { useUserStore } from '@/store/user/userStore';
 
@@ -133,7 +133,7 @@ export function TransactionDetailsModal({
             )}
           >
             <StatusIcon className="mr-2 h-4 w-4" />
-            {transaction.status}
+            {formatStatusLabel(transaction.status)}
           </Badge>
         </DialogHeader>
 
