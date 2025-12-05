@@ -10,6 +10,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { TransactionStatus } from '@/types/transaction';
 import {
   CheckCircle2,
@@ -58,6 +66,12 @@ export default function TransactionsSection({
     new Set()
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationData, setDeleteConfirmationData] = useState<{
+    totalCount: number;
+    hardDeleteCount: number;
+    softDeleteCount: number;
+  } | null>(null);
 
   // Calculate transaction volume data by month
   const transactionVolumeData = useMemo(() => {
@@ -245,7 +259,7 @@ export default function TransactionsSection({
     setSelectedForDeletion(new Set());
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedForDeletion.size === 0) return;
 
     // Get transactions being deleted
@@ -258,14 +272,17 @@ export default function TransactionsSection({
     ).length;
     const hardDeleteCount = transactionsToDelete.length - softDeleteCount;
 
-    // Confirm deletion
-    const confirmMessage =
-      `Delete ${transactionsToDelete.length} transaction(s)?\n\n` +
-      `${hardDeleteCount > 0 ? `• ${hardDeleteCount} will be permanently deleted\n` : ''}` +
-      `${softDeleteCount > 0 ? `• ${softDeleteCount} will be hidden but preserved in statistics\n` : ''}` +
-      `\nThis action cannot be undone for permanently deleted transactions.`;
+    // Show confirmation dialog
+    setDeleteConfirmationData({
+      totalCount: transactionsToDelete.length,
+      hardDeleteCount,
+      softDeleteCount,
+    });
+    setShowDeleteConfirmation(true);
+  };
 
-    if (!window.confirm(confirmMessage)) return;
+  const handleConfirmDelete = async () => {
+    if (selectedForDeletion.size === 0) return;
 
     setIsDeleting(true);
     try {
@@ -292,6 +309,7 @@ export default function TransactionsSection({
       // Exit delete mode and refresh
       setIsDeleteMode(false);
       setSelectedForDeletion(new Set());
+      setShowDeleteConfirmation(false);
       window.location.reload();
     } catch (error) {
       console.error('Failed to delete transactions:', error);
@@ -301,6 +319,11 @@ export default function TransactionsSection({
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationData(null);
   };
 
   // Calculate total stats from recent transactions
@@ -550,7 +573,19 @@ export default function TransactionsSection({
             <div className="space-y-3">
               {displayTransactions.length > 0 ? (
                 displayTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center gap-3">
+                  <div
+                    key={transaction.id}
+                    className={`flex items-center gap-3 ${
+                      isDeleteMode
+                        ? 'hover:bg-accent cursor-pointer rounded-md p-2 transition-colors'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      if (isDeleteMode) {
+                        handleToggleSelection(transaction.id);
+                      }
+                    }}
+                  >
                     {isDeleteMode && (
                       <input
                         type="checkbox"
@@ -565,7 +600,9 @@ export default function TransactionsSection({
                         transaction={transaction}
                         onClick={
                           isDeleteMode
-                            ? undefined
+                            ? () => {
+                                // Prevent opening details modal in delete mode
+                              }
                             : () => handleTransactionClick(transaction)
                         }
                       />
@@ -604,6 +641,75 @@ export default function TransactionsSection({
         filters={filters}
         onFiltersChange={setFilters}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteConfirmation}
+        onOpenChange={setShowDeleteConfirmation}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              {deleteConfirmationData?.totalCount} transaction(s)?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {deleteConfirmationData?.hardDeleteCount ? (
+              <div className="bg-destructive/10 flex items-start gap-3 rounded-md p-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    {deleteConfirmationData.hardDeleteCount} will be permanently
+                    deleted
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    These transactions will be completely removed from your
+                    database.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {deleteConfirmationData?.softDeleteCount ? (
+              <div className="flex items-start gap-3 rounded-md bg-yellow-500/10 p-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    {deleteConfirmationData.softDeleteCount} will be hidden but
+                    preserved in statistics
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    These transactions will be hidden from view but kept in your
+                    success rate calculations.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            <p className="text-destructive text-sm font-semibold">
+              This action cannot be undone for permanently deleted transactions.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleCancelConfirmation}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
