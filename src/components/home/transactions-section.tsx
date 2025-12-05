@@ -17,10 +17,12 @@ import {
   Filter,
   Search,
   TrendingUp,
+  Trash2,
   Users,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import AreaChartComponent from './components/transactions/area-chart-component';
 import PieChartComponent from './components/transactions/pie-chart-component';
@@ -49,6 +51,13 @@ export default function TransactionsSection({
     type: 'all',
     dateRange: 'all',
   });
+
+  // Delete mode state
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(
+    new Set()
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Calculate transaction volume data by month
   const transactionVolumeData = useMemo(() => {
@@ -174,6 +183,20 @@ export default function TransactionsSection({
     });
   }, [searchQuery, filters, recentTransactions]);
 
+  // When in delete mode, only show deletable transactions
+  const displayTransactions = useMemo(() => {
+    if (isDeleteMode) {
+      return filteredTransactions.filter((t) =>
+        [
+          'waiting_for_participant',
+          'both_joined',
+          'screenshots_uploaded',
+        ].includes(t.status)
+      );
+    }
+    return filteredTransactions;
+  }, [isDeleteMode, filteredTransactions]);
+
   // Count active filters
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -196,6 +219,88 @@ export default function TransactionsSection({
       type: 'all',
       dateRange: 'all',
     });
+  };
+
+  // Delete mode handlers
+  const handleToggleSelection = (transactionId: string) => {
+    const newSelection = new Set(selectedForDeletion);
+    if (newSelection.has(transactionId)) {
+      newSelection.delete(transactionId);
+    } else {
+      newSelection.add(transactionId);
+    }
+    setSelectedForDeletion(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedForDeletion.size === displayTransactions.length) {
+      setSelectedForDeletion(new Set());
+    } else {
+      setSelectedForDeletion(new Set(displayTransactions.map((t) => t.id)));
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteMode(false);
+    setSelectedForDeletion(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedForDeletion.size === 0) return;
+
+    // Get transactions being deleted
+    const transactionsToDelete = displayTransactions.filter((t) =>
+      selectedForDeletion.has(t.id)
+    );
+
+    const softDeleteCount = transactionsToDelete.filter(
+      (t) => t.status === 'screenshots_uploaded'
+    ).length;
+    const hardDeleteCount = transactionsToDelete.length - softDeleteCount;
+
+    // Confirm deletion
+    const confirmMessage =
+      `Delete ${transactionsToDelete.length} transaction(s)?\n\n` +
+      `${hardDeleteCount > 0 ? `• ${hardDeleteCount} will be permanently deleted\n` : ''}` +
+      `${softDeleteCount > 0 ? `• ${softDeleteCount} will be hidden but preserved in statistics\n` : ''}` +
+      `\nThis action cannot be undone for permanently deleted transactions.`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/transaction/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionIds: Array.from(selectedForDeletion),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete transactions');
+      }
+
+      const result = await response.json();
+
+      // Show success message
+      toast.success(
+        `Successfully deleted ${result.summary.softDeleted + result.summary.hardDeleted} transaction(s)`
+      );
+
+      // Exit delete mode and refresh
+      setIsDeleteMode(false);
+      setSelectedForDeletion(new Set());
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to delete transactions:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete transactions'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Calculate total stats from recent transactions
@@ -278,13 +383,22 @@ export default function TransactionsSection({
               <div>
                 <CardTitle>Recent Transactions</CardTitle>
                 <CardDescription>
-                  Your latest transaction activity
-                  {filteredTransactions.length !==
-                    recentTransactions.length && (
-                    <span className="text-primary ml-2">
-                      ({filteredTransactions.length} of{' '}
-                      {recentTransactions.length})
+                  {isDeleteMode ? (
+                    <span className="text-destructive">
+                      Delete mode active - Select transactions to delete (
+                      {displayTransactions.length} deletable)
                     </span>
+                  ) : (
+                    <>
+                      Your latest transaction activity
+                      {filteredTransactions.length !==
+                        recentTransactions.length && (
+                        <span className="text-primary ml-2">
+                          ({filteredTransactions.length} of{' '}
+                          {recentTransactions.length})
+                        </span>
+                      )}
+                    </>
                   )}
                 </CardDescription>
               </div>
@@ -314,6 +428,40 @@ export default function TransactionsSection({
                     </Badge>
                   )}
                 </Button>
+
+                {/* Delete Mode Button */}
+                {!isDeleteMode ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsDeleteMode(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={selectedForDeletion.size === 0 || isDeleting}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {isDeleting
+                        ? 'Deleting...'
+                        : `Delete Selected (${selectedForDeletion.size})`}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelDelete}
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -381,21 +529,61 @@ export default function TransactionsSection({
               </div>
             )}
 
+            {/* Select All Checkbox in Delete Mode */}
+            {isDeleteMode && displayTransactions.length > 0 && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border p-3">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  checked={
+                    selectedForDeletion.size === displayTransactions.length
+                  }
+                  onChange={handleSelectAll}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <label htmlFor="select-all" className="text-sm font-medium">
+                  Select All ({displayTransactions.length} transactions)
+                </label>
+              </div>
+            )}
+
             <div className="space-y-3">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <TransactionItem
-                    key={transaction.id}
-                    transaction={transaction}
-                    onClick={() => handleTransactionClick(transaction)}
-                  />
+              {displayTransactions.length > 0 ? (
+                displayTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center gap-3">
+                    {isDeleteMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedForDeletion.has(transaction.id)}
+                        onChange={() => handleToggleSelection(transaction.id)}
+                        className="h-4 w-4 rounded border-gray-300"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <TransactionItem
+                        transaction={transaction}
+                        onClick={
+                          isDeleteMode
+                            ? undefined
+                            : () => handleTransactionClick(transaction)
+                        }
+                      />
+                    </div>
+                  </div>
                 ))
               ) : (
                 <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
                   <Search className="mb-3 h-12 w-12 opacity-20" />
-                  <p className="text-sm">No transactions found</p>
+                  <p className="text-sm">
+                    {isDeleteMode
+                      ? 'No deletable transactions found'
+                      : 'No transactions found'}
+                  </p>
                   <p className="text-xs">
-                    Try adjusting your search or filters
+                    {isDeleteMode
+                      ? 'Only transactions with status "waiting for participant", "both joined", or "screenshots uploaded" can be deleted'
+                      : 'Try adjusting your search or filters'}
                   </p>
                 </div>
               )}

@@ -86,6 +86,7 @@ export interface TransactionDetails {
   hash: string | null | undefined;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
   transaction_participants: TransactionParticipant[];
 }
 
