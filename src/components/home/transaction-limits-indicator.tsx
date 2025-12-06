@@ -63,10 +63,6 @@ export function TransactionLimitsIndicator({
 
   return (
     <Card className="border-muted">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Transaction Capacity</CardTitle>
-        <CardDescription>Current usage of transaction limits</CardDescription>
-      </CardHeader>
       <CardContent className="space-y-4">
         {/* Pending Transactions */}
         <div>
@@ -100,8 +96,7 @@ export function TransactionLimitsIndicator({
             <div className="bg-destructive/10 mt-2 flex items-center gap-2 rounded p-2">
               <AlertCircle className="text-destructive h-4 w-4" />
               <p className="text-destructive text-xs">
-                Limit reached. Delete or complete transactions to create new
-                ones.
+                Delete or complete transactions to create new ones.
               </p>
             </div>
           )}
@@ -145,8 +140,7 @@ export function TransactionLimitsIndicator({
             <div className="bg-destructive/10 mt-2 flex items-center gap-2 rounded p-2">
               <AlertCircle className="text-destructive h-4 w-4" />
               <p className="text-destructive text-xs">
-                Limit reached. Complete or cancel transactions to create new
-                ones.
+                Complete or cancel transactions to create new ones.
               </p>
             </div>
           )}
