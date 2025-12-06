@@ -25,6 +25,7 @@ import {
   Users,
   XCircle,
   X,
+  Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -69,9 +70,88 @@ export function TransactionDetailsModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const user = useUserStore();
 
   if (!transaction) return null;
+
+  const isCreator = transaction.creator_id === user.id;
+
+  const handleCancelTransaction = async () => {
+    if (!transaction?.id) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel this active transaction? This action cannot be undone.'
+    );
+
+    if (!confirmed) return;
+
+    setIsCancelling(true);
+    try {
+      const response = await fetch(
+        `/api/transaction/${transaction.id}/cancel`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel transaction');
+      }
+
+      toast.success('Transaction cancelled successfully');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to cancel transaction:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to cancel transaction'
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleDeleteTransaction = async () => {
+    if (!transaction?.id) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this transaction? This action cannot be undone.'
+    );
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/transaction/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionIds: [transaction.id],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete transaction');
+      }
+
+      toast.success('Transaction deleted successfully');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete transaction'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const StatusIcon = statusIcons[transaction.status];
 
@@ -140,7 +220,7 @@ export function TransactionDetailsModal({
               </div>
 
               {/* Status Badge below title */}
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge
                   variant="outline"
                   className={cn(
@@ -151,6 +231,42 @@ export function TransactionDetailsModal({
                   <StatusIcon className="mr-1.5 h-3.5 w-3.5" />
                   {formatStatusLabel(transaction.status)}
                 </Badge>
+
+                {/* Cancel Button - only for active status */}
+                {isCreator && transaction.status === 'active' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                    onClick={handleCancelTransaction}
+                    disabled={isCancelling}
+                    title="Cancel transaction"
+                  >
+                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                    {isCancelling ? 'Cancelling...' : 'Cancel'}
+                  </Button>
+                )}
+
+                {/* Delete Button - only for early-stage statuses */}
+                {isCreator &&
+                  [
+                    'waiting_for_participant',
+                    'both_joined',
+                    'screenshots_uploaded',
+                    'pending',
+                  ].includes(transaction.status) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                      onClick={handleDeleteTransaction}
+                      disabled={isDeleting}
+                      title="Delete transaction"
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                  )}
               </div>
             </div>
 
@@ -726,6 +842,22 @@ export function TransactionDetailsModal({
                         <p className="font-medium">Transaction Disputed</p>
                         <p className="text-muted-foreground text-sm">
                           Under review
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cancelled status */}
+                  {transaction.status === 'cancelled' && (
+                    <div className="relative flex gap-4">
+                      <div className="relative z-10 mt-2 ml-2 flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-gray-500 bg-gray-500/10" />
+                      <div className="flex-1 pt-0.5">
+                        <p className="font-medium">Transaction Cancelled</p>
+                        <p className="text-muted-foreground text-sm">
+                          Cancelled by creator
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {formatDate(transaction.updated_at)}
                         </p>
                       </div>
                     </div>

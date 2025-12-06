@@ -14,7 +14,14 @@ export function useTransactionDeletionListener(transactionId: string | null) {
         toast.warning('This transaction has been deleted by the creator', {
           duration: 5000,
         });
-        // Optionally redirect or close modal
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 2000);
+      })
+      .on('broadcast', { event: 'transaction_cancelled' }, () => {
+        toast.warning('This transaction has been cancelled by the creator', {
+          duration: 5000,
+        });
         setTimeout(() => {
           window.location.href = '/home';
         }, 2000);
