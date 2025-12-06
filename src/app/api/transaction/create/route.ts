@@ -27,6 +27,88 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const payload: CreateTransactionPayload = await request.json();
 
+    // Check transaction count guardrails
+    const { data: pendingTransactions, error: pendingError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('creator_id', user.id)
+      .in('status', [
+        'waiting_for_participant',
+        'both_joined',
+        'screenshots_uploaded',
+      ])
+      .is('deleted_at', null);
+
+    if (pendingError) {
+      console.error('Error counting pending transactions:', pendingError);
+      return NextResponse.json(
+        { error: 'Failed to check transaction limits' },
+        { status: 500 }
+      );
+    }
+
+    const pendingCount = pendingTransactions?.length || 0;
+    const MAX_PENDING = 5;
+
+    if (pendingCount >= MAX_PENDING) {
+      console.log('[Create] Pending transaction limit exceeded:', {
+        userId: user.id,
+        pendingCount,
+        MAX_PENDING,
+      });
+      return NextResponse.json(
+        {
+          error: `You have reached the maximum limit of ${MAX_PENDING} pending transactions. Please complete or delete some transactions before creating new ones.`,
+          code: 'MAX_PENDING_EXCEEDED',
+          currentCount: pendingCount,
+          maxLimit: MAX_PENDING,
+        },
+        { status: 409 }
+      );
+    }
+
+    const { data: activeTransactions, error: activeError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('creator_id', user.id)
+      .in('status', ['active', 'pending', 'reported', 'disputed'])
+      .is('deleted_at', null);
+
+    if (activeError) {
+      console.error('Error counting active transactions:', activeError);
+      return NextResponse.json(
+        { error: 'Failed to check transaction limits' },
+        { status: 500 }
+      );
+    }
+
+    const activeCount = activeTransactions?.length || 0;
+    const MAX_ACTIVE = 3;
+
+    if (activeCount >= MAX_ACTIVE) {
+      console.log('[Create] Active transaction limit exceeded:', {
+        userId: user.id,
+        activeCount,
+        MAX_ACTIVE,
+      });
+      return NextResponse.json(
+        {
+          error: `You have reached the maximum limit of ${MAX_ACTIVE} active transactions. Please complete or cancel some transactions before creating new ones.`,
+          code: 'MAX_ACTIVE_EXCEEDED',
+          currentCount: activeCount,
+          maxLimit: MAX_ACTIVE,
+        },
+        { status: 409 }
+      );
+    }
+
+    console.log('Transaction limits check:', {
+      userId: user.id,
+      pendingCount,
+      activeCount,
+      limitsOk: true,
+    });
+
     // Get creator info from user metadata
     const creatorName =
       user.user_metadata?.name ||

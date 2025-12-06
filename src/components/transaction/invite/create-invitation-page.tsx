@@ -4,6 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+interface ErrorResponse {
+  error: string;
+  code?: string;
+  currentCount?: number;
+  maxLimit?: number;
+}
 import {
   Card,
   CardContent,
@@ -68,9 +75,13 @@ export function CreateTransactionPage() {
         });
 
         if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ error: 'Unknown error' }));
+          let errorData: ErrorResponse = { error: 'Unknown error' };
+          try {
+            errorData = await response.json();
+          } catch {
+            console.warn('Failed to parse error response as JSON');
+            errorData = { error: response.statusText || 'Unknown error' };
+          }
 
           console.error('Transaction creation failed:', {
             status: response.status,
@@ -83,6 +94,33 @@ export function CreateTransactionPage() {
             setError('authentication');
             toast.error('Please sign in to create a transaction');
             setTimeout(() => router.push('/sign-in'), 2000);
+            return;
+          }
+
+          // Handle transaction limit exceeded (409 Conflict)
+          if (response.status === 409) {
+            const code = errorData?.code;
+            if (code === 'MAX_PENDING_EXCEEDED') {
+              setError('limit_pending');
+              toast.error(
+                `You have ${errorData.currentCount}/${errorData.maxLimit} pending transactions. Delete or complete some to create new ones.`,
+                { duration: 6000 }
+              );
+              return;
+            }
+            if (code === 'MAX_ACTIVE_EXCEEDED') {
+              setError('limit_active');
+              toast.error(
+                `You have ${errorData.currentCount}/${errorData.maxLimit} active transactions. Complete or cancel some to create new ones.`,
+                { duration: 6000 }
+              );
+              return;
+            }
+            // Generic 409 conflict
+            setError('conflict');
+            toast.error(
+              errorData?.error || 'Cannot create transaction at this time'
+            );
             return;
           }
 
@@ -100,7 +138,7 @@ export function CreateTransactionPage() {
 
           // Generic error
           setError('generic');
-          toast.error(errorData.error || 'Failed to create transaction');
+          toast.error(errorData?.error || 'Failed to create transaction');
           return;
         }
 
