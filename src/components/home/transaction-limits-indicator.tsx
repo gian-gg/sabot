@@ -2,14 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { getTransactionLimitsStatus } from '@/lib/supabase/db/transactions';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LimitsStatus {
   pending: {
@@ -34,6 +28,7 @@ export function TransactionLimitsIndicator({
 }: TransactionLimitsIndicatorProps) {
   const [limits, setLimits] = useState<LimitsStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -61,96 +56,233 @@ export function TransactionLimitsIndicator({
   const isPendingAtLimit = !limits.pending.canCreate;
   const isActiveAtLimit = !limits.active.canCreate;
 
-  return (
-    <Card className="border-muted">
-      <CardContent className="space-y-4">
-        {/* Pending Transactions */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-medium">Pending Transactions</label>
-            <span
-              className={`text-sm font-semibold ${
-                isPendingAtLimit
-                  ? 'text-destructive'
-                  : isPendingNearLimit
-                    ? 'text-amber-500'
-                    : 'text-green-600'
-              }`}
-            >
-              {limits.pending.current}/{limits.pending.max}
-            </span>
-          </div>
-          <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                isPendingAtLimit
-                  ? 'bg-destructive'
-                  : isPendingNearLimit
-                    ? 'bg-amber-500'
-                    : 'bg-green-600'
-              }`}
-              style={{ width: `${Math.min(pendingPercentage, 100)}%` }}
-            />
-          </div>
-          {isPendingAtLimit && (
-            <div className="bg-destructive/10 mt-2 flex items-center gap-2 rounded p-2">
-              <AlertCircle className="text-destructive h-4 w-4" />
-              <p className="text-destructive text-xs">
-                Delete or complete transactions to create new ones.
-              </p>
-            </div>
-          )}
-          {isPendingNearLimit && !isPendingAtLimit && (
-            <p className="mt-2 text-xs text-amber-600">
-              Approaching limit. You have{' '}
-              {limits.pending.max - limits.pending.current} slot(s) remaining.
-            </p>
-          )}
-        </div>
+  // Calculate totals for summary view
+  const totalUsed = limits.pending.current + limits.active.current;
+  const totalMax = limits.pending.max + limits.active.max;
+  const totalPercentage = (totalUsed / totalMax) * 100;
 
-        {/* Active Transactions */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-medium">Active Transactions</label>
-            <span
-              className={`text-sm font-semibold ${
-                isActiveAtLimit
-                  ? 'text-destructive'
-                  : isActiveNearLimit
-                    ? 'text-amber-500'
-                    : 'text-green-600'
-              }`}
-            >
-              {limits.active.current}/{limits.active.max}
-            </span>
-          </div>
-          <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                isActiveAtLimit
-                  ? 'bg-destructive'
-                  : isActiveNearLimit
-                    ? 'bg-amber-500'
-                    : 'bg-green-600'
-              }`}
-              style={{ width: `${Math.min(activePercentage, 100)}%` }}
-            />
-          </div>
-          {isActiveAtLimit && (
-            <div className="bg-destructive/10 mt-2 flex items-center gap-2 rounded p-2">
-              <AlertCircle className="text-destructive h-4 w-4" />
-              <p className="text-destructive text-xs">
-                Complete or cancel transactions to create new ones.
-              </p>
+  // Determine overall status color
+  const isAnyAtLimit = isPendingAtLimit || isActiveAtLimit;
+  const isAnyNearLimit = isPendingNearLimit || isActiveNearLimit;
+  const overallStatusColor = isAnyAtLimit
+    ? 'text-destructive'
+    : isAnyNearLimit
+      ? 'text-amber-500'
+      : 'text-green-600';
+
+  const overallBarColor = isAnyAtLimit
+    ? 'bg-destructive'
+    : isAnyNearLimit
+      ? 'bg-amber-500'
+      : 'bg-green-600';
+
+  // Determine consolidated warning state and message
+  const showConsolidatedWarning =
+    isPendingAtLimit ||
+    isActiveAtLimit ||
+    (isPendingNearLimit && isActiveNearLimit);
+
+  const getWarningMessage = (): {
+    type: 'destructive' | 'warning';
+    title: string;
+  } | null => {
+    // Priority 1: Both at limit
+    if (isPendingAtLimit && isActiveAtLimit) {
+      return {
+        type: 'destructive',
+        title: 'Both pending and active transaction limits reached.',
+      };
+    }
+
+    // Priority 2: One at limit, one near limit
+    if (isPendingAtLimit && isActiveNearLimit) {
+      return {
+        type: 'destructive',
+        title: 'Pending limit reached. Active approaching limit.',
+      };
+    }
+    if (isActiveAtLimit && isPendingNearLimit) {
+      return {
+        type: 'destructive',
+        title: 'Active limit reached. Pending approaching limit.',
+      };
+    }
+
+    // Priority 3: Only pending at limit
+    if (isPendingAtLimit) {
+      return {
+        type: 'destructive',
+        title: 'Pending transaction limit reached (5/5).',
+      };
+    }
+
+    // Priority 4: Only active at limit
+    if (isActiveAtLimit) {
+      return {
+        type: 'destructive',
+        title: 'Active transaction limit reached (3/3).',
+      };
+    }
+
+    // Priority 5: Both near limit
+    if (isPendingNearLimit && isActiveNearLimit) {
+      return {
+        type: 'warning',
+        title: 'Approaching transaction limits.',
+      };
+    }
+
+    return null;
+  };
+
+  return (
+    <Card className="border-muted p-0">
+      <CardContent className="space-y-0 p-0">
+        {/* Collapsed Summary View */}
+        {!isExpanded && (
+          <div className="space-y-3 px-6 pt-6 pb-2">
+            {/* Summary Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">Transaction Limits</h3>
+              <span className={`text-sm font-semibold ${overallStatusColor}`}>
+                {totalUsed}/{totalMax}
+              </span>
             </div>
-          )}
-          {isActiveNearLimit && !isActiveAtLimit && (
-            <p className="mt-2 text-xs text-amber-600">
-              Approaching limit. You have{' '}
-              {limits.active.max - limits.active.current} slot(s) remaining.
-            </p>
-          )}
-        </div>
+
+            {/* Summary Progress Bar */}
+            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${overallBarColor}`}
+                style={{ width: `${Math.min(totalPercentage, 100)}%` }}
+              />
+            </div>
+
+            {/* Expand Button */}
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="text-primary hover:text-primary/80 flex w-full items-center justify-center gap-2 rounded py-2 text-xs font-medium transition-colors"
+            >
+              <ChevronDown className="h-4 w-4" />
+              View Details
+            </button>
+          </div>
+        )}
+
+        {/* Expanded Detailed View */}
+        {isExpanded && (
+          <div className="space-y-4 px-6 pt-6 pb-2">
+            {/* Pending Transactions */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  Pending Transactions
+                </label>
+                <span
+                  className={`text-sm font-semibold ${
+                    isPendingAtLimit
+                      ? 'text-destructive'
+                      : isPendingNearLimit
+                        ? 'text-amber-500'
+                        : 'text-green-600'
+                  }`}
+                >
+                  {limits.pending.current}/{limits.pending.max}
+                </span>
+              </div>
+              <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    isPendingAtLimit
+                      ? 'bg-destructive'
+                      : isPendingNearLimit
+                        ? 'bg-amber-500'
+                        : 'bg-green-600'
+                  }`}
+                  style={{ width: `${Math.min(pendingPercentage, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Active Transactions */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  Active Transactions
+                </label>
+                <span
+                  className={`text-sm font-semibold ${
+                    isActiveAtLimit
+                      ? 'text-destructive'
+                      : isActiveNearLimit
+                        ? 'text-amber-500'
+                        : 'text-green-600'
+                  }`}
+                >
+                  {limits.active.current}/{limits.active.max}
+                </span>
+              </div>
+              <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    isActiveAtLimit
+                      ? 'bg-destructive'
+                      : isActiveNearLimit
+                        ? 'bg-amber-500'
+                        : 'bg-green-600'
+                  }`}
+                  style={{ width: `${Math.min(activePercentage, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Consolidated Warning */}
+            {showConsolidatedWarning &&
+              (() => {
+                const warning = getWarningMessage();
+                if (!warning) return null;
+
+                const isDestructive = warning.type === 'destructive';
+
+                return (
+                  <div
+                    className={`rounded-lg border p-3 ${
+                      isDestructive
+                        ? 'bg-destructive/10 border-destructive/20'
+                        : 'border-amber-500/30 bg-amber-500/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertCircle
+                        className={`mb-0.5 h-4 w-4 shrink-0 ${
+                          isDestructive ? 'text-destructive' : 'text-amber-600'
+                        }`}
+                      />
+                      <div className="flex-1">
+                        <p
+                          className={`text-xs font-medium ${
+                            isDestructive
+                              ? 'text-destructive'
+                              : 'text-amber-700 dark:text-amber-600'
+                          }`}
+                        >
+                          {warning.title}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {/* Collapse Button */}
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="text-primary hover:text-primary/80 flex w-full items-center justify-center gap-2 rounded py-2 text-xs font-medium transition-colors"
+            >
+              <ChevronUp className="h-4 w-4" />
+              Hide Details
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

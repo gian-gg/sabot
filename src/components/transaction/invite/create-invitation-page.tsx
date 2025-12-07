@@ -226,11 +226,21 @@ export function CreateTransactionPage() {
             <CardTitle className="text-destructive text-xl">
               {error === 'authentication' && 'Authentication Required'}
               {error === 'database' && 'Database Setup Required'}
+              {error === 'limit_pending' &&
+                'Pending Transactions Limit Reached'}
+              {error === 'limit_active' && 'Active Transactions Limit Reached'}
+              {error === 'conflict' && 'Cannot Create Transaction'}
               {error === 'generic' && 'Error Creating Transaction'}
             </CardTitle>
             <CardDescription>
               {error === 'authentication' && 'Redirecting to sign in...'}
               {error === 'database' && 'Database migrations need to be run'}
+              {error === 'limit_pending' &&
+                'You have reached the maximum of 5 pending transactions. Please complete or delete some to create new ones.'}
+              {error === 'limit_active' &&
+                'You have reached the maximum of 3 active transactions. Please complete or cancel some to create new ones.'}
+              {error === 'conflict' &&
+                'A conflict occurred while creating your transaction'}
               {error === 'generic' && 'An unexpected error occurred'}
             </CardDescription>
           </CardHeader>
@@ -252,12 +262,14 @@ export function CreateTransactionPage() {
               </div>
             )}
             <div className="flex gap-2">
-              <Button
-                onClick={() => window.location.reload()}
-                variant="default"
-              >
-                Retry
-              </Button>
+              {error !== 'authentication' && (
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="default"
+                >
+                  Retry
+                </Button>
+              )}
               <Button onClick={() => router.push('/home')} variant="outline">
                 Go Home
               </Button>
