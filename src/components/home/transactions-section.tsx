@@ -28,6 +28,7 @@ import {
   Trash2,
   Users,
   X,
+  XCircle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -72,6 +73,14 @@ export default function TransactionsSection({
     hardDeleteCount: number;
     softDeleteCount: number;
   } | null>(null);
+
+  // Cancel mode state
+  const [isCancelMode, setIsCancelMode] = useState(false);
+  const [selectedForCancellation, setSelectedForCancellation] = useState<
+    Set<string>
+  >(new Set());
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
 
   // Calculate transaction volume data by month
   const transactionVolumeData = useMemo(() => {
@@ -197,7 +206,7 @@ export default function TransactionsSection({
     });
   }, [searchQuery, filters, recentTransactions]);
 
-  // When in delete mode, only show deletable transactions
+  // When in delete mode, only show deletable transactions; when in cancel mode, only show active
   const displayTransactions = useMemo(() => {
     if (isDeleteMode) {
       return filteredTransactions.filter((t) =>
@@ -208,8 +217,11 @@ export default function TransactionsSection({
         ].includes(t.status)
       );
     }
+    if (isCancelMode) {
+      return filteredTransactions.filter((t) => t.status === 'active');
+    }
     return filteredTransactions;
-  }, [isDeleteMode, filteredTransactions]);
+  }, [isDeleteMode, isCancelMode, filteredTransactions]);
 
   // Count active filters
   const activeFilterCount = useMemo(() => {
@@ -326,6 +338,73 @@ export default function TransactionsSection({
     setDeleteConfirmationData(null);
   };
 
+  // Cancel mode handlers
+  const handleToggleCancellationSelection = (transactionId: string) => {
+    const newSelection = new Set(selectedForCancellation);
+    if (newSelection.has(transactionId)) {
+      newSelection.delete(transactionId);
+    } else {
+      newSelection.add(transactionId);
+    }
+    setSelectedForCancellation(newSelection);
+  };
+
+  const handleSelectAllForCancel = () => {
+    if (selectedForCancellation.size === displayTransactions.length) {
+      setSelectedForCancellation(new Set());
+    } else {
+      setSelectedForCancellation(new Set(displayTransactions.map((t) => t.id)));
+    }
+  };
+
+  const handleCancelCancelMode = () => {
+    setIsCancelMode(false);
+    setSelectedForCancellation(new Set());
+  };
+
+  const handleBulkCancel = () => {
+    if (selectedForCancellation.size === 0) return;
+    setShowCancelConfirmation(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (selectedForCancellation.size === 0) return;
+
+    setIsCancelling(true);
+    try {
+      const response = await fetch('/api/transaction/bulk-cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionIds: Array.from(selectedForCancellation),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel transactions');
+      }
+
+      const result = await response.json();
+
+      toast.success(
+        `Successfully cancelled ${result.summary.cancelled} transaction(s)`
+      );
+
+      setIsCancelMode(false);
+      setSelectedForCancellation(new Set());
+      setShowCancelConfirmation(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to cancel transactions:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to cancel transactions'
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   // Calculate total stats from recent transactions
   const totalVolume = useMemo(() => {
     const total = recentTransactions.reduce((sum, t) => sum + t.price, 0);
@@ -406,7 +485,12 @@ export default function TransactionsSection({
               <div>
                 <CardTitle>Recent Transactions</CardTitle>
                 <CardDescription>
-                  {isDeleteMode ? (
+                  {isCancelMode ? (
+                    <span className="text-amber-600">
+                      Cancel mode active - Select active transactions to cancel
+                      ({displayTransactions.length} cancellable)
+                    </span>
+                  ) : isDeleteMode ? (
                     <span className="text-destructive">
                       Delete mode active - Select transactions to delete (
                       {displayTransactions.length} deletable)
@@ -452,23 +536,62 @@ export default function TransactionsSection({
                   )}
                 </Button>
 
-                {/* Delete Mode Button */}
-                {!isDeleteMode ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsDeleteMode(true)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </Button>
+                {/* Action Mode Buttons */}
+                {!isDeleteMode && !isCancelMode ? (
+                  <div className="flex items-center gap-2">
+                    {/* Cancel Button - Amber styling */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsCancelMode(true)}
+                      className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+
+                    {/* Delete Button - Red styling */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDeleteMode(true)}
+                      className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                ) : isCancelMode ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleBulkCancel}
+                      disabled={
+                        selectedForCancellation.size === 0 || isCancelling
+                      }
+                      className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      {isCancelling
+                        ? 'Cancelling...'
+                        : `Cancel Selected (${selectedForCancellation.size})`}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelCancelMode}
+                      disabled={isCancelling}
+                    >
+                      Exit
+                    </Button>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="destructive"
                       size="sm"
                       onClick={handleBulkDelete}
                       disabled={selectedForDeletion.size === 0 || isDeleting}
+                      className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       {isDeleting
@@ -481,7 +604,7 @@ export default function TransactionsSection({
                       onClick={handleCancelDelete}
                       disabled={isDeleting}
                     >
-                      Cancel
+                      Exit
                     </Button>
                   </div>
                 )}
@@ -552,23 +675,30 @@ export default function TransactionsSection({
               </div>
             )}
 
-            {/* Select All Checkbox in Delete Mode */}
-            {isDeleteMode && displayTransactions.length > 0 && (
-              <div className="mb-3 flex items-center gap-2 rounded-md border p-3">
-                <input
-                  type="checkbox"
-                  id="select-all"
-                  checked={
-                    selectedForDeletion.size === displayTransactions.length
-                  }
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <label htmlFor="select-all" className="text-sm font-medium">
-                  Select All ({displayTransactions.length} transactions)
-                </label>
-              </div>
-            )}
+            {/* Select All Checkbox in Delete or Cancel Mode */}
+            {(isDeleteMode || isCancelMode) &&
+              displayTransactions.length > 0 && (
+                <div className="mb-3 flex items-center gap-2 rounded-md border p-3">
+                  <input
+                    type="checkbox"
+                    id="select-all"
+                    checked={
+                      isDeleteMode
+                        ? selectedForDeletion.size ===
+                          displayTransactions.length
+                        : selectedForCancellation.size ===
+                          displayTransactions.length
+                    }
+                    onChange={
+                      isDeleteMode ? handleSelectAll : handleSelectAllForCancel
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="select-all" className="text-sm font-medium">
+                    Select All ({displayTransactions.length} transactions)
+                  </label>
+                </div>
+              )}
 
             <div className="space-y-3">
               {displayTransactions.length > 0 ? (
@@ -576,21 +706,31 @@ export default function TransactionsSection({
                   <div
                     key={transaction.id}
                     className={`flex items-center gap-3 ${
-                      isDeleteMode
+                      isDeleteMode || isCancelMode
                         ? 'hover:bg-accent cursor-pointer rounded-md p-2 transition-colors'
                         : ''
                     }`}
                     onClick={() => {
                       if (isDeleteMode) {
                         handleToggleSelection(transaction.id);
+                      } else if (isCancelMode) {
+                        handleToggleCancellationSelection(transaction.id);
                       }
                     }}
                   >
-                    {isDeleteMode && (
+                    {(isDeleteMode || isCancelMode) && (
                       <input
                         type="checkbox"
-                        checked={selectedForDeletion.has(transaction.id)}
-                        onChange={() => handleToggleSelection(transaction.id)}
+                        checked={
+                          isDeleteMode
+                            ? selectedForDeletion.has(transaction.id)
+                            : selectedForCancellation.has(transaction.id)
+                        }
+                        onChange={() =>
+                          isDeleteMode
+                            ? handleToggleSelection(transaction.id)
+                            : handleToggleCancellationSelection(transaction.id)
+                        }
                         className="h-4 w-4 rounded border-gray-300"
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -599,9 +739,9 @@ export default function TransactionsSection({
                       <TransactionItem
                         transaction={transaction}
                         onClick={
-                          isDeleteMode
+                          isDeleteMode || isCancelMode
                             ? () => {
-                                // Prevent opening details modal in delete mode
+                                // Prevent opening details modal in action modes
                               }
                             : () => handleTransactionClick(transaction)
                         }
@@ -613,14 +753,18 @@ export default function TransactionsSection({
                 <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
                   <Search className="mb-3 h-12 w-12 opacity-20" />
                   <p className="text-sm">
-                    {isDeleteMode
-                      ? 'No deletable transactions found'
-                      : 'No transactions found'}
+                    {isCancelMode
+                      ? 'No active transactions found'
+                      : isDeleteMode
+                        ? 'No deletable transactions found'
+                        : 'No transactions found'}
                   </p>
                   <p className="text-xs">
-                    {isDeleteMode
-                      ? 'Only transactions with status "waiting for participant", "both joined", or "screenshots uploaded" can be deleted'
-                      : 'Try adjusting your search or filters'}
+                    {isCancelMode
+                      ? 'Only transactions with status "active" can be cancelled'
+                      : isDeleteMode
+                        ? 'Only transactions with status "waiting for participant", "both joined", or "screenshots uploaded" can be deleted'
+                        : 'Try adjusting your search or filters'}
                   </p>
                 </div>
               )}
@@ -706,6 +850,58 @@ export default function TransactionsSection({
               disabled={isDeleting}
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog
+        open={showCancelConfirmation}
+        onOpenChange={setShowCancelConfirmation}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Cancel</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel {selectedForCancellation.size}{' '}
+              active transaction(s)?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-md border-amber-500/20 bg-amber-500/10 p-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-700">
+                  {selectedForCancellation.size} active transaction(s) will be
+                  cancelled
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Cancelled transactions cannot be reactivated. All participants
+                  will be notified.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm font-semibold text-amber-600">
+              This action cannot be undone.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelConfirmation(false)}
+              disabled={isCancelling}
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="border-amber-500/20 bg-amber-500 text-white hover:bg-amber-600"
+            >
+              {isCancelling ? 'Cancelling...' : 'Cancel Transactions'}
             </Button>
           </DialogFooter>
         </DialogContent>
