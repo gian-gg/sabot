@@ -146,6 +146,35 @@ export interface TransactionWithParticipants extends DBTransaction {
   participants: TransactionParticipant[];
 }
 
+// Price validation constraints
+export const PRICE_CONSTRAINTS = {
+  MIN: 0.01,
+  MAX: 99999999.99,
+  DECIMAL_PLACES: 2,
+} as const;
+
+// Validate price and return if valid
+export function validatePrice(price: unknown): number {
+  const num = typeof price === 'string' ? parseFloat(price) : price;
+
+  if (!Number.isFinite(num)) {
+    throw new Error('Price must be a valid number');
+  }
+  if (num < PRICE_CONSTRAINTS.MIN) {
+    throw new Error(`Price must be at least ${PRICE_CONSTRAINTS.MIN}`);
+  }
+  if (num > PRICE_CONSTRAINTS.MAX) {
+    throw new Error(`Price cannot exceed ${PRICE_CONSTRAINTS.MAX}`);
+  }
+  if (!Number.isInteger(num * 100)) {
+    throw new Error(
+      `Price can only have up to ${PRICE_CONSTRAINTS.DECIMAL_PLACES} decimal places`
+    );
+  }
+
+  return Math.round(num * 100) / 100;
+}
+
 export interface CreateTransactionPayload {
   item_name?: string;
   item_description?: string;

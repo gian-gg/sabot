@@ -31,11 +31,12 @@ export function ReviewTransactionInvitation({
 }: ReviewTransactionInvitationProps) {
   return (
     <Card>
-      <CardContent className="space-y-6">
+      <CardContent className="flex flex-col gap-6">
         <Link
           href={`/profile/${inviter.id}`}
           target="_blank"
           rel="noopener noreferrer"
+          title="View Profile"
         >
           <div className="bg-muted/50 hover:bg-muted/70 group flex w-full items-center gap-4 rounded-lg p-8 py-6 text-left transition-colors">
             <Avatar className="ring-primary/20 h-16 w-16 ring-2">
@@ -53,9 +54,6 @@ export function ReviewTransactionInvitation({
                 )}
               </div>
               <p className="text-muted-foreground text-sm">{inviter.email}</p>
-              <p className="text-primary mt-1 text-xs font-medium">
-                View Profile →
-              </p>
             </div>
             <Info className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
           </div>
@@ -84,7 +82,7 @@ export function ReviewTransactionInvitation({
           </ul>
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-3">
           <Button
             variant="outline"
             onClick={onDecline}

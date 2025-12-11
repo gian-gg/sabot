@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { CreateTransactionPayload } from '@/types/transaction';
+import { CreateTransactionPayload, validatePrice } from '@/types/transaction';
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,6 +109,23 @@ export async function POST(request: NextRequest) {
       limitsOk: true,
     });
 
+    // Validate price if provided
+    let validatedPrice: number | undefined;
+    if (payload.price !== undefined && payload.price !== null) {
+      try {
+        validatedPrice = validatePrice(payload.price);
+      } catch (error) {
+        console.error('Price validation error:', error);
+        return NextResponse.json(
+          {
+            error: error instanceof Error ? error.message : 'Invalid price',
+            code: 'INVALID_PRICE',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Get creator info from user metadata
     const creatorName =
       user.user_metadata?.name ||
@@ -140,7 +157,7 @@ export async function POST(request: NextRequest) {
         status: 'waiting_for_participant',
         item_name: payload.item_name,
         item_description: payload.item_description,
-        price: payload.price,
+        price: validatedPrice,
         transaction_type: payload.transaction_type,
         meeting_location: payload.meeting_location,
         meeting_time: payload.meeting_time,
