@@ -585,22 +585,40 @@ export function CreateTransactionForm({
   };
 
   // Handle approval of field changes from other party
-  const handleApproveChange = useCallback((field: string, value: unknown) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value as string,
-    }));
+  const handleApproveChange = useCallback(
+    (field: string, value: unknown) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value as string,
+      }));
 
-    // Auto-lock the field after approving change
-    setFieldLocks((prev) => ({
-      ...prev,
-      [field]: true,
-    }));
+      // Auto-lock the field after approving change
+      setFieldLocks((prev) => ({
+        ...prev,
+        [field]: true,
+      }));
 
-    toast.success(`Applied change to ${getFieldDisplayName(field)}`, {
-      description: 'Field has been locked',
-    });
-  }, []);
+      // Broadcast lock state change back to other party so both sides stay in sync
+      if (conflictResolution && currentUserId) {
+        setTimeout(() => {
+          conflictResolution.selectField(
+            `fieldLock_${field}` as keyof AnalysisData,
+            {
+              field,
+              locked: true,
+              userId: currentUserId,
+              timestamp: Date.now(),
+            }
+          );
+        }, 0);
+      }
+
+      toast.success(`Applied change to ${getFieldDisplayName(field)}`, {
+        description: 'Field has been locked',
+      });
+    },
+    [conflictResolution, currentUserId]
+  );
 
   // Handle rejection of field changes from other party
   const handleRejectChange = useCallback((field: string) => {
