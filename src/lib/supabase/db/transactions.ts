@@ -32,7 +32,19 @@ export async function getTransactionDetailsByUserID(
     return [];
   }
 
-  return (data as TransactionDetails[]) || [];
+  const transactions = (data as TransactionDetails[]) || [];
+
+  // Get comment counts for all transactions
+  for (const transaction of transactions) {
+    const { count } = await supabase
+      .from('transaction_comments')
+      .select('id', { count: 'exact' })
+      .eq('transaction_id', transaction.id);
+
+    transaction.comment_count = count || 0;
+  }
+
+  return transactions;
 }
 
 export interface TransactionLimitsStatus {

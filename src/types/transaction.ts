@@ -88,6 +88,8 @@ export interface TransactionDetails {
   updated_at: string;
   deleted_at?: string | null;
   transaction_participants: TransactionParticipant[];
+  comments?: TransactionComment[];
+  comment_count?: number;
 }
 
 export interface TransactionParticipant {
@@ -124,6 +126,22 @@ export interface TransactionScreenshot {
   uploaded_at: string;
 }
 
+export interface TransactionComment {
+  id: string;
+  transaction_id: string;
+  user_id: string;
+  content: string;
+  parent_comment_id?: string | null;
+  edited_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Enriched fields (added by API)
+  user_name?: string;
+  user_email?: string;
+  user_avatar_url?: string | null;
+  replies?: TransactionComment[];
+}
+
 export interface TransactionWithParticipants extends DBTransaction {
   participants: TransactionParticipant[];
 }
@@ -152,6 +170,17 @@ export interface JoinTransactionPayload {
 export interface UploadScreenshotPayload {
   transaction_id: string;
   file: File;
+}
+
+export interface CreateCommentPayload {
+  transaction_id: string;
+  content: string;
+  parent_comment_id?: string;
+}
+
+export interface UpdateCommentPayload {
+  comment_id: string;
+  content: string;
 }
 
 // Import types from escrow module

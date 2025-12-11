@@ -33,6 +33,7 @@ import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
 import type { TransactionDetails } from '@/types/transaction';
 import { useUserStore } from '@/store/user/userStore';
 import { Copy } from 'lucide-react';
+import CommentThread from '@/components/transaction/comment-thread';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -865,6 +866,12 @@ export function TransactionDetailsModal({
                 </div>
               </div>
             </div>
+
+            {/* Comment Thread */}
+            <CommentThread
+              transactionId={transaction.id}
+              currentUserId={user?.id}
+            />
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row">
