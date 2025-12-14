@@ -301,6 +301,14 @@ export function CreateTransactionForm({
   // Track which change requests we've already shown
   const shownChangeRequestsRef = React.useRef<Set<string>>(new Set());
 
+  // Track sent change proposals to recognize approval/rejection responses
+  const sentChangesRef = React.useRef<
+    Map<
+      string,
+      { field: keyof TransactionFormData; newValue: string; oldValue: string }
+    >
+  >(new Map());
+
   // Sync form data changes from other party (Step 3+) - Request approval
   useEffect(() => {
     if (!conflictResolution || !currentUserId || currentStep < 3) return;
@@ -360,6 +368,92 @@ export function CreateTransactionForm({
     currentUserName,
     otherUserName,
     formData,
+  ]);
+
+  // Handle approval/rejection responses from other party for our proposed changes
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep < 3) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    Object.entries(sharedSelections).forEach(([key, selection]) => {
+      if (key.startsWith('changeResponse_') && selection) {
+        const responseData = selection.value as {
+          messageId: string;
+          confirmed: boolean;
+          userId: string;
+          timestamp: number;
+        };
+
+        // Only process responses from other party
+        if (responseData.userId !== currentUserId) {
+          const trackedChange = sentChangesRef.current.get(
+            responseData.messageId
+          );
+
+          if (trackedChange) {
+            const { field, newValue, oldValue } = trackedChange;
+
+            if (responseData.confirmed) {
+              // APPROVED: Update form with new value and lock the field
+              setFormData((prev) => ({
+                ...prev,
+                [field]: newValue,
+              }));
+
+              // Lock the field after approval
+              setFieldLocks((prev) => ({
+                ...prev,
+                [field]: true,
+              }));
+
+              // Broadcast lock state to other party
+              if (conflictResolution && currentUserId) {
+                setTimeout(() => {
+                  conflictResolution.selectField(
+                    `fieldLock_${field}` as keyof AnalysisData,
+                    {
+                      field,
+                      locked: true,
+                      userId: currentUserId,
+                      timestamp: Date.now(),
+                    }
+                  );
+                }, 0);
+              }
+
+              toast.success(
+                `Your proposed change to ${getFieldDisplayName(field)} was approved`,
+                {
+                  description: 'Field has been locked',
+                }
+              );
+            } else {
+              // REJECTED: Revert to the old value to maintain consistency
+              setFormData((prev) => ({
+                ...prev,
+                [field]: oldValue,
+              }));
+
+              toast.error(
+                `Your proposed change to ${getFieldDisplayName(field)} was rejected`,
+                {
+                  description: 'Reverted to previous value',
+                }
+              );
+            }
+
+            // Clean up the tracked change
+            sentChangesRef.current.delete(responseData.messageId);
+          }
+        }
+      }
+    });
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
   ]);
 
   // Helper to toggle individual field lock
@@ -553,7 +647,27 @@ export function CreateTransactionForm({
   );
 
   const updateFormData = (field: keyof TransactionFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      // Capture the old value before updating (default to empty string if undefined)
+      const oldValue = prev[field] || '';
+
+      // If in collaborative mode and field is locked by other party, track this proposal
+      if (
+        conflictResolution &&
+        currentUserId &&
+        currentStep >= 3 &&
+        fieldLocks[field]
+      ) {
+        const messageId = `change-formField_${field}-${Date.now()}`;
+        sentChangesRef.current.set(messageId, {
+          field,
+          newValue: value,
+          oldValue,
+        });
+      }
+
+      return { ...prev, [field]: value };
+    });
 
     // Broadcast form field change to other party if in collaborative mode (Step 3+)
     // Use debounce to avoid sending on every keystroke
