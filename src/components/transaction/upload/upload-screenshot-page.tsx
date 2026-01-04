@@ -196,7 +196,7 @@ export function UploadScreenshotPage({
                 ? 'Analysis Complete!'
                 : 'Analyzing Screenshots...'}
             </h3>
-            <p className="text-muted-foreground text-center">
+            <p className="text-muted-foreground w-xl text-center">
               {status?.transaction.status === 'active'
                 ? 'Redirecting you to the transaction page...'
                 : 'Our AI is extracting transaction details from your conversation screenshots. This may take a moment...'}

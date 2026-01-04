@@ -264,6 +264,15 @@ export function CreateTransactionForm({
           if (previousState !== lockData.locked) {
             lockUpdates[fieldKey] = lockData.locked;
 
+            // ✅ NEW: Store consensus value when both parties lock the field
+            if (lockData.locked) {
+              const currentValue = formData[fieldKey] || '';
+              consensusValuesRef.current.set(fieldKey, currentValue);
+              console.log(
+                `[ConsensusTracking] 🔒 Both parties locked ${String(fieldKey)} with consensus value: "${currentValue}"`
+              );
+            }
+
             // Show notification about other party's action (only once per field)
             if (!notifiedFields.has(fieldKey)) {
               notifiedFields.add(fieldKey);
@@ -296,6 +305,7 @@ export function CreateTransactionForm({
     conflictResolution?.sharedSelections,
     currentUserId,
     fieldLocks,
+    formData,
   ]);
 
   // Track which change requests we've already shown
@@ -308,6 +318,15 @@ export function CreateTransactionForm({
       { field: keyof TransactionFormData; newValue: string; oldValue: string }
     >
   >(new Map());
+
+  // Track the last mutually-agreed (consensus) value for each field
+  // This is the value to revert to when a proposal is rejected
+  const consensusValuesRef = React.useRef<
+    Map<keyof TransactionFormData, string>
+  >(new Map());
+
+  // Track which responses we've already processed to avoid duplicate processing
+  const processedResponsesRef = React.useRef<Set<string>>(new Set());
 
   // Sync form data changes from other party (Step 3+) - Request approval
   useEffect(() => {
@@ -385,6 +404,12 @@ export function CreateTransactionForm({
           timestamp: number;
         };
 
+        // Skip if already processed
+        const responseKey = `${key}-${responseData.timestamp}`;
+        if (processedResponsesRef.current.has(responseKey)) {
+          return;
+        }
+
         // Only process responses from other party
         if (responseData.userId !== currentUserId) {
           const trackedChange = sentChangesRef.current.get(
@@ -392,7 +417,11 @@ export function CreateTransactionForm({
           );
 
           if (trackedChange) {
-            const { field, newValue, oldValue } = trackedChange;
+            const { field, newValue } = trackedChange;
+
+            console.log(
+              `[ResponseHandler] 📬 Processing response: messageId=${responseData.messageId}, confirmed=${responseData.confirmed}, field=${String(field)}, newValue="${newValue}"`
+            );
 
             if (responseData.confirmed) {
               // APPROVED: Update form with new value and lock the field
@@ -400,6 +429,12 @@ export function CreateTransactionForm({
                 ...prev,
                 [field]: newValue,
               }));
+
+              // ✅ NEW: Update consensus value to the newly approved value
+              consensusValuesRef.current.set(field, newValue);
+              console.log(
+                `[ConsensusTracking] ✅ Approval: New consensus value for ${String(field)}: "${newValue}"`
+              );
 
               // Lock the field after approval
               setFieldLocks((prev) => ({
@@ -429,22 +464,53 @@ export function CreateTransactionForm({
                 }
               );
             } else {
-              // REJECTED: Revert to the old value to maintain consistency
+              // REJECTED: Revert to consensus value (last mutually-agreed value)
+              const consensusValue =
+                consensusValuesRef.current.get(field) || '';
+
+              console.log(
+                `[ConsensusTracking] ❌ REJECTION HANDLER FIRING: Field=${String(field)}, newValue="${newValue}", consensusValue="${consensusValue}"`
+              );
+              console.log(
+                `[ConsensusTracking] ❌ All consensus values:`,
+                Array.from(consensusValuesRef.current.entries())
+              );
+              console.log(
+                `[ConsensusTracking] ❌ Rejection: Reverting ${String(field)} from "${newValue}" to consensus value: "${consensusValue}"`
+              );
+
               setFormData((prev) => ({
                 ...prev,
-                [field]: oldValue,
+                [field]: consensusValue,
               }));
 
+              // Show rejection toast
+              console.log(
+                `[Toast] About to show rejection toast for field ${String(field)}`
+              );
               toast.error(
                 `Your proposed change to ${getFieldDisplayName(field)} was rejected`,
                 {
-                  description: 'Reverted to previous value',
+                  description: consensusValue
+                    ? `Reverted to agreed value: "${consensusValue}"`
+                    : 'Reverted to blank',
+                  duration: 5000,
                 }
+              );
+              console.log(
+                `[Toast] Rejection toast displayed for field ${String(field)}`
               );
             }
 
+            // Mark response as processed
+            processedResponsesRef.current.add(responseKey);
+
             // Clean up the tracked change
             sentChangesRef.current.delete(responseData.messageId);
+          } else {
+            console.warn(
+              `[ResponseHandler] ⚠️ No tracked change found for messageId: ${responseData.messageId}`
+            );
           }
         }
       }
@@ -460,6 +526,18 @@ export function CreateTransactionForm({
   const toggleFieldLock = (field: keyof typeof fieldLocks) => {
     setFieldLocks((prev) => {
       const newLockState = !prev[field];
+
+      // ✅ NEW: Store consensus value when user locks the field
+      if (newLockState) {
+        const currentValue = formData[field as keyof TransactionFormData] || '';
+        consensusValuesRef.current.set(
+          field as keyof TransactionFormData,
+          currentValue
+        );
+        console.log(
+          `[ConsensusTracking] 🔒 User locked ${String(field)} with consensus value: "${currentValue}"`
+        );
+      }
 
       // Show toast notification
       if (newLockState) {
@@ -647,6 +725,10 @@ export function CreateTransactionForm({
   );
 
   const updateFormData = (field: keyof TransactionFormData, value: string) => {
+    // Generate message ID immediately so it's consistent throughout the flow
+    // (used for both tracking and broadcasting after debounce)
+    const messageId = `change-formField_${field}-${Date.now()}`;
+
     setFormData((prev) => {
       // Capture the old value before updating (default to empty string if undefined)
       const oldValue = prev[field] || '';
@@ -658,7 +740,9 @@ export function CreateTransactionForm({
         currentStep >= 3 &&
         fieldLocks[field]
       ) {
-        const messageId = `change-formField_${field}-${Date.now()}`;
+        console.log(
+          `[ProposalTracking] 📝 Tracking change for ${String(field)}: "${oldValue}" → "${value}" (messageId: ${messageId})`
+        );
         sentChangesRef.current.set(messageId, {
           field,
           newValue: value,
@@ -680,7 +764,9 @@ export function CreateTransactionForm({
 
       // Set new debounce timer (500ms delay)
       const timer = setTimeout(() => {
-        const messageId = `change-formField_${field}-${Date.now()}`;
+        console.log(
+          `[ProposalBroadcast] 📡 Broadcasting change for ${String(field)}: "${value}" (messageId: ${messageId})`
+        );
         conflictResolution.selectField(
           `formField_${field}` as keyof AnalysisData,
           {
@@ -688,7 +774,7 @@ export function CreateTransactionForm({
             value,
             userId: currentUserId,
             timestamp: Date.now(),
-            messageId, // Include message ID for approval tracking
+            messageId, // Use the SAME message ID from tracking
           }
         );
         debounceTimersRef.current.delete(field);
@@ -705,6 +791,15 @@ export function CreateTransactionForm({
         ...prev,
         [field]: value as string,
       }));
+
+      // ✅ NEW: Store approved value as new consensus
+      consensusValuesRef.current.set(
+        field as keyof TransactionFormData,
+        value as string
+      );
+      console.log(
+        `[ConsensusTracking] ✅ Approver accepted: New consensus value for ${String(field)}: "${value}"`
+      );
 
       // Auto-lock the field after approving change
       setFieldLocks((prev) => ({
