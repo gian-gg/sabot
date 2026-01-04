@@ -130,7 +130,7 @@ export function UploadScreenshotPage({
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
         try {
-          const response = JSON.parse(xhr.responseText);
+          JSON.parse(xhr.responseText); // Parse to validate response
           // Set to 100% to indicate completion
           setUploadProgress(100);
 

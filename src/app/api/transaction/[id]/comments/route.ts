@@ -8,10 +8,11 @@ import type { CreateCommentPayload } from '@/types/transaction';
 // GET /api/transaction/[id]/comments - Get all comments for a transaction
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const transactionId = params.id;
+    const transactionId = resolvedParams.id;
 
     if (!transactionId) {
       return NextResponse.json(
@@ -38,10 +39,11 @@ export async function GET(
 // POST /api/transaction/[id]/comments - Create a new comment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const transactionId = params.id;
+    const transactionId = resolvedParams.id;
 
     if (!transactionId) {
       return NextResponse.json(

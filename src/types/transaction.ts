@@ -155,7 +155,7 @@ export const PRICE_CONSTRAINTS = {
 
 // Validate price and return if valid
 export function validatePrice(price: unknown): number {
-  const num = typeof price === 'string' ? parseFloat(price) : price;
+  const num = typeof price === 'string' ? parseFloat(price) : (price as number);
 
   if (!Number.isFinite(num)) {
     throw new Error('Price must be a valid number');

@@ -6,7 +6,6 @@ import type {
   CreateCommentPayload,
   UpdateCommentPayload,
 } from '@/types/transaction';
-import type { TransactionParticipant } from '@/types/transaction';
 
 /**
  * Get comments for a transaction with user details
@@ -49,15 +48,20 @@ export async function getTransactionComments(
       user_name: comment.user_name || `User ${comment.user_id.substring(0, 8)}`,
       user_email: comment.user_email,
       user_avatar_url: comment.user_avatar_url,
+      replies: [] as TransactionComment[],
     }));
 
     // Build comment tree (organize replies)
-    const commentMap = new Map<string, TransactionComment>();
-    const rootComments: TransactionComment[] = [];
+    const commentMap = new Map<
+      string,
+      TransactionComment & { replies: TransactionComment[] }
+    >();
+    const rootComments: (TransactionComment & {
+      replies: TransactionComment[];
+    })[] = [];
 
     // First pass: create map of all comments
     comments.forEach((comment) => {
-      comment.replies = [];
       commentMap.set(comment.id, comment);
     });
 
@@ -66,7 +70,7 @@ export async function getTransactionComments(
       if (comment.parent_comment_id) {
         const parent = commentMap.get(comment.parent_comment_id);
         if (parent) {
-          parent.replies!.push(comment);
+          parent.replies.push(comment);
         }
       } else {
         rootComments.push(comment);
@@ -118,7 +122,7 @@ export async function createTransactionComment(
     const isParticipant =
       transactionData.creator_id === user.id ||
       transactionData.transaction_participants.some(
-        (p: TransactionParticipant) => p.user_id === user.id
+        (p) => p.user_id === user.id
       );
 
     if (!isParticipant) {

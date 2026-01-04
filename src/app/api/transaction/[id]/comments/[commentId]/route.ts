@@ -8,10 +8,11 @@ import type { UpdateCommentPayload } from '@/types/transaction';
 // PUT /api/transaction/[id]/comments/[commentId] - Update a comment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const { commentId } = params;
+    const { commentId } = resolvedParams;
 
     if (!commentId) {
       return NextResponse.json(
@@ -67,10 +68,11 @@ export async function PUT(
 // DELETE /api/transaction/[id]/comments/[commentId] - Delete a comment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
+  const resolvedParams = await params;
   try {
-    const { commentId } = params;
+    const { commentId } = resolvedParams;
 
     if (!commentId) {
       return NextResponse.json(
