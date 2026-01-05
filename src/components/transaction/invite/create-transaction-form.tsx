@@ -2830,7 +2830,7 @@ export function CreateTransactionForm({
         <Card className="border-2 shadow-xl">
           <CardHeader className="bg-muted/30 space-y-3 border-b">
             <CardTitle className="text-2xl">
-              {currentStep === 1 && 'Convo Analysis'}
+              {currentStep === 1 && 'Screenshot Analysis'}
               {currentStep === 2 && 'Resolve Data Conflicts'}
               {currentStep === 3 && 'Item Details'}
               {currentStep === 4 && 'Exchange Information'}
