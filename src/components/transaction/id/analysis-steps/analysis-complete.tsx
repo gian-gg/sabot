@@ -7,10 +7,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import type { AnalysisData } from '@/types/analysis';
-import { AlertTriangle, CheckCircle, User } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle,
+  User,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
 
 interface AnalysisCompleteProps {
   analyses: AnalysisData[];
@@ -22,6 +34,7 @@ export function AnalysisComplete({
   transactionId,
 }: AnalysisCompleteProps) {
   const { status } = useTransactionStatus(transactionId);
+  const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
   // Extract the actual analysis data (handle both nested and flat structures)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,6 +44,7 @@ export function AnalysisComplete({
       return {
         ...analysis.extracted_data,
         id: analysis.id,
+        user_id: analysis.user_id, // Preserve user_id from parent
         screenshot_url:
           analysis.screenshot_url || analysis.extracted_data.screenshot_url,
       };
@@ -40,9 +54,17 @@ export function AnalysisComplete({
   });
 
   const getParticipantRole = (userId: string) => {
+    console.log('getParticipantRole debug:', {
+      userId,
+      status: status,
+      participants: status?.participants,
+    });
+
     if (!status?.participants) return 'Party';
 
     const participant = status.participants.find((p) => p.user_id === userId);
+    console.log('Found participant:', participant);
+
     if (!participant) return 'Party';
 
     // Creator is typically the seller, invitee is typically the buyer
@@ -89,6 +111,7 @@ export function AnalysisComplete({
   return (
     <div className="w-full space-y-6">
       {flattenedAnalyses.map((analysis, index) => {
+        console.log('Analysis object:', analysis);
         const conditionBadge = getConditionBadgeVariant(
           analysis.productCondition
         );
@@ -98,7 +121,10 @@ export function AnalysisComplete({
               <div className="flex items-center gap-3">
                 <User className="text-muted-foreground h-5 w-5" />
                 <CardTitle>
-                  {getParticipantRole(analysis.user_id)}&apos;s Conversation
+                  {analysis.user_id
+                    ? getParticipantRole(analysis.user_id)
+                    : 'Unknown'}
+                  &apos;s Conversation
                 </CardTitle>
                 <Badge variant="outline" className="capitalize">
                   {analysis.platform}
@@ -135,10 +161,10 @@ export function AnalysisComplete({
                     Extracted Information
                   </h4>
 
-                  <div className="space-y-3">
+                  <div className="space-y-0">
                     {analysis.itemDescription && (
-                      <Card className="border-border/50 shadow-none">
-                        <CardContent className="px-4 py-3">
+                      <Card className="border-border/50 w-xs shadow-none">
+                        <CardContent className="px-4">
                           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                             Item Details
                           </span>
@@ -170,9 +196,9 @@ export function AnalysisComplete({
                     )}
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Card className="border-border/50 shadow-none">
+                      <Card className="border-border/50 w-xs shadow-none">
                         <CardContent className="px-4 py-3">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                          <span className="text-muted-foreground w-2xl text-xs font-medium tracking-wide uppercase">
                             Transaction Method
                           </span>
                           <p className="mt-1.5 text-sm font-semibold capitalize">
@@ -197,7 +223,7 @@ export function AnalysisComplete({
                     </div>
 
                     {analysis.quantity && (
-                      <Card className="border-border/50 shadow-none">
+                      <Card className="border-border/50 w-xs shadow-none">
                         <CardContent className="px-4 py-3">
                           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                             Quantity
@@ -215,7 +241,7 @@ export function AnalysisComplete({
                           analysis.meetingSchedule) && (
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {analysis.meetingLocation && (
-                              <Card className="border-border/50 shadow-none">
+                              <Card className="border-border/50 w-xs shadow-none">
                                 <CardContent className="px-4 py-3">
                                   <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                                     Meeting Location
@@ -228,7 +254,7 @@ export function AnalysisComplete({
                             )}
 
                             {analysis.meetingSchedule && (
-                              <Card className="border-border/50 shadow-none">
+                              <Card className="border-border/50 w-xs shadow-none">
                                 <CardContent className="px-4 py-3">
                                   <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                                     Scheduled Time
@@ -252,7 +278,7 @@ export function AnalysisComplete({
                           analysis.deliveryMethod) && (
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {analysis.deliveryAddress && (
-                              <Card className="border-border/50 shadow-none">
+                              <Card className="border-border/50 w-xs shadow-none">
                                 <CardContent className="px-4 py-3">
                                   <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                                     Delivery Address
@@ -265,7 +291,7 @@ export function AnalysisComplete({
                             )}
 
                             {analysis.deliveryMethod && (
-                              <Card className="border-border/50 shadow-none">
+                              <Card className="border-border/50 w-xs shadow-none">
                                 <CardContent className="px-4 py-3">
                                   <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                                     Delivery Method
@@ -280,22 +306,46 @@ export function AnalysisComplete({
                         )}
                       </>
                     )}
-
-                    {analysis.extractedText && (
-                      <Card className="border-border/50 shadow-none">
-                        <CardContent className="px-4 py-3">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            Full Conversation
-                          </span>
-                          <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
-                            {analysis.extractedText}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
                   </div>
                 </div>
               </div>
+              {analysis.extractedText && (
+                <Collapsible
+                  open={openStates[analysis.id || index]}
+                  onOpenChange={(open) =>
+                    setOpenStates((prev) => ({
+                      ...prev,
+                      [analysis.id || index]: open,
+                    }))
+                  }
+                >
+                  <CollapsibleTrigger asChild>
+                    <Card className="hover:bg-muted/20 cursor-pointer shadow-none transition-colors">
+                      <CardContent className="px-10 py-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            Full Conversation
+                          </span>
+                          {openStates[analysis.id || index] ? (
+                            <ChevronUp className="text-muted-foreground h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="text-muted-foreground h-4 w-4" />
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="border-border/50 mt-2 shadow-none">
+                      <CardContent className="px-4 py-3">
+                        <p className="text-muted-foreground text-xs leading-relaxed">
+                          {analysis.extractedText}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
               {(analysis.riskFlags ?? []).length > 0 && (
                 <Alert className="mt-6">

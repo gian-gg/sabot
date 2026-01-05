@@ -88,6 +88,8 @@ export interface TransactionDetails {
   updated_at: string;
   deleted_at?: string | null;
   transaction_participants: TransactionParticipant[];
+  comments?: TransactionComment[];
+  comment_count?: number;
 }
 
 export interface TransactionParticipant {
@@ -124,8 +126,53 @@ export interface TransactionScreenshot {
   uploaded_at: string;
 }
 
+export interface TransactionComment {
+  id: string;
+  transaction_id: string;
+  user_id: string;
+  content: string;
+  parent_comment_id?: string | null;
+  edited_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Enriched fields (added by API)
+  user_name?: string;
+  user_email?: string;
+  user_avatar_url?: string | null;
+  replies?: TransactionComment[];
+}
+
 export interface TransactionWithParticipants extends DBTransaction {
   participants: TransactionParticipant[];
+}
+
+// Price validation constraints
+export const PRICE_CONSTRAINTS = {
+  MIN: 0.01,
+  MAX: 99999999.99,
+  DECIMAL_PLACES: 2,
+} as const;
+
+// Validate price and return if valid
+export function validatePrice(price: unknown): number {
+  const num = typeof price === 'string' ? parseFloat(price) : (price as number);
+
+  if (!Number.isFinite(num)) {
+    throw new Error('Price must be a valid number');
+  }
+  if (num < PRICE_CONSTRAINTS.MIN) {
+    throw new Error(`Price must be at least ${PRICE_CONSTRAINTS.MIN}`);
+  }
+  if (num > PRICE_CONSTRAINTS.MAX) {
+    throw new Error(`Price cannot exceed ${PRICE_CONSTRAINTS.MAX}`);
+  }
+  if (!Number.isInteger(num * 100)) {
+    throw new Error(
+      `Price can only have up to ${PRICE_CONSTRAINTS.DECIMAL_PLACES} decimal places`
+    );
+  }
+
+  return Math.round(num * 100) / 100;
 }
 
 export interface CreateTransactionPayload {
@@ -152,6 +199,17 @@ export interface JoinTransactionPayload {
 export interface UploadScreenshotPayload {
   transaction_id: string;
   file: File;
+}
+
+export interface CreateCommentPayload {
+  transaction_id: string;
+  content: string;
+  parent_comment_id?: string;
+}
+
+export interface UpdateCommentPayload {
+  comment_id: string;
+  content: string;
 }
 
 // Import types from escrow module

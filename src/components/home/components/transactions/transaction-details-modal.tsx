@@ -33,6 +33,7 @@ import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
 import type { TransactionDetails } from '@/types/transaction';
 import { useUserStore } from '@/store/user/userStore';
 import { Copy } from 'lucide-react';
+import CommentThread from '@/components/transaction/comment-thread';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -235,9 +236,9 @@ export function TransactionDetailsModal({
                 {/* Cancel Button - only for active status */}
                 {isCreator && transaction.status === 'active' && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                    className="h-7 border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
                     onClick={handleCancelTransaction}
                     disabled={isCancelling}
                     title="Cancel transaction"
@@ -256,9 +257,9 @@ export function TransactionDetailsModal({
                     'pending',
                   ].includes(transaction.status) && (
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-7 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                      className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
                       onClick={handleDeleteTransaction}
                       disabled={isDeleting}
                       title="Delete transaction"
@@ -865,6 +866,12 @@ export function TransactionDetailsModal({
                 </div>
               </div>
             </div>
+
+            {/* Comment Thread */}
+            <CommentThread
+              transactionId={transaction.id}
+              currentUserId={user?.id}
+            />
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row">

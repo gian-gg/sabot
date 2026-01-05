@@ -13,6 +13,7 @@ import {
 import React from 'react';
 import type { TransactionDetails } from '@/types/transaction';
 import { formatStatusLabel } from '@/lib/utils/helpers';
+import CommentIndicator from '@/components/transaction/comment-indicator';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -86,6 +87,13 @@ const TransactionItem = ({
             </span>
             <span>•</span>
             <span>{new Date(transaction.created_at).toLocaleDateString()}</span>
+            {transaction.comment_count !== undefined &&
+              transaction.comment_count > 0 && (
+                <>
+                  <span>•</span>
+                  <CommentIndicator count={transaction.comment_count} />
+                </>
+              )}
           </div>
         </div>
       </div>

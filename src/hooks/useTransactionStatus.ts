@@ -1,16 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { TransactionStatusResponse } from '@/types/transaction';
-
-const POLL_INTERVAL = 5000; // Poll every 5 seconds as fallback
 
 export function useTransactionStatus(transactionId: string | null) {
   const [status, setStatus] = useState<TransactionStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // create supabase client inside effect so it's not a dependency
@@ -21,8 +18,12 @@ export function useTransactionStatus(transactionId: string | null) {
       return;
     }
 
-    // Fetch initial status
-    const fetchStatus = async () => {
+    console.log(
+      `[TransactionStatus] 🚀 Initializing broadcast-only real-time updates for transaction: ${transactionId}`
+    );
+
+    // Fetch status with source tracking
+    const fetchStatus = async (source: 'broadcast' | 'manual' = 'manual') => {
       try {
         const response = await fetch(
           `/api/transaction/${transactionId}/status`
@@ -37,48 +38,58 @@ export function useTransactionStatus(transactionId: string | null) {
         const data = await response.json();
         setStatus(data);
         setError(null);
+
+        // Log successful fetch with source
+        if (source === 'broadcast') {
+          console.log(
+            '[TransactionStatus] ⚡ Broadcast: received update',
+            data.status
+          );
+        }
       } catch (err) {
-        console.error('Transaction status fetch error:', err);
+        console.error('[TransactionStatus] ❌ Error fetching status:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStatus();
+    // Initial fetch
+    fetchStatus('manual');
 
-    // Subscribe to Supabase Broadcast channel (works without database replication)
+    // Subscribe to Supabase Broadcast channel
     const channel = supabase
       .channel(`transaction:${transactionId}`)
-      .on('broadcast', { event: 'transaction_update' }, () => {
-        // console.log('Received broadcast:', payload);
-        // Refetch status when broadcast received
-        fetchStatus();
+      .on('broadcast', { event: 'transaction_update' }, async () => {
+        console.log(
+          '[TransactionStatus] ⚡ Broadcast event received: transaction_update'
+        );
+
+        // Fetch updated status
+        await fetchStatus('broadcast');
       })
-      .on('broadcast', { event: 'deliverable_confirmed' }, (payload) => {
-        console.log('Deliverable confirmed via AI verification:', payload);
-        console.log('Refetching transaction status...');
-        // Refetch status when deliverable is confirmed
-        fetchStatus();
+      .on('broadcast', { event: 'deliverable_confirmed' }, async (payload) => {
+        console.log(
+          '[TransactionStatus] ⚡ Broadcast event received: deliverable_confirmed',
+          payload
+        );
+
+        // Fetch updated status
+        await fetchStatus('broadcast');
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // console.log('Subscribed to transaction updates');
+          console.log('[TransactionStatus] 📡 Subscribed to realtime channel');
         }
       });
 
-    // Fallback: Poll for updates every 5 seconds
-    // This ensures updates even if broadcast fails or is delayed
-    pollIntervalRef.current = setInterval(() => {
-      fetchStatus();
-    }, POLL_INTERVAL);
-
+    // Cleanup
     return () => {
-      // Cleanup
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-      // removeChannel on the same client instance created above
+      console.log(
+        `[TransactionStatus] 🛑 Cleaning up real-time updates for transaction: ${transactionId}`
+      );
+
+      // Remove channel
       supabase.removeChannel(channel);
     };
   }, [transactionId]);

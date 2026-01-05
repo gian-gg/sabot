@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { ShieldCheck, Upload, Loader2, CheckCircle2 } from 'lucide-react';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export function UploadScreenshotPage({
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [analyzing, setAnalyzing] = useState(false);
   const [currentUserUploaded, setCurrentUserUploaded] = useState(false);
   const analysisTriggeredRef = useRef(false);
@@ -103,39 +105,83 @@ export function UploadScreenshotPage({
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || uploading) return; // Prevent multiple clicks
 
     setUploading(true);
+    setUploadProgress(0);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-      const response = await fetch(`/api/transaction/${transactionId}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+    const xhr = new XMLHttpRequest();
 
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to upload screenshot');
+    // Track upload progress (0-90% for file upload to server)
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        // Map to 0-90% to leave room for server processing
+        const percentComplete = Math.round((event.loaded / event.total) * 90);
+        setUploadProgress(percentComplete);
       }
+    });
 
-      toast.success('Screenshot uploaded successfully!');
-      setCurrentUserUploaded(true);
-      // Wait for status update via real-time hook
-    } catch (error) {
-      console.error('Error uploading screenshot:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to upload screenshot'
-      );
-      setUploading(false); // Re-enable button on error
-    }
-    // Don't set uploading to false on success - keep it disabled
+    // Handle upload completion
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        try {
+          JSON.parse(xhr.responseText); // Parse to validate response
+          // Set to 100% to indicate completion
+          setUploadProgress(100);
+
+          // Show success after a brief delay so user sees 100%
+          setTimeout(() => {
+            toast.success('Screenshot uploaded successfully!');
+            setCurrentUserUploaded(true);
+            setUploadProgress(0);
+            setUploading(false);
+            // Wait for status update via real-time hook
+          }, 300);
+        } catch (error) {
+          console.error('Error parsing response:', error);
+          toast.error('Failed to parse upload response');
+          setUploading(false);
+          setUploadProgress(0);
+        }
+      } else {
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          console.error('Upload error:', errorData);
+          toast.error(errorData.error || 'Upload failed');
+          setUploading(false);
+          setUploadProgress(0);
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast.error('Failed to upload screenshot');
+          setUploading(false);
+          setUploadProgress(0);
+        }
+      }
+    });
+
+    // Handle upload errors
+    xhr.addEventListener('error', () => {
+      console.error('Upload error');
+      toast.error('Upload failed. Please try again.');
+      setUploading(false);
+      setUploadProgress(0);
+    });
+
+    // Handle upload abort
+    xhr.addEventListener('abort', () => {
+      console.log('Upload aborted');
+      setUploading(false);
+      setUploadProgress(0);
+    });
+
+    // Send the request
+    xhr.open('POST', `/api/transaction/${transactionId}/upload`);
+    xhr.send(formData);
   };
 
   // Show analyzing state
@@ -150,7 +196,7 @@ export function UploadScreenshotPage({
                 ? 'Analysis Complete!'
                 : 'Analyzing Screenshots...'}
             </h3>
-            <p className="text-muted-foreground text-center">
+            <p className="text-muted-foreground w-xl text-center">
               {status?.transaction.status === 'active'
                 ? 'Redirecting you to the transaction page...'
                 : 'Our AI is extracting transaction details from your conversation screenshots. This may take a moment...'}
@@ -242,16 +288,32 @@ export function UploadScreenshotPage({
               </p>
             </div>
 
+            {uploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Uploading...</span>
+                  </div>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {uploadProgress}%
+                  </span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
             <Button
               type="submit"
               className="w-full"
-              disabled={!file || uploading}
+              disabled={!file || uploading || currentUserUploaded}
             >
               {uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
+              ) : currentUserUploaded ? (
+                'Uploaded'
               ) : (
                 'Upload & Verify'
               )}

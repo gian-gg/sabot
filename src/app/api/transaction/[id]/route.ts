@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { validatePrice } from '@/types/transaction';
 
 export async function GET(
   request: NextRequest,
@@ -140,13 +141,34 @@ export async function PUT(
       creatorId: existingTransaction.creator_id,
     });
 
+    // Validate price if provided
+    let validatedPrice: number | null = null;
+    if (
+      formData.price !== undefined &&
+      formData.price !== null &&
+      formData.price !== ''
+    ) {
+      try {
+        validatedPrice = validatePrice(formData.price);
+      } catch (error) {
+        console.error('Price validation error:', error);
+        return NextResponse.json(
+          {
+            error: error instanceof Error ? error.message : 'Invalid price',
+            code: 'INVALID_PRICE',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update transaction with form data
     const { data: transaction, error: updateError } = await supabase
       .from('transactions')
       .update({
         item_name: formData.item_name,
         item_description: formData.item_description,
-        price: parseFloat(formData.price) || null,
+        price: validatedPrice,
         transaction_type: formData.transaction_type,
         meeting_location: formData.meeting_location,
         meeting_time: formData.meeting_time

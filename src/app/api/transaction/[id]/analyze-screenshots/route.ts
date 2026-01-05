@@ -160,6 +160,19 @@ export async function POST(
       console.error('❌ Failed to update transaction status:', updateError);
     } else {
       console.log('✅ Transaction status updated to active');
+
+      // Broadcast analysis completion to all participants
+      console.log('📡 Broadcasting analysis completion event...');
+      const channel = supabase.channel(`transaction:${transactionId}`);
+      await channel.send({
+        type: 'broadcast',
+        event: 'transaction_update',
+        payload: {
+          status: 'active',
+          message: 'Screenshot analysis complete',
+        },
+      });
+      console.log('✅ Broadcast sent for analysis completion');
     }
 
     console.log(
