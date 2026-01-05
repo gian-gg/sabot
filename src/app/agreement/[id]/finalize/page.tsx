@@ -93,7 +93,6 @@ export default function FinalizePage({
   });
 
   // State
-  const [escrowEnabled, setEscrowEnabled] = useState(false);
   const [escrowData, setEscrowData] = useState<EnhancedEscrowData | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -238,7 +237,7 @@ export default function FinalizePage({
       return;
     }
 
-    if (escrowEnabled && escrowData) {
+    if (escrowData) {
       console.log('Creating escrow with data:', escrowData);
       // API call to create escrow will be added
     }
@@ -325,7 +324,7 @@ export default function FinalizePage({
 
   // Validation for escrow
   const isEscrowValid =
-    !escrowEnabled ||
+    !escrowData ||
     (escrowData?.deliverables &&
       escrowData.deliverables.length > 0 &&
       escrowData.deliverables.every((d) => d.description.trim().length > 0));
@@ -507,8 +506,7 @@ export default function FinalizePage({
         <div className="space-y-6">
           {/* Escrow Protection (Optional) - Enhanced */}
           <EscrowProtectionEnhanced
-            enabled={escrowEnabled}
-            onEnabledChange={setEscrowEnabled}
+            enabled={true}
             onEscrowDataChange={setEscrowData}
             agreementTitle={agreementData.title}
             agreementTerms="Review agreement terms before finalizing."

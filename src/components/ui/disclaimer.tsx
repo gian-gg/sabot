@@ -33,8 +33,10 @@ const VARIANT_STYLES: Record<
   },
 };
 
-export interface DisclaimerProps
-  extends Omit<React.ComponentProps<'div'>, 'title'> {
+export interface DisclaimerProps extends Omit<
+  React.ComponentProps<'div'>,
+  'title'
+> {
   variant?: DisclaimerVariant;
   title?: React.ReactNode;
   children?: React.ReactNode;

@@ -9,6 +9,16 @@ import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analy
 import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
 import { FieldChangeApproval } from '@/components/transaction/invite/field-change-approval';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -63,6 +73,10 @@ const STEPS = [
   { id: 6, name: 'Review', icon: CheckCircle2 },
 ];
 
+interface Step3ConfirmationData {
+  confirmations: Record<string, { confirmed: boolean; timestamp: number }>;
+}
+
 interface TransactionFormData {
   item_name: string;
   product_model: string;
@@ -102,6 +116,10 @@ export function CreateTransactionForm({
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showStepConfirmDialog, setShowStepConfirmDialog] = useState(false);
+  const [waitingForOtherParty, setWaitingForOtherParty] = useState(false);
+  const [currentUserConfirmedStep3, setCurrentUserConfirmedStep3] =
+    useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(
     userId || null
   );
@@ -121,12 +139,110 @@ export function CreateTransactionForm({
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
   const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
 
+  // Generate storage key based on transaction ID or user IDs
+  const getStorageKey = () => {
+    if (transactionId) {
+      return `transaction-form-${transactionId}`;
+    }
+    // For new transactions, use user IDs to create a unique key
+    return `transaction-form-${currentUserId || 'temp'}-${otherUserId || 'temp'}`;
+  };
+
+  // Save form state to localStorage
+  const saveFormState = () => {
+    if (typeof window === 'undefined') return;
+
+    const state = {
+      currentStep,
+      formData,
+      fieldLocks,
+      conflictsWereResolved,
+      analysisCompleted,
+      extractedData,
+      multipleAnalyses,
+      hasConflicts,
+      bothPartiesReady,
+      escrowEnabled,
+      arbiterEnabled,
+      escrowData,
+      currentUserConfirmedStep3,
+      waitingForOtherParty,
+      savedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save form state:', error);
+    }
+  };
+
+  // Load form state from localStorage
+  const loadFormState = () => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        const state = JSON.parse(saved);
+        // Only load if saved within last 24 hours
+        if (state.savedAt && Date.now() - state.savedAt < 24 * 60 * 60 * 1000) {
+          return state;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load form state:', error);
+    }
+    return null;
+  };
+
+  // Clear saved state
+  const clearFormState = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(getStorageKey());
+    } catch (error) {
+      console.error('Failed to clear form state:', error);
+    }
+  };
+
   // Scroll to top whenever the step changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  // Load saved state on mount
+  useEffect(() => {
+    const savedState = loadFormState();
+    if (savedState) {
+      setCurrentStep(savedState.currentStep || 1);
+      setFormData(savedState.formData || formData);
+      setFieldLocks(savedState.fieldLocks || fieldLocks);
+      setConflictsWereResolved(savedState.conflictsWereResolved || false);
+      setAnalysisCompleted(savedState.analysisCompleted || false);
+      setExtractedData(savedState.extractedData || null);
+      setMultipleAnalyses(savedState.multipleAnalyses || []);
+      setHasConflicts(savedState.hasConflicts || false);
+      setBothPartiesReady(savedState.bothPartiesReady || false);
+      setEscrowEnabled(savedState.escrowEnabled || false);
+      setArbiterEnabled(savedState.arbiterEnabled || false);
+      setEscrowData(savedState.escrowData || escrowData);
+      setCurrentUserConfirmedStep3(
+        savedState.currentUserConfirmedStep3 || false
+      );
+      setWaitingForOtherParty(savedState.waitingForOtherParty || false);
+
+      // If we were waiting for other party, show the dialog again
+      if (savedState.waitingForOtherParty && savedState.currentStep === 2) {
+        setShowStepConfirmDialog(true);
+      }
+
+      console.log('Loaded saved form state:', savedState);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Track when current user confirms in conflict resolution
   useEffect(() => {
@@ -139,6 +255,60 @@ export function CreateTransactionForm({
       }
     }
   }, [conflictResolution, currentUserId, userId]);
+
+  // Listen for step 3 transition confirmations from both parties
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep !== 2) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    // Check for step 3 confirmations
+    const step3Confirmations =
+      sharedSelections['step3Confirmation' as keyof AnalysisData];
+    if (step3Confirmations) {
+      const confirmationData =
+        step3Confirmations.value as Step3ConfirmationData;
+
+      if (confirmationData?.confirmations) {
+        const allUserIds = Object.keys(confirmationData.confirmations);
+        const allConfirmed =
+          allUserIds.length >= 2 &&
+          Object.values(confirmationData.confirmations).every(
+            (c) => c.confirmed
+          );
+
+        // If both parties confirmed and we're waiting, proceed to step 3
+        if (allConfirmed && waitingForOtherParty) {
+          setWaitingForOtherParty(false);
+          setShowStepConfirmDialog(false);
+          const newStep = Math.min(currentStep + 1, STEPS.length);
+          setCurrentStep(newStep);
+
+          // Save state after step change
+          setTimeout(() => saveFormState(), 100);
+
+          toast.success('Both parties agreed. Moving to item details.');
+        }
+
+        // Update waiting state based on other party's confirmation
+        const otherPartyConfirmed = allUserIds
+          .filter((id) => id !== currentUserId)
+          .some((id) => confirmationData.confirmations[id]?.confirmed);
+
+        if (currentUserConfirmedStep3 && !otherPartyConfirmed) {
+          setWaitingForOtherParty(true);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+    waitingForOtherParty,
+    currentUserConfirmedStep3,
+  ]);
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
@@ -238,6 +408,9 @@ export function CreateTransactionForm({
     fetchUserData();
   }, [transactionId]);
 
+  // Track the last lock change timestamp per field to avoid processing our own changes
+  const lastLockChangeRef = React.useRef<Map<string, number>>(new Map());
+
   // Sync field lock states from other party
   useEffect(() => {
     if (!conflictResolution || !currentUserId) return;
@@ -255,37 +428,46 @@ export function CreateTransactionForm({
           timestamp: number;
         };
 
+        const fieldKey = lockData.field;
+        const fieldKeyStr = String(fieldKey);
+
         // Only apply lock changes from other party
         if (lockData.userId !== currentUserId) {
-          const fieldKey = lockData.field;
           const previousState = fieldLocks[fieldKey];
+          const lastProcessedTime =
+            lastLockChangeRef.current.get(fieldKeyStr) || 0;
 
-          // Only update if state actually changed
-          if (previousState !== lockData.locked) {
+          // Only update if state actually changed AND we haven't processed this timestamp
+          if (
+            previousState !== lockData.locked &&
+            lockData.timestamp > lastProcessedTime
+          ) {
             lockUpdates[fieldKey] = lockData.locked;
+            lastLockChangeRef.current.set(fieldKeyStr, lockData.timestamp);
 
             // ✅ NEW: Store consensus value when both parties lock the field
             if (lockData.locked) {
               const currentValue = formData[fieldKey] || '';
               consensusValuesRef.current.set(fieldKey, currentValue);
               console.log(
-                `[ConsensusTracking] 🔒 Both parties locked ${String(fieldKey)} with consensus value: "${currentValue}"`
+                `[ConsensusTracking] 🔒 Other party locked ${fieldKeyStr} with consensus value: "${currentValue}"`
               );
             }
 
-            // Show notification about other party's action (only once per field)
-            if (!notifiedFields.has(fieldKey)) {
-              notifiedFields.add(fieldKey);
+            // Show notification about other party's action (only once per field per timestamp)
+            const notificationKey = `${fieldKeyStr}-${lockData.timestamp}`;
+            if (!notifiedFields.has(notificationKey)) {
+              notifiedFields.add(notificationKey);
               if (lockData.locked) {
                 toast.info(
-                  `Other party locked ${getFieldDisplayName(fieldKey)}`,
+                  `Other party locked ${getFieldDisplayName(fieldKeyStr)}`,
                   {
                     duration: 2000,
                   }
                 );
               } else {
                 toast.info(
-                  `Other party unlocked ${getFieldDisplayName(fieldKey)}`,
+                  `Other party unlocked ${getFieldDisplayName(fieldKeyStr)}`,
                   {
                     duration: 2000,
                   }
@@ -524,6 +706,8 @@ export function CreateTransactionForm({
 
   // Helper to toggle individual field lock
   const toggleFieldLock = (field: keyof typeof fieldLocks) => {
+    const timestamp = Date.now();
+
     setFieldLocks((prev) => {
       const newLockState = !prev[field];
 
@@ -538,6 +722,9 @@ export function CreateTransactionForm({
           `[ConsensusTracking] 🔒 User locked ${String(field)} with consensus value: "${currentValue}"`
         );
       }
+
+      // Record that we made this change to avoid processing it later
+      lastLockChangeRef.current.set(String(field), timestamp);
 
       // Show toast notification
       if (newLockState) {
@@ -561,7 +748,7 @@ export function CreateTransactionForm({
               field,
               locked: newLockState,
               userId: currentUserId,
-              timestamp: Date.now(),
+              timestamp,
             }
           );
         }, 0);
@@ -1185,6 +1372,31 @@ export function CreateTransactionForm({
     transformExtractedData(resolvedData);
   };
 
+  // Auto-save state when critical data changes (but not on every keystroke)
+  useEffect(() => {
+    // Don't save on initial mount or if we're still loading
+    if (currentStep === 1 && !conflictsWereResolved && !analysisCompleted)
+      return;
+
+    const saveTimeout = setTimeout(() => {
+      saveFormState();
+    }, 1000); // Debounce saves by 1 second
+
+    return () => clearTimeout(saveTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentStep,
+    conflictsWereResolved,
+    analysisCompleted,
+    fieldLocks,
+    escrowEnabled,
+    arbiterEnabled,
+    hasConflicts,
+    bothPartiesReady,
+    currentUserConfirmedStep3,
+    waitingForOtherParty,
+  ]);
+
   // Helper to get missing fields for step 3
   const getMissingFields = () => {
     const missing: string[] = [];
@@ -1293,7 +1505,17 @@ export function CreateTransactionForm({
 
   const handleNext = () => {
     if (canProceedToNext) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+      // Check if transitioning from step 2 to step 3 (conflicts to item details)
+      if (currentStep === 2 && conflictsWereResolved) {
+        setShowStepConfirmDialog(true);
+        return;
+      }
+
+      const newStep = Math.min(currentStep + 1, STEPS.length);
+      setCurrentStep(newStep);
+
+      // Save state after step change
+      setTimeout(() => saveFormState(), 100);
     } else {
       // Provide feedback on what's missing
       if (currentStep === 3) {
@@ -1322,6 +1544,75 @@ export function CreateTransactionForm({
       } else {
         toast.error('Please fill in all required fields');
       }
+    }
+  };
+
+  const handleStepConfirmation = () => {
+    if (!conflictResolution || !currentUserId) return;
+
+    setCurrentUserConfirmedStep3(true);
+
+    // Broadcast step 3 confirmation to other party
+    const currentTime = Date.now();
+    const existingData = conflictResolution.sharedSelections[
+      'step3Confirmation' as keyof AnalysisData
+    ]?.value as Step3ConfirmationData;
+
+    conflictResolution.selectField(
+      'step3Confirmation' as keyof AnalysisData,
+      {
+        confirmations: {
+          ...(existingData?.confirmations || {}),
+          [currentUserId]: {
+            confirmed: true,
+            timestamp: currentTime,
+          },
+        },
+      } as Step3ConfirmationData
+    );
+
+    // Check if other party has already confirmed
+    const existingConfirmations = existingData?.confirmations || {};
+    const otherPartyConfirmed = Object.keys(existingConfirmations)
+      .filter((id) => id !== currentUserId)
+      .some((id) => existingConfirmations[id]?.confirmed);
+
+    if (otherPartyConfirmed) {
+      // Other party already confirmed, proceed immediately
+      setShowStepConfirmDialog(false);
+      const newStep = Math.min(currentStep + 1, STEPS.length);
+      setCurrentStep(newStep);
+
+      // Save state after step change
+      setTimeout(() => saveFormState(), 100);
+
+      toast.success('Both parties agreed. Moving to item details.');
+    } else {
+      // Wait for other party to confirm
+      setWaitingForOtherParty(true);
+      toast.info('Waiting for other party to agree...');
+    }
+  };
+
+  const handleStepCancellation = () => {
+    setShowStepConfirmDialog(false);
+    setWaitingForOtherParty(false);
+    setCurrentUserConfirmedStep3(false);
+
+    // Remove our confirmation if we had confirmed
+    if (conflictResolution && currentUserId && currentUserConfirmedStep3) {
+      const existingData = conflictResolution.sharedSelections[
+        'step3Confirmation' as keyof AnalysisData
+      ]?.value as Step3ConfirmationData;
+      const updatedConfirmations = { ...(existingData?.confirmations || {}) };
+      delete updatedConfirmations[currentUserId];
+
+      conflictResolution.selectField(
+        'step3Confirmation' as keyof AnalysisData,
+        {
+          confirmations: updatedConfirmations,
+        } as Step3ConfirmationData
+      );
     }
   };
 
@@ -1431,11 +1722,13 @@ export function CreateTransactionForm({
       // Navigate to active transaction page if updating, or call callback if creating
       if (transactionId) {
         toast.success('Transaction finalized successfully!');
+        clearFormState(); // Clear saved state on success
         setTimeout(() => {
           router.push(ROUTES.TRANSACTION.ACTIVE(finalTransactionId!));
         }, 800);
       } else if (onTransactionCreated) {
         toast.success('Transaction created successfully');
+        clearFormState(); // Clear saved state on success
         onTransactionCreated(finalTransactionId!);
       }
     } catch (error) {
@@ -1619,7 +1912,7 @@ export function CreateTransactionForm({
                   <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
                     <Lock className="h-4 w-4" />
                     <AlertDescription className="text-red-800 dark:text-red-200">
-                      🔓 Please lock the following fields before proceeding:{' '}
+                      Please lock the following fields before proceeding:{' '}
                       {unlockedFields.map(getFieldDisplayName).join(', ')}
                     </AlertDescription>
                   </Alert>
@@ -2921,6 +3214,63 @@ export function CreateTransactionForm({
           onReject={handleRejectChange}
         />
       )}
+
+      {/* Step Transition Confirmation Dialog */}
+      <AlertDialog
+        open={showStepConfirmDialog}
+        onOpenChange={setShowStepConfirmDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {waitingForOtherParty
+                ? 'Waiting for Other Party'
+                : 'Proceed to Item Details?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {waitingForOtherParty ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <span>
+                      You&apos;ve agreed to proceed to item details. Waiting for
+                      the other party to also agree...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    You&apos;re about to move from conflict resolution to item
+                    details. Your progress will be saved, but you won&apos;t be
+                    able to return to the previous step once you continue.
+                    <br />
+                    <br />
+                    <strong>Note:</strong> Both parties must agree to proceed.
+                    When you refresh the page, you&apos;ll be taken directly to
+                    step 3 (Item Details) with all your resolved conflicts
+                    preserved.
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {waitingForOtherParty ? (
+              <AlertDialogCancel onClick={handleStepCancellation}>
+                Cancel & Stay Here
+              </AlertDialogCancel>
+            ) : (
+              <>
+                <AlertDialogCancel onClick={handleStepCancellation}>
+                  Stay Here
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleStepConfirmation}>
+                  Continue to Item Details
+                </AlertDialogAction>
+              </>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

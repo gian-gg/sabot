@@ -15,7 +15,6 @@ import {
   Award,
   CheckCircle,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 
 interface ArbiterCandidate {

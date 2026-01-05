@@ -43,7 +43,6 @@ interface ItemDetails {
 
 interface EscrowProtectionEnhancedProps {
   enabled: boolean;
-  onEnabledChange: (enabled: boolean) => void;
   onEscrowDataChange: (data: EnhancedEscrowData) => void;
   agreementTitle?: string;
   agreementTerms?: string;
@@ -301,7 +300,6 @@ function parseDeliverablesFromAgreement(
 
 export function EscrowProtectionEnhanced({
   enabled,
-  onEnabledChange,
   onEscrowDataChange,
   agreementTitle,
   agreementTerms,
