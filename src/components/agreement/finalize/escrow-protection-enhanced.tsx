@@ -28,6 +28,7 @@ import {
   Users,
   Wrench,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -130,9 +131,72 @@ function shouldRequireArbiter(deliverables: Deliverable[]): boolean {
   );
 }
 
+// Cache for deliverable type inferences
+const deliverableTypeCache = new Map<string, EscrowType>();
+
 async function inferDeliverableType(
   itemDetails: ItemDetails
 ): Promise<EscrowType> {
+  // Create cache key from item details
+  const cacheKey =
+    `${itemDetails.name}|${itemDetails.description}|${itemDetails.category}`.toLowerCase();
+
+  // Check cache first
+  if (deliverableTypeCache.has(cacheKey)) {
+    return deliverableTypeCache.get(cacheKey)!;
+  }
+
+  // Try keyword matching first to avoid API calls
+  const text =
+    `${itemDetails.name} ${itemDetails.description} ${itemDetails.category}`.toLowerCase();
+
+  if (
+    text.includes('cash') ||
+    text.includes('money') ||
+    text.includes('peso')
+  ) {
+    const result = 'cash';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
+  }
+  if (
+    text.includes('payment') ||
+    text.includes('transfer') ||
+    text.includes('gcash')
+  ) {
+    const result = 'digital_transfer';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
+  }
+  if (
+    text.includes('document') ||
+    text.includes('certificate') ||
+    text.includes('license')
+  ) {
+    const result = 'document';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
+  }
+  if (
+    text.includes('digital') ||
+    text.includes('software') ||
+    text.includes('app')
+  ) {
+    const result = 'digital';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
+  }
+  if (
+    text.includes('service') ||
+    text.includes('repair') ||
+    text.includes('cleaning')
+  ) {
+    const result = 'service';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
+  }
+
+  // Only use AI for ambiguous cases
   try {
     const response = await fetch('/api/ai/infer-deliverable-type', {
       method: 'POST',
@@ -151,51 +215,15 @@ async function inferDeliverableType(
     }
 
     const data = await response.json();
-    return data.deliverableType as EscrowType;
+    const result = data.deliverableType as EscrowType;
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('Error inferring deliverable type:', error);
-    // Fallback to basic keyword matching if AI fails
-    const text =
-      `${itemDetails.name} ${itemDetails.description} ${itemDetails.category}`.toLowerCase();
-
-    if (
-      text.includes('cash') ||
-      text.includes('money') ||
-      text.includes('peso')
-    ) {
-      return 'cash';
-    }
-    if (
-      text.includes('payment') ||
-      text.includes('transfer') ||
-      text.includes('gcash')
-    ) {
-      return 'digital_transfer';
-    }
-    if (
-      text.includes('document') ||
-      text.includes('certificate') ||
-      text.includes('license')
-    ) {
-      return 'document';
-    }
-    if (
-      text.includes('digital') ||
-      text.includes('software') ||
-      text.includes('app')
-    ) {
-      return 'digital';
-    }
-    if (
-      text.includes('service') ||
-      text.includes('repair') ||
-      text.includes('cleaning')
-    ) {
-      return 'service';
-    }
-
     // Default to item for physical goods
-    return 'item';
+    const result = 'item';
+    deliverableTypeCache.set(cacheKey, result);
+    return result;
   }
 }
 
@@ -549,9 +577,10 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="bg-amber-100 px-2.5 py-1 text-xs font-normal text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                      className="border-amber-200 px-2.5 py-1 text-xs font-normal text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
                                     >
-                                      Arbiter Required
+                                      <AlertTriangle className="mr-1 h-3 w-3" />
+                                      Arbiter
                                     </Badge>
                                   )}
                                 </div>
@@ -751,9 +780,10 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="bg-amber-100 px-2.5 py-1 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                      className="border-amber-200 px-2.5 py-1 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
                                     >
-                                      Arbiter Required
+                                      <AlertTriangle className="mr-1 h-3 w-3" />
+                                      Arbiter
                                     </Badge>
                                   )}
                                 </div>
@@ -895,7 +925,7 @@ export function EscrowProtectionEnhanced({
           <div className="grid gap-6 md:grid-cols-2">
             {/* Escrow Summary */}
             <Card>
-              <CardHeader className="pb-4">
+              <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <CheckCircle className="h-5 w-5" />
                   Escrow Summary
@@ -911,9 +941,7 @@ export function EscrowProtectionEnhanced({
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-sm">
-                    Arbiter Required
-                  </span>
+                  <span className="text-muted-foreground text-sm">Arbiter</span>
                   <div className="flex items-center gap-1">
                     <Shield
                       className={`h-4 w-4 ${escrowData.arbiter_required ? 'text-amber-600' : 'text-green-600'}`}
@@ -930,7 +958,7 @@ export function EscrowProtectionEnhanced({
 
             {/* Completion Date */}
             <Card>
-              <CardHeader className="pb-4">
+              <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Calendar className="h-5 w-5" />
                   Deadline
@@ -939,7 +967,7 @@ export function EscrowProtectionEnhanced({
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="completion-date" className="text-sm">
-                    Completion Date{' '}
+                    Completion{' '}
                     <span className="text-muted-foreground">(Optional)</span>
                   </Label>
                   <Input
@@ -952,7 +980,7 @@ export function EscrowProtectionEnhanced({
                       })
                     }
                     min={new Date().toISOString().split('T')[0]}
-                    className="h-10 text-sm"
+                    className="h-10 text-sm [&::-webkit-calendar-picker-indicator]:hue-rotate-[86deg] [&::-webkit-calendar-picker-indicator]:invert-[.6] [&::-webkit-calendar-picker-indicator]:saturate-[500%] [&::-webkit-calendar-picker-indicator]:sepia-[.9] [&::-webkit-calendar-picker-indicator]:filter"
                   />
                 </div>
               </CardContent>
