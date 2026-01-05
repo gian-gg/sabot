@@ -2827,8 +2827,8 @@ export function CreateTransactionForm({
         </div>
 
         {/* Form Card */}
-        <Card className="border-2 shadow-xl">
-          <CardHeader className="bg-muted/30 space-y-3 border-b">
+        <Card className="border-2 pt-0 shadow-xl">
+          <CardHeader className="bg-muted/15 border-b px-10 pt-6">
             <CardTitle className="text-2xl">
               {currentStep === 1 && 'Screenshot Analysis'}
               {currentStep === 2 && 'Resolve Data Conflicts'}
@@ -2838,7 +2838,7 @@ export function CreateTransactionForm({
               {currentStep === 6 &&
                 (transactionId ? 'Review & Confirm' : 'Create Transaction')}
             </CardTitle>
-            <CardDescription className="text-base">
+            <CardDescription className="text-sm">
               {currentStep === 1 &&
                 'AI-powered analysis of your conversation screenshots to extract transaction details and detect fraud'}
               {currentStep === 2 &&
@@ -2855,7 +2855,7 @@ export function CreateTransactionForm({
                 'Review and confirm your transaction details'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 p-8">
+          <CardContent className="space-y-6 p-8 pt-0">
             {renderStepContent()}
 
             {/* Navigation Buttons */}

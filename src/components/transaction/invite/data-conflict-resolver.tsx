@@ -458,7 +458,10 @@ export function DataConflictResolver({
                   {getFieldLabel(field)}
                 </Label>
                 {hasConflict && (
-                  <Badge variant="outline">
+                  <Badge
+                    variant="outline"
+                    className="border-red-500/20 bg-red-500/10 text-red-600"
+                  >
                     <AlertTriangle className="mr-1 h-3 w-3" />
                     Conflict
                   </Badge>
