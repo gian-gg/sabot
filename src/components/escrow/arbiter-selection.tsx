@@ -194,8 +194,10 @@ export function ArbiterSelection({
                       <AvatarFallback className="text-xs">
                         {selectedArbiter.name
                           .split(' ')
+                          .filter((word) => !word.endsWith('.')) // Filter out titles like "Dr."
                           .map((n) => n[0])
-                          .join('')}
+                          .join('')
+                          .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">
@@ -239,16 +241,21 @@ export function ArbiterSelection({
                       <AvatarFallback>
                         {arbiter.name
                           .split(' ')
+                          .filter((word) => !word.endsWith('.')) // Filter out titles like "Dr."
                           .map((n) => n[0])
-                          .join('')}
+                          .join('')
+                          .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium">{arbiter.name}</h4>
                         {arbiter.isRecommended && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Star className="mr-1 h-3 w-3" />
+                          <Badge
+                            variant="secondary"
+                            className="px-1.5 py-0 text-[8px]"
+                          >
+                            <Star className="mr-0.5 h-2 w-2" />
                             Recommended
                           </Badge>
                         )}

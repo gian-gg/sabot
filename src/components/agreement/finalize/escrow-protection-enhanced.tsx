@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { Deliverable, EscrowType, PartyResponsible } from '@/types/escrow';
 import { useSharedConflictResolution } from '@/hooks/use-shared-conflict-resolution';
@@ -470,30 +469,6 @@ export function EscrowProtectionEnhanced({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <CardHeader className="pb-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
-              <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Escrow Protection</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Secure holding until deliverables are completed
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-end sm:justify-start">
-            <Switch
-              checked={enabled}
-              onCheckedChange={onEnabledChange}
-              aria-label="Enable escrow protection"
-            />
-          </div>
-        </div>
-      </CardHeader>
-
       {enabled && (
         <div className="space-y-6">
           {/* Deliverables Section */}
@@ -514,7 +489,7 @@ export function EscrowProtectionEnhanced({
               <div className="space-y-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 flex-shrink-0 rounded-full bg-blue-500"></div>
+                    <div className="h-3 w-3 shrink-0 rounded-full bg-blue-500"></div>
                     <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300">
                       {initiatorName
                         ? `${initiatorName}'s Obligations`
@@ -554,7 +529,7 @@ export function EscrowProtectionEnhanced({
                           key={deliverable.id}
                           className="border-l-4 border-l-blue-200 dark:border-l-blue-800"
                         >
-                          <CardContent className="p-4">
+                          <CardContent>
                             <div className="space-y-4">
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -563,10 +538,10 @@ export function EscrowProtectionEnhanced({
                                   </span>
                                   {typeInfo && (
                                     <Badge
-                                      className={`${typeInfo.color} text-sm`}
+                                      className={`${typeInfo.color} px-2.5 py-1 text-xs font-normal`}
                                     >
                                       {React.createElement(typeInfo.icon, {
-                                        className: 'mr-1 h-3 w-3',
+                                        className: 'mr-0.5 h-3 w-3',
                                       })}
                                       {typeInfo.label}
                                     </Badge>
@@ -574,7 +549,7 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="bg-amber-100 text-sm text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                      className="bg-amber-100 px-2.5 py-1 text-xs font-normal text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                     >
                                       Arbiter Required
                                     </Badge>
@@ -716,7 +691,7 @@ export function EscrowProtectionEnhanced({
               <div className="space-y-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 flex-shrink-0 rounded-full bg-green-500"></div>
+                    <div className="h-3 w-3 shrink-0 rounded-full bg-green-500"></div>
                     <h4 className="text-sm font-medium text-green-700 dark:text-green-300">
                       {participantName
                         ? `${participantName}'s Obligations`
@@ -756,7 +731,7 @@ export function EscrowProtectionEnhanced({
                           key={deliverable.id}
                           className="border-l-4 border-l-green-200 dark:border-l-green-800"
                         >
-                          <CardContent className="p-4">
+                          <CardContent>
                             <div className="space-y-4">
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -765,7 +740,7 @@ export function EscrowProtectionEnhanced({
                                   </span>
                                   {typeInfo && (
                                     <Badge
-                                      className={`${typeInfo.color} text-sm`}
+                                      className={`${typeInfo.color} px-2.5 py-1 text-xs`}
                                     >
                                       {React.createElement(typeInfo.icon, {
                                         className: 'mr-1 h-3 w-3',
@@ -776,7 +751,7 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="bg-amber-100 text-sm text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                      className="bg-amber-100 px-2.5 py-1 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                     >
                                       Arbiter Required
                                     </Badge>
@@ -958,7 +933,7 @@ export function EscrowProtectionEnhanced({
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Calendar className="h-5 w-5" />
-                  Expected Completion
+                  Deadline
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -2458,46 +2458,91 @@ export function CreateTransactionForm({
               {/* Escrow Protection Section */}
               <div className="space-y-1">
                 <Card className="border-2 shadow-lg">
-                  <EscrowProtectionEnhanced
-                    enabled={escrowEnabled}
-                    onEnabledChange={updateEscrowEnabled}
-                    onEscrowDataChange={(data) => {
-                      setEscrowData(data);
-                      // Don't auto-enable arbiter from escrow
-                      updateArbiterEnabled(false);
-                    }}
-                    agreementTitle={formData.item_name}
-                    agreementTerms={formData.item_description}
-                    itemDetails={{
-                      name: formData.item_name,
-                      description: formData.item_description,
-                      price: parseFloat(formData.price || '0'),
-                      quantity: parseInt(formData.quantity || '1'),
-                      category: formData.category,
-                      condition: formData.condition,
-                    }}
-                    initiatorId={currentUserId || ''}
-                    participantId={otherUserId || ''}
-                    initiatorName={currentUserName}
-                    participantName={otherUserName}
-                    conflictResolution={conflictResolution}
-                    currentUserId={currentUserId || undefined}
-                    currentStep={currentStep}
-                  />
+                  <CardHeader className="border-b">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
+                          <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">
+                            Escrow Protection
+                          </CardTitle>
+                          <p className="text-muted-foreground text-sm">
+                            Secure holding until deliverables are completed
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={escrowEnabled}
+                        onCheckedChange={updateEscrowEnabled}
+                        aria-label="Enable escrow protection"
+                      />
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    {escrowEnabled ? (
+                      <div className="space-y-4">
+                        <EscrowProtectionEnhanced
+                          enabled={escrowEnabled}
+                          onEnabledChange={updateEscrowEnabled}
+                          onEscrowDataChange={(data) => {
+                            setEscrowData(data);
+                            // Don't auto-enable arbiter from escrow
+                            updateArbiterEnabled(false);
+                          }}
+                          agreementTitle={formData.item_name}
+                          agreementTerms={formData.item_description}
+                          itemDetails={{
+                            name: formData.item_name,
+                            description: formData.item_description,
+                            price: parseFloat(formData.price || '0'),
+                            quantity: parseInt(formData.quantity || '1'),
+                            category: formData.category,
+                            condition: formData.condition,
+                          }}
+                          initiatorId={currentUserId || ''}
+                          participantId={otherUserId || ''}
+                          initiatorName={currentUserName}
+                          participantName={otherUserName}
+                          conflictResolution={conflictResolution}
+                          currentUserId={currentUserId || undefined}
+                          currentStep={currentStep}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          With escrow protection, funds and deliverables are
+                          held safely until both parties fulfill their
+                          obligations.
+                        </p>
+                        <Alert className="border-blue-200 dark:border-blue-900 dark:bg-blue-950">
+                          <Shield className="h-5 w-5 text-blue-400" />
+                          <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+                            Escrow protection ensures that payments are only
+                            released when both parties have completed their part
+                            of the transaction
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
+                  </CardContent>
                 </Card>
               </div>
 
               {/* Arbiter Oversight Section */}
               <div className="space-y-1">
                 <Card className="border-2 shadow-lg">
-                  <CardHeader className="bg-muted/30 border-b">
+                  <CardHeader className="border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950">
                           <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-base">
                             Arbiter Oversight
                           </CardTitle>
                           <p className="text-muted-foreground text-sm">
@@ -2509,12 +2554,11 @@ export function CreateTransactionForm({
                         checked={arbiterEnabled}
                         onCheckedChange={updateArbiterEnabled}
                         aria-label="Enable arbiter oversight"
-                        className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
                       />
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-6">
+                  <CardContent>
                     {arbiterEnabled ? (
                       <div className="space-y-4">
                         <ArbiterSelection
@@ -2537,12 +2581,12 @@ export function CreateTransactionForm({
                           and mediate in case of disputes. This provides an
                           extra layer of security and trust.
                         </p>
-                        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-                          <Shield className="h-4 w-4 text-amber-600" />
+                        <Alert className="border-amber-200 dark:border-amber-900 dark:bg-amber-950">
+                          <Shield className="h-5 w-5 text-amber-400!" />
                           <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>How it works:</strong> An arbiter is a
-                            neutral third party who can help resolve disputes
-                            and ensure fair outcomes for both parties.
+                            An arbiter is a neutral third party who can help
+                            resolve disputes and ensure fair outcomes for both
+                            parties.
                           </AlertDescription>
                         </Alert>
                       </div>
@@ -2758,7 +2802,7 @@ export function CreateTransactionForm({
               );
             })}
           </div>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-10 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
               {currentStep === 1 && '🔍 Analyze screenshots'}
               {currentStep === 2 && '🔀 Resolve any conflicts'}

@@ -131,7 +131,7 @@ export function ArbiterSelection({
     <div className="space-y-4">
       {/* Search */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent>
           <div className="space-y-3">
             <Label htmlFor="arbiter-search" className="text-sm">
               Search for Arbiters
@@ -153,17 +153,16 @@ export function ArbiterSelection({
       {/* Recommended Arbiters */}
       {showRecommended && (
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader>
             <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-500" />
                 <span className="text-lg">Recommended Arbiters</span>
               </div>
               <Badge
                 variant="secondary"
-                className="w-fit bg-amber-100 text-sm text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                className="text-shadow-primary-foreground w-fit rounded-2xl bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
               >
-                <Star className="mr-1 h-3 w-3" />
+                <Star className="mr-0.5 h-3 w-3" />
                 Top Rated
               </Badge>
             </CardTitle>
@@ -189,25 +188,28 @@ export function ArbiterSelection({
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-center gap-2">
+                            <div className="mb-1 flex items-center gap-2.5">
                               <h4 className="text-sm font-medium">
                                 {candidate.name}
                               </h4>
-                              <Badge variant="secondary" className="text-sm">
-                                <Star className="mr-1 h-3 w-3" />
+                              <Badge
+                                variant="secondary"
+                                className="rounded-2xl px-3 py-1 text-xs"
+                              >
+                                <Star className="mr-0.5 h-3 w-3" />
                                 Recommended
                               </Badge>
                             </div>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-muted-foreground text-xs">
                               {candidate.specializations.join(', ')}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="mt-5 grid grid-cols-2 items-center gap-2 px-10 text-sm">
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <Star className="h-4 w-4 text-white" />
                           <span className="font-medium">
                             {candidate.rating}
                           </span>
@@ -269,19 +271,19 @@ export function ArbiterSelection({
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-sm font-medium">
+                            <h4 className="mb-1 text-sm font-medium">
                               {candidate.name}
                             </h4>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-muted-foreground text-xs">
                               {candidate.specializations.join(', ')}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="mt-5 grid grid-cols-2 items-center gap-2 px-10 text-sm">
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <Star className="h-4 w-4 text-white" />
                           <span className="font-medium">
                             {candidate.rating}
                           </span>
