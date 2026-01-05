@@ -55,7 +55,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 
 const STEPS = [
-  { id: 1, name: 'Screenshot Analysis', icon: Shield },
+  { id: 1, name: 'Convo Analysis', icon: Shield },
   { id: 2, name: 'Resolve Conflicts', icon: GitMerge },
   { id: 3, name: 'Item Details', icon: Package },
   { id: 4, name: 'Exchange Info', icon: MapPin },
@@ -2513,17 +2513,17 @@ export function CreateTransactionForm({
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          With escrow protection, funds and deliverables are
-                          held safely until both parties fulfill their
-                          obligations.
+                        <p className="text-muted-foreground mb-5 text-sm leading-relaxed">
+                          Escrow protection ensures that payments are only
+                          released when both parties have fully completed and
+                          verified their respective parts of the transaction.
                         </p>
                         <Alert className="border-blue-200 dark:border-blue-900 dark:bg-blue-950">
                           <Shield className="h-5 w-5 text-blue-400" />
                           <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-                            Escrow protection ensures that payments are only
-                            released when both parties have completed their part
-                            of the transaction
+                            With escrow protection, funds and deliverables are
+                            held safely until both parties fulfill their
+                            obligations.
                           </AlertDescription>
                         </Alert>
                       </div>
@@ -2576,7 +2576,7 @@ export function CreateTransactionForm({
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <p className="text-muted-foreground text-sm leading-relaxed">
+                        <p className="text-muted-foreground mb-5 text-sm leading-relaxed">
                           Add an independent arbiter to oversee this transaction
                           and mediate in case of disputes. This provides an
                           extra layer of security and trust.
@@ -2756,22 +2756,36 @@ export function CreateTransactionForm({
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-20 pb-8">
-      <div
-        className={`w-full transition-all duration-300 ${currentStep === 3 || currentStep === 5 ? 'max-w-6xl' : 'max-w-3xl'}`}
-      >
+      <div className={`w-full max-w-5xl transition-all duration-300`}>
         {/* Progress Indicator */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {STEPS.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep === step.id;
-              const isCompleted = currentStep > step.id;
+          <div className="relative">
+            {/* Full connecting line background */}
+            <div className="bg-muted absolute top-6 right-6 left-6 h-0.5 -translate-y-1/2" />
 
-              return (
-                <React.Fragment key={step.id}>
-                  <div className="flex flex-col items-center">
+            {/* Progress line */}
+            <div
+              className="bg-primary absolute top-6 left-6 h-0.5 -translate-y-1/2 transition-all duration-300"
+              style={{
+                width:
+                  currentStep > 1
+                    ? `calc(${((currentStep - 1) / (STEPS.length - 1)) * 97}% )`
+                    : '0%',
+              }}
+            />
+
+            {/* Steps in flex layout */}
+            <div className="flex items-center justify-between">
+              {STEPS.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = currentStep === step.id;
+                const isCompleted = currentStep > step.id;
+
+                return (
+                  <div key={step.id} className="flex flex-col items-center">
+                    {/* Step circle */}
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                      className={`bg-background relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                         isActive
                           ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-lg'
                           : isCompleted
@@ -2785,22 +2799,17 @@ export function CreateTransactionForm({
                         React.createElement(Icon, { className: 'h-5 w-5' })
                       )}
                     </div>
+
+                    {/* Step label */}
                     <p
-                      className={`mt-2 text-xs font-medium transition-colors ${isActive ? 'text-primary' : ''}`}
+                      className={`mt-2 text-center text-xs font-medium transition-colors ${isActive ? 'text-primary' : ''}`}
                     >
                       {step.name}
                     </p>
                   </div>
-                  {index < STEPS.length - 1 && (
-                    <div
-                      className={`h-0.5 flex-1 transition-all duration-300 ${
-                        isCompleted ? 'bg-primary' : 'bg-muted'
-                      }`}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           <div className="mt-10 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
@@ -2821,7 +2830,7 @@ export function CreateTransactionForm({
         <Card className="border-2 shadow-xl">
           <CardHeader className="bg-muted/30 space-y-3 border-b">
             <CardTitle className="text-2xl">
-              {currentStep === 1 && 'Screenshot Analysis'}
+              {currentStep === 1 && 'Convo Analysis'}
               {currentStep === 2 && 'Resolve Data Conflicts'}
               {currentStep === 3 && 'Item Details'}
               {currentStep === 4 && 'Exchange Information'}
