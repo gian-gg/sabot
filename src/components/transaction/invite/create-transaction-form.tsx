@@ -64,6 +64,29 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 
+// Debug wrapper for toast to track all calls
+const originalToastSuccess = toast.success;
+const originalToastInfo = toast.info;
+const originalToastError = toast.error;
+
+toast.success = (...args) => {
+  console.log(`[TOAST-SUCCESS] Called with:`, args);
+  console.trace('Toast success call stack');
+  return originalToastSuccess.apply(toast, args);
+};
+
+toast.info = (...args) => {
+  console.log(`[TOAST-INFO] Called with:`, args);
+  console.trace('Toast info call stack');
+  return originalToastInfo.apply(toast, args);
+};
+
+toast.error = (...args) => {
+  console.log(`[TOAST-ERROR] Called with:`, args);
+  console.trace('Toast error call stack');
+  return originalToastError.apply(toast, args);
+};
+
 const STEPS = [
   { id: 1, name: 'Convo Analysis', icon: Shield },
   { id: 2, name: 'Resolve Conflicts', icon: GitMerge },
@@ -417,7 +440,6 @@ export function CreateTransactionForm({
 
     const sharedSelections = conflictResolution.sharedSelections;
     const lockUpdates: Partial<typeof fieldLocks> = {};
-    const notifiedFields = new Set<string>();
 
     Object.entries(sharedSelections).forEach(([key, selection]) => {
       if (key.startsWith('fieldLock_') && selection) {
@@ -431,55 +453,73 @@ export function CreateTransactionForm({
         const fieldKey = lockData.field;
         const fieldKeyStr = String(fieldKey);
 
-        // Only apply lock changes from other party
-        if (lockData.userId !== currentUserId) {
-          const previousState = fieldLocks[fieldKey];
-          const lastProcessedTime =
-            lastLockChangeRef.current.get(fieldKeyStr) || 0;
+        // COMPLETELY SKIP processing our own changes - this should eliminate duplicate toasts
+        if (lockData.userId === currentUserId) {
+          console.log(
+            `[LockSync] 🚫 Skipping own change: field=${fieldKeyStr}, userId=${lockData.userId}`
+          );
+          return; // Skip entirely
+        }
 
-          // Only update if state actually changed AND we haven't processed this timestamp
-          if (
-            previousState !== lockData.locked &&
-            lockData.timestamp > lastProcessedTime
-          ) {
-            lockUpdates[fieldKey] = lockData.locked;
-            lastLockChangeRef.current.set(fieldKeyStr, lockData.timestamp);
+        console.log(
+          `[LockSync] Processing other party: field=${fieldKeyStr}, userId=${lockData.userId}, locked=${lockData.locked}`
+        );
 
-            // ✅ NEW: Store consensus value when both parties lock the field
-            if (lockData.locked) {
-              const currentValue = formData[fieldKey] || '';
-              consensusValuesRef.current.set(fieldKey, currentValue);
-              console.log(
-                `[ConsensusTracking] 🔒 Other party locked ${fieldKeyStr} with consensus value: "${currentValue}"`
-              );
-            }
+        const previousState = fieldLocks[fieldKey];
+        const lastProcessedTime =
+          lastLockChangeRef.current.get(fieldKeyStr) || 0;
 
-            // Show notification about other party's action (only once per field per timestamp)
-            const notificationKey = `${fieldKeyStr}-${lockData.timestamp}`;
-            if (!notifiedFields.has(notificationKey)) {
-              notifiedFields.add(notificationKey);
-              if (lockData.locked) {
-                toast.info(
-                  `Other party locked ${getFieldDisplayName(fieldKeyStr)}`,
-                  {
-                    duration: 2000,
-                  }
-                );
-              } else {
-                toast.info(
-                  `Other party unlocked ${getFieldDisplayName(fieldKeyStr)}`,
-                  {
-                    duration: 2000,
-                  }
-                );
-              }
-            }
+        // Only update if state actually changed AND we haven't processed this timestamp
+        if (
+          previousState !== lockData.locked &&
+          lockData.timestamp > lastProcessedTime
+        ) {
+          console.log(
+            `[LockSync] ✅ Applying change: field=${fieldKeyStr}, locked=${lockData.locked}`
+          );
+
+          lockUpdates[fieldKey] = lockData.locked;
+          lastLockChangeRef.current.set(fieldKeyStr, lockData.timestamp);
+
+          // ✅ NEW: Store consensus value when both parties lock the field
+          if (lockData.locked) {
+            const currentValue = formData[fieldKey] || '';
+            consensusValuesRef.current.set(fieldKey, currentValue);
+            console.log(
+              `[ConsensusTracking] 🔒 Other party locked ${fieldKeyStr} with consensus value: "${currentValue}"`
+            );
           }
+
+          // Always show notification for other party's changes
+          console.log(
+            `[LockSync] 🔔 Showing other party toast: field=${fieldKeyStr}, locked=${lockData.locked}`
+          );
+
+          if (lockData.locked) {
+            toast.info(
+              `Other party locked ${getFieldDisplayName(fieldKeyStr)}`,
+              {
+                duration: 2000,
+              }
+            );
+          } else {
+            toast.info(
+              `Other party unlocked ${getFieldDisplayName(fieldKeyStr)}`,
+              {
+                duration: 2000,
+              }
+            );
+          }
+        } else {
+          console.log(
+            `[LockSync] ❌ Skipping change: field=${fieldKeyStr}, reason=${previousState === lockData.locked ? 'no state change' : 'already processed'}`
+          );
         }
       }
     });
 
     if (Object.keys(lockUpdates).length > 0) {
+      console.log(`[LockSync] 📝 Applying updates:`, lockUpdates);
       setFieldLocks((prev) => ({ ...prev, ...lockUpdates }));
     }
   }, [
@@ -707,9 +747,35 @@ export function CreateTransactionForm({
   // Helper to toggle individual field lock
   const toggleFieldLock = (field: keyof typeof fieldLocks) => {
     const timestamp = Date.now();
+    const fieldStr = String(field);
+    const callId = Math.random().toString(36).substr(2, 9);
+
+    console.log(`[LockToggle-${callId}] 🔄 === STARTING TOGGLE ===`);
+    console.log(`[LockToggle-${callId}] Field: ${fieldStr}`);
+    console.log(`[LockToggle-${callId}] Current state: ${fieldLocks[field]}`);
+    console.log(`[LockToggle-${callId}] Timestamp: ${timestamp}`);
+    console.log(`[LockToggle-${callId}] User ID: ${currentUserId}`);
+    console.log(`[LockToggle-${callId}] Call ID: ${callId}`);
+
+    // Check if this function is being called multiple times rapidly
+    const lastCall = lastLockChangeRef.current.get(`${fieldStr}_lastCall`) || 0;
+    const timeSinceLastCall = timestamp - lastCall;
+    console.log(
+      `[LockToggle-${callId}] Time since last call: ${timeSinceLastCall}ms`
+    );
+
+    if (timeSinceLastCall < 100) {
+      console.log(
+        `[LockToggle-${callId}] 🚫 DUPLICATE CALL DETECTED! Ignoring call within 100ms`
+      );
+      return;
+    }
+
+    lastLockChangeRef.current.set(`${fieldStr}_lastCall`, timestamp);
 
     setFieldLocks((prev) => {
       const newLockState = !prev[field];
+      console.log(`[LockToggle-${callId}] New state will be: ${newLockState}`);
 
       // ✅ NEW: Store consensus value when user locks the field
       if (newLockState) {
@@ -719,29 +785,45 @@ export function CreateTransactionForm({
           currentValue
         );
         console.log(
-          `[ConsensusTracking] 🔒 User locked ${String(field)} with consensus value: "${currentValue}"`
+          `[ConsensusTracking] 🔒 User locked ${fieldStr} with consensus value: "${currentValue}"`
         );
       }
 
       // Record that we made this change to avoid processing it later
-      lastLockChangeRef.current.set(String(field), timestamp);
+      lastLockChangeRef.current.set(fieldStr, timestamp);
+      console.log(
+        `[LockToggle-${callId}] Recorded timestamp in map: ${fieldStr} -> ${timestamp}`
+      );
 
       // Show toast notification
+      console.log(`[LockToggle-${callId}] 🔔 === ABOUT TO SHOW TOAST ===`);
       if (newLockState) {
+        console.log(`[LockToggle-${callId}] Calling toast.success for LOCK`);
         toast.success(`Locked ${getFieldDisplayName(field)}`, {
           duration: 2000,
         });
+        console.log(
+          `[LockToggle-${callId}] Called toast.success for LOCK - DONE`
+        );
       } else {
+        console.log(`[LockToggle-${callId}] Calling toast.info for UNLOCK`);
         toast.info(`Unlocked ${getFieldDisplayName(field)} for editing`, {
           duration: 2000,
           description: 'You can now modify this field',
         });
+        console.log(
+          `[LockToggle-${callId}] Called toast.info for UNLOCK - DONE`
+        );
       }
 
       // Broadcast lock state change to other party if using real-time collaboration
-      // Use setTimeout to avoid setState during render
       if (conflictResolution && currentUserId) {
+        console.log(`[LockToggle-${callId}] 📡 Will broadcast in setTimeout`);
         setTimeout(() => {
+          console.log(`[LockToggle-${callId}] 📡 === BROADCASTING NOW ===`);
+          console.log(
+            `[LockToggle-${callId}] Broadcasting: ${fieldStr}, locked=${newLockState}, userId=${currentUserId}`
+          );
           conflictResolution.selectField(
             `fieldLock_${field}` as keyof AnalysisData,
             {
@@ -751,9 +833,15 @@ export function CreateTransactionForm({
               timestamp,
             }
           );
+          console.log(`[LockToggle-${callId}] 📡 Broadcast completed`);
         }, 0);
+      } else {
+        console.log(
+          `[LockToggle-${callId}] No conflict resolution or user ID, skipping broadcast`
+        );
       }
 
+      console.log(`[LockToggle-${callId}] === TOGGLE FUNCTION ENDING ===`);
       return { ...prev, [field]: newLockState };
     });
   };
@@ -1828,10 +1916,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -1907,17 +1994,6 @@ export function CreateTransactionForm({
                 (field) => formData[field] && !fieldLocks[field]
               );
 
-              if (unlockedFields.length > 0) {
-                return (
-                  <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
-                    <Lock className="h-4 w-4" />
-                    <AlertDescription className="text-red-800 dark:text-red-200">
-                      Please lock the following fields before proceeding:{' '}
-                      {unlockedFields.map(getFieldDisplayName).join(', ')}
-                    </AlertDescription>
-                  </Alert>
-                );
-              }
               return null;
             })()}
 
@@ -1957,7 +2033,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('item_name')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -2004,7 +2080,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('product_model')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -2058,7 +2134,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('category')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -2111,7 +2187,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('condition')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -2152,7 +2228,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('quantity')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -2197,7 +2273,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('item_description')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                 </div>
@@ -2241,7 +2317,7 @@ export function CreateTransactionForm({
                     onClick={() => toggleFieldLock('price')}
                     className="shrink-0"
                   >
-                    <Unlock className="h-4 w-4" />
+                    <Unlock className="text-primary h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -2261,10 +2337,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -2314,8 +2389,9 @@ export function CreateTransactionForm({
                     variant="outline"
                     size="sm"
                     onClick={() => toggleFieldLock('transaction_type')}
+                    className="text-primary hover:text-primary"
                   >
-                    <Unlock className="mr-2 h-4 w-4" />
+                    <Unlock className="text-primary mr-2 h-4 w-4" />
                     Lock
                   </Button>
                 )}
@@ -2420,7 +2496,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('meeting_location')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2466,7 +2542,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('meeting_time')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -2520,7 +2596,7 @@ export function CreateTransactionForm({
                             onClick={() => toggleFieldLock('delivery_address')}
                             className="shrink-0"
                           >
-                            <Unlock className="h-4 w-4" />
+                            <Unlock className="text-primary h-4 w-4" />
                           </Button>
                         )}
                     </div>
@@ -2563,7 +2639,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('delivery_method')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2618,7 +2694,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('online_platform')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2659,7 +2735,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('online_contact')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -2700,9 +2776,9 @@ export function CreateTransactionForm({
                           variant="outline"
                           size="icon"
                           onClick={() => toggleFieldLock('online_instructions')}
-                          className="shrink-0"
+                          className="shrink-0 border-red-500 bg-red-950 hover:bg-red-900"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="h-4 w-4 text-red-800" />
                         </Button>
                       )}
                   </div>
@@ -2732,10 +2808,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -2779,11 +2854,8 @@ export function CreateTransactionForm({
                       <div className="space-y-4">
                         <EscrowProtectionEnhanced
                           enabled={escrowEnabled}
-                          onEnabledChange={updateEscrowEnabled}
                           onEscrowDataChange={(data) => {
                             setEscrowData(data);
-                            // Don't auto-enable arbiter from escrow
-                            updateArbiterEnabled(false);
                           }}
                           agreementTitle={formData.item_name}
                           agreementTerms={formData.item_description}
@@ -3069,7 +3141,7 @@ export function CreateTransactionForm({
 
             {/* Steps in flex layout */}
             <div className="flex items-center justify-between">
-              {STEPS.map((step, index) => {
+              {STEPS.map((step) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
@@ -3138,7 +3210,7 @@ export function CreateTransactionForm({
                 'Review and resolve any conflicts between the two screenshot analyses'}
               {currentStep === 3 &&
                 (transactionId
-                  ? 'Update transaction details'
+                  ? 'Update transaction details and make sure to lock the fields before proceeding'
                   : "Describe what you're buying or selling")}
               {currentStep === 4 &&
                 "Choose how you'll exchange (meetup or delivery)"}

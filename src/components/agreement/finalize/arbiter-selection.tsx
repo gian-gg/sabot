@@ -167,7 +167,7 @@ export function ArbiterSelection({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-80 space-y-3 overflow-y-auto">
+            <div className="space-y-3">
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
