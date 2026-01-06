@@ -33,6 +33,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { use, useEffect, useState } from 'react';
 
+// Animated loading dots component
+const LoadingDots = () => {
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev + 1) % 4);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{'.'.repeat(dots)}</span>;
+};
+
 export default function TransactionActive({
   params,
 }: {
@@ -94,9 +108,16 @@ export default function TransactionActive({
         }
       };
       blockchainSave();
+
+      // Get finalization delay from environment variable or default to 2000ms (2 seconds)
+      const finalizationDelay = parseInt(
+        process.env.NEXT_PUBLIC_FINALIZATION_DELAY || '2000',
+        10
+      );
+
       setTimeout(() => {
         router.push('/');
-      }, 2000);
+      }, finalizationDelay);
     }
   }, [status?.participants, status?.transaction?.id, router, id]);
 
@@ -152,9 +173,12 @@ export default function TransactionActive({
         <PageHeader />
         <div className="flex flex-1 items-center justify-center p-8">
           <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
-            <CardContent className="pt-6">
+            <CardContent className="pt-2 pb-1.5">
               <div className="text-center">
-                <p className="text-neutral-400">Loading transaction...</p>
+                <p className="text-neutral-400">
+                  Loading transaction
+                  <LoadingDots />
+                </p>
               </div>
             </CardContent>
           </Card>
