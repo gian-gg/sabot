@@ -48,19 +48,19 @@ interface ArbiterSelectionProps {
 const RECOMMENDED_ARBITERS: Arbiter[] = [
   {
     id: 'arb-1',
-    name: 'Maria Santos',
-    email: 'maria.santos@arbitration.com',
+    name: 'Dr. Sarah Chen',
+    email: 'sarah.chen@tech-arbitration.com',
     rating: 4.9,
-    completedDisputes: 127,
-    specialties: ['E-commerce', 'Digital Services', 'Freelance Work'],
-    responseTime: '< 24 hours',
-    fee: '₱2,500',
+    completedDisputes: 156,
+    specialties: ['Technology', 'Software Development', 'IT Services'],
+    responseTime: '< 6 hours',
+    fee: '₱4,000',
     isRecommended: true,
   },
   {
     id: 'arb-2',
-    name: 'John Rodriguez',
-    email: 'john.rodriguez@dispute-resolution.ph',
+    name: 'James Rodriguez',
+    email: 'james.rodriguez@dispute-resolution.ph',
     rating: 4.8,
     completedDisputes: 89,
     specialties: ['Real Estate', 'Business Contracts', 'Employment'],
@@ -70,16 +70,26 @@ const RECOMMENDED_ARBITERS: Arbiter[] = [
   },
   {
     id: 'arb-3',
-    name: 'Dr. Sarah Chen',
-    email: 'sarah.chen@tech-arbitration.com',
+    name: 'Emily Thompson',
+    email: 'emily.thompson@arbitration.com',
     rating: 4.7,
-    completedDisputes: 156,
-    specialties: ['Technology', 'Software Development', 'IT Services'],
-    responseTime: '< 6 hours',
-    fee: '₱4,000',
+    completedDisputes: 127,
+    specialties: ['E-commerce', 'Digital Services', 'Creative Work'],
+    responseTime: '< 24 hours',
+    fee: '₱2,500',
     isRecommended: true,
   },
 ];
+
+// Helper function to get arbiter image path
+const getArbiterImagePath = (name: string): string => {
+  // Convert name to filename format
+  const fileName = name
+    .toLowerCase()
+    .replace('dr. ', '') // Remove title
+    .replace(/\s+/g, '-'); // Replace spaces with hyphens
+  return `/images/${fileName}.jpg`;
+};
 
 export function ArbiterSelection({
   onArbiterSelect,
@@ -113,6 +123,7 @@ export function ArbiterSelection({
   }, [searchTerm]);
 
   const handleArbiterSelect = (arbiter: Arbiter) => {
+    console.log('handleArbiterSelect called with:', arbiter.name);
     onArbiterSelect(arbiter);
   };
 
@@ -190,7 +201,9 @@ export function ArbiterSelection({
                 <div className="mt-1 flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={selectedArbiter.avatar} />
+                      <AvatarImage
+                        src={getArbiterImagePath(selectedArbiter.name)}
+                      />
                       <AvatarFallback className="text-xs">
                         {selectedArbiter.name
                           .split(' ')
@@ -223,68 +236,97 @@ export function ArbiterSelection({
       )}
 
       {/* Arbiter List */}
-      {!selectedArbiter && (
-        <div className="space-y-3">
-          {filteredArbiters.map((arbiter) => (
-            <Card
-              key={arbiter.id}
-              className={`hover:bg-muted/50 cursor-pointer transition-colors ${
-                selectedArbiterId === arbiter.id ? 'ring-2 ring-orange-500' : ''
-              }`}
-              onClick={() => !disabled && handleArbiterSelect(arbiter)}
+      <div className="space-y-3">
+        {filteredArbiters.map((arbiter) => (
+          <Card
+            key={arbiter.id}
+            className={`hover:bg-muted/50 pointer-events-auto relative cursor-pointer border-l-4 transition-colors ${
+              selectedArbiterId === arbiter.id
+                ? 'border-l-primary ring-primary/20 ring-2'
+                : 'border-l-amber-200 dark:border-l-amber-800'
+            }`}
+          >
+            <CardContent
+              className="relative cursor-pointer pt-4"
+              onClick={() => {
+                console.log(
+                  'CardContent clicked:',
+                  arbiter.name,
+                  'Disabled:',
+                  disabled
+                );
+                if (!disabled) {
+                  handleArbiterSelect(arbiter);
+                }
+              }}
             >
-              <CardContent className="pt-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={arbiter.avatar} />
-                      <AvatarFallback>
-                        {arbiter.name
-                          .split(' ')
-                          .filter((word) => !word.endsWith('.')) // Filter out titles like "Dr."
-                          .map((n) => n[0])
-                          .join('')
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{arbiter.name}</h4>
-                        {arbiter.isRecommended && (
-                          <Badge
-                            variant="secondary"
-                            className="px-1.5 py-0 text-[8px]"
-                          >
-                            <Star className="mr-0.5 h-2 w-2" />
-                            Recommended
-                          </Badge>
-                        )}
+              {/* Invisible clickable overlay */}
+              <div
+                className="absolute inset-0 z-10 cursor-pointer"
+                onClick={(e) => {
+                  console.log(
+                    'Overlay clicked:',
+                    arbiter.name,
+                    'Disabled:',
+                    disabled
+                  );
+                  if (!disabled) {
+                    handleArbiterSelect(arbiter);
+                  }
+                }}
+              />
+              <div className="pointer-events-none relative z-20 flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={getArbiterImagePath(arbiter.name)} />
+                    <AvatarFallback>
+                      {arbiter.name
+                        .split(' ')
+                        .filter((word) => !word.endsWith('.')) // Filter out titles like "Dr."
+                        .map((n) => n[0])
+                        .join('')
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{arbiter.name}</h4>
+                      {arbiter.isRecommended && (
+                        <Badge
+                          variant="secondary"
+                          className="px-1.5 py-0 text-[8px]"
+                        >
+                          <Star className="mr-0.5 h-2 w-2" />
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {arbiter.email}
+                    </p>
+                    <div className="text-muted-foreground flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span>{arbiter.rating}</span>
                       </div>
-                      <p className="text-muted-foreground text-sm">
-                        {arbiter.email}
-                      </p>
-                      <div className="text-muted-foreground flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span>{arbiter.rating}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span>{arbiter.completedDisputes} disputes</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{arbiter.responseTime}</span>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        <span>{arbiter.completedDisputes} disputes</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{arbiter.responseTime}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-orange-600">{arbiter.fee}</p>
-                    <p className="text-muted-foreground text-xs">Fee</p>
-                  </div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1">
+                <div className="text-right">
+                  <p className="font-medium text-orange-600">{arbiter.fee}</p>
+                  <p className="text-muted-foreground text-xs">Fee</p>
+                </div>
+              </div>
+              <div className="relative z-20 mt-3 flex flex-wrap items-center justify-between gap-1">
+                <div className="pointer-events-none flex flex-wrap gap-1">
                   {arbiter.specialties.map((specialty) => (
                     <Badge
                       key={specialty}
@@ -295,11 +337,21 @@ export function ArbiterSelection({
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Test button clicked for:', arbiter.name);
+                    handleArbiterSelect(arbiter);
+                  }}
+                  className="pointer-events-auto relative z-30 rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-600"
+                >
+                  Select
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Custom Arbiter Option */}
       {!selectedArbiter && (

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -37,6 +37,16 @@ interface ArbiterSelectionProps {
   selectedArbiter?: ArbiterCandidate;
   isWaitingForApproval?: boolean;
 }
+
+// Helper function to get arbiter image path
+const getArbiterImagePath = (name: string): string => {
+  // Convert name to filename format
+  const fileName = name
+    .toLowerCase()
+    .replace('dr. ', '') // Remove title
+    .replace(/\s+/g, '-'); // Replace spaces with hyphens
+  return `/images/${fileName}.jpg`;
+};
 
 const RECOMMENDED_ARBITERS: ArbiterCandidate[] = [
   {
@@ -174,11 +184,15 @@ export function ArbiterSelection({
                   className="cursor-pointer border-l-4 border-l-amber-200 transition-all hover:shadow-md dark:border-l-amber-800"
                   onClick={() => handleProposeArbiter(candidate)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="py-0 pl-10">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={getArbiterImagePath(candidate.name)}
+                              alt={candidate.name}
+                            />
                             <AvatarFallback className="bg-amber-100 text-sm dark:bg-amber-900">
                               {candidate.name
                                 .split(' ')
@@ -262,6 +276,10 @@ export function ArbiterSelection({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={getArbiterImagePath(candidate.name)}
+                              alt={candidate.name}
+                            />
                             <AvatarFallback className="bg-blue-100 text-sm dark:bg-blue-900">
                               {candidate.name
                                 .split(' ')
@@ -341,6 +359,10 @@ export function ArbiterSelection({
           <CardContent>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Avatar className="h-12 w-12">
+                <AvatarImage
+                  src={getArbiterImagePath(selectedArbiter.name)}
+                  alt={selectedArbiter.name}
+                />
                 <AvatarFallback className="bg-green-100 dark:bg-green-900">
                   {selectedArbiter.name
                     .split(' ')
