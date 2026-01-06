@@ -59,7 +59,6 @@ import {
   TrendingUp,
   Truck,
   Unlock,
-  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
@@ -1486,17 +1485,6 @@ export function CreateTransactionForm({
     waitingForOtherParty,
   ]);
 
-  // Helper to get missing fields for step 3
-  const getMissingFields = () => {
-    const missing: string[] = [];
-    if (!formData.item_name) missing.push('item_name');
-    if (!formData.item_description) missing.push('item_description');
-    if (!formData.price) missing.push('price');
-    if (!formData.quantity) missing.push('quantity');
-    if (!formData.category) missing.push('category');
-    return missing;
-  };
-
   const canProceedToNext = useMemo(() => {
     switch (currentStep) {
       case 1:
@@ -1958,19 +1946,6 @@ export function CreateTransactionForm({
 
             {/* Unlocked Fields Alert */}
             {(() => {
-              const requiredFieldNames: (keyof TransactionFormData)[] = [
-                'item_name',
-                'item_description',
-                'price',
-                'quantity',
-                'category',
-                'condition',
-              ];
-
-              const unlockedFields = requiredFieldNames.filter(
-                (field) => formData[field] && !fieldLocks[field]
-              );
-
               return null;
             })()}
 

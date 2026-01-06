@@ -263,7 +263,7 @@ export function ArbiterSelection({
               {/* Invisible clickable overlay */}
               <div
                 className="absolute inset-0 z-10 cursor-pointer"
-                onClick={(e) => {
+                onClick={() => {
                   console.log(
                     'Overlay clicked:',
                     arbiter.name,
