@@ -59,15 +59,21 @@ export function UploadScreenshotPage({
         throw new Error(data.error || 'Failed to analyze screenshots');
       }
 
-      console.log('✅ Analysis triggered successfully');
+      console.log('✅ Analysis completed successfully');
       toast.success('Analysis completed!');
+
+      // Navigate to transaction page after analysis completes
+      setTimeout(() => {
+        console.log('✅ Navigating to transaction page...');
+        router.push(ROUTES.TRANSACTION.VIEW(transactionId));
+      }, 1500);
     } catch (error) {
       console.error('❌ Error triggering analysis:', error);
       toast.error('Failed to analyze screenshots. Please try again.');
       setAnalyzing(false);
       analysisTriggeredRef.current = false;
     }
-  }, [transactionId]);
+  }, [transactionId, router]);
 
   // Trigger analysis when both screenshots uploaded
   useEffect(() => {
@@ -87,17 +93,6 @@ export function UploadScreenshotPage({
     analyzing,
     triggerAnalysis,
   ]);
-
-  // Navigate when analysis is complete (status becomes 'active')
-  useEffect(() => {
-    if (status?.transaction.status === 'active' && analyzing) {
-      console.log('✅ Analysis complete! Navigating to transaction page...');
-      toast.success('Analysis complete! Proceeding...');
-      setTimeout(() => {
-        router.push(ROUTES.TRANSACTION.VIEW(transactionId));
-      }, 1500);
-    }
-  }, [status?.transaction.status, transactionId, router, analyzing]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -188,18 +183,15 @@ export function UploadScreenshotPage({
   if (analyzing || status?.transaction.status === 'active') {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
-        <Card className="w-full max-w-2xl">
+        <Card className="w-full max-w-2xl border">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="text-primary mb-4 h-16 w-16 animate-spin" />
-            <h3 className="mb-2 text-xl font-semibold">
-              {status?.transaction.status === 'active'
-                ? 'Analysis Complete!'
-                : 'Analyzing Screenshots...'}
+            <h3 className="mb-4 text-xl font-semibold">
+              Analyzing Screenshots...
             </h3>
-            <p className="text-muted-foreground w-xl text-center">
-              {status?.transaction.status === 'active'
-                ? 'Redirecting you to the transaction page...'
-                : 'Our AI is extracting transaction details from your conversation screenshots. This may take a moment...'}
+            <p className="text-muted-foreground w-lg text-center">
+              Our AI is extracting transaction details from your conversation
+              screenshots. Please wait...
             </p>
           </CardContent>
         </Card>

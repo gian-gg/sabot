@@ -907,7 +907,7 @@ export function TransactionDetailsModal({
                         href={`https://sepolia-blockscout.lisk.com/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2"
+                        className="flex h-12 items-center justify-center gap-2"
                       >
                         <ExternalLink className="h-4 w-4" />
                         View on Blockchain
@@ -918,8 +918,9 @@ export function TransactionDetailsModal({
                     onClick={handleExportPDF}
                     disabled={isExporting}
                     variant="outline"
+                    className="flex h-12 flex-1 items-center justify-center"
                   >
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                     Export
                   </Button>
                 </>
