@@ -42,15 +42,16 @@ export async function POST(
       if (fetchError) {
         console.error('❌ Error fetching existing analyses:', fetchError);
       } else {
-        // Update status to active if not already
-        await supabase
+        // Keep existing status - don't automatically change to active
+        const { data: currentTransaction } = await supabase
           .from('transactions')
-          .update({ status: 'active' })
-          .eq('id', transactionId);
+          .select('status')
+          .eq('id', transactionId)
+          .single();
 
         return NextResponse.json({
           results: analyses || [],
-          status: 'active',
+          status: currentTransaction?.status || 'screenshots_uploaded',
           cached: true,
         });
       }
@@ -149,40 +150,47 @@ export async function POST(
       }
     }
 
-    // Update transaction status to 'active' (analysis complete, ready for transaction details)
-    console.log('🔄 Updating transaction status to active...');
-    const { error: updateError } = await supabase
+    // Keep status as 'screenshots_uploaded' - don't automatically change to 'active'
+    // Analysis is complete, but status should only change to 'active' when users finalize
+    console.log('✅ Analysis complete, keeping status as screenshots_uploaded');
+
+    // Get current transaction status
+    const { data: currentTransaction } = await supabase
       .from('transactions')
-      .update({ status: 'active' })
-      .eq('id', transactionId);
+      .select('status')
+      .eq('id', transactionId)
+      .single();
 
-    if (updateError) {
-      console.error('❌ Failed to update transaction status:', updateError);
-    } else {
-      console.log('✅ Transaction status updated to active');
+    const currentStatus = currentTransaction?.status || 'screenshots_uploaded';
 
-      // Broadcast analysis completion to all participants
-      console.log('📡 Broadcasting analysis completion event...');
-      const channel = supabase.channel(`transaction:${transactionId}`);
-      await channel.send({
-        type: 'broadcast',
-        event: 'transaction_update',
-        payload: {
-          status: 'active',
-          message: 'Screenshot analysis complete',
-        },
-      });
-      console.log('✅ Broadcast sent for analysis completion');
-    }
+    // Broadcast analysis completion to all participants
+    console.log('📡 Broadcasting analysis completion event...');
+    const channel = supabase.channel(`transaction:${transactionId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'transaction_update',
+      payload: {
+        status: currentStatus,
+        message: 'Screenshot analysis complete',
+      },
+    });
+    console.log('✅ Broadcast sent for analysis completion');
 
     console.log(
       `✅ Analysis complete. Returning ${analysisResults.length} results`
     );
     console.log('Results:', JSON.stringify(analysisResults, null, 2));
 
+    // Get final transaction status
+    const { data: finalTransaction } = await supabase
+      .from('transactions')
+      .select('status')
+      .eq('id', transactionId)
+      .single();
+
     return NextResponse.json({
       results: analysisResults,
-      status: 'active',
+      status: finalTransaction?.status || 'screenshots_uploaded',
     });
   } catch (error) {
     console.error('❌ Analysis error:', error);
