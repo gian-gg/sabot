@@ -1,8 +1,6 @@
 export type AgreementStatus =
   | 'waiting_for_participant'
-  | 'both_joined'
-  | 'questionnaire_completed'
-  | 'active'
+  | 'in-progress'
   | 'finalized'
   | 'cancelled';
 

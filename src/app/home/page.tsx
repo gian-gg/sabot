@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
 import TransactionsSection from '@/components/home/transactions-section';
-import { ActiveContractsSection } from '@/components/home/active-contracts-section';
+import AgreementsSection from '@/components/home/agreements-section';
 import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { useUserStore } from '@/store/user/userStore';
 import { AlertTriangle } from 'lucide-react';
@@ -13,26 +13,33 @@ import { Spinner } from '@/components/ui/spinner';
 
 import { getTransactionDetailsByUserID } from '@/lib/supabase/db/transactions';
 import type { TransactionDetails } from '@/types/transaction';
+import type { AgreementWithParticipants } from '@/types/agreement';
 
 export default function Home() {
   const user = useUserStore();
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionDetails[]>([]);
+  const [agreements, setAgreements] = useState<AgreementWithParticipants[]>([]);
   const [activeTab, setActiveTab] = useState<'transactions' | 'agreements'>(
     'transactions'
   );
 
   useEffect(() => {
     setLoading(true);
-    const fetchTransactions = async (userid: string) => {
-      const recentTransactions = await getTransactionDetailsByUserID(userid);
+    const fetchData = async (userid: string) => {
+      const [recentTransactions] = await Promise.all([
+        getTransactionDetailsByUserID(userid),
+        // TODO: Add getAgreementsByUserID function when ready
+      ]);
       setTransactions(recentTransactions);
+      // TODO: setAgreements(recentAgreements);
+      setAgreements([]); // Empty for now
       setLoading(false);
     };
 
     if (user.id) {
-      fetchTransactions(user.id);
+      fetchData(user.id);
     }
   }, [user.id]);
 
@@ -58,7 +65,9 @@ export default function Home() {
                   {activeTab === 'transactions' && (
                     <TransactionsSection recentTransactions={transactions} />
                   )}
-                  {activeTab === 'agreements' && <ActiveContractsSection />}
+                  {activeTab === 'agreements' && (
+                    <AgreementsSection recentAgreements={agreements} />
+                  )}
                 </div>
               </>
             )}
