@@ -294,7 +294,7 @@
 ┌─────────────────────────────────────────────────────────┐
 │ Field Lock States                                       │
 │                                                         │
-│ 🔒 LOCKED (from screenshot analysis)                    │
+│ 🔒 LOCKED (from convo analysis)                        │
 │    ├─ Field is disabled (grayed out)                   │
 │    ├─ Shows lock icon button                           │
 │    └─ Clicking unlock → Sends notification             │

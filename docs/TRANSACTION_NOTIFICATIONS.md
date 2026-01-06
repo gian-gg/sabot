@@ -138,14 +138,14 @@ The system maps technical field names to user-friendly labels:
 
 ### Step Names
 
-| Step # | Name                |
-| ------ | ------------------- |
-| 1      | Screenshot Analysis |
-| 2      | Resolve Conflicts   |
-| 3      | Item Details        |
-| 4      | Exchange Info       |
-| 5      | Safety Options      |
-| 6      | Review              |
+| Step # | Name              |
+| ------ | ----------------- |
+| 1      | Convo Analysis    |
+| 2      | Resolve Conflicts |
+| 3      | Item Details      |
+| 4      | Exchange Info     |
+| 5      | Safety Options    |
+| 6      | Review            |
 
 ## Usage Examples
 

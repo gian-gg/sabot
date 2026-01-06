@@ -33,6 +33,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { use, useEffect, useState } from 'react';
 
+// Animated loading dots component
+const LoadingDots = () => {
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev + 1) % 4);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{'.'.repeat(dots)}</span>;
+};
+
 export default function TransactionActive({
   params,
 }: {
@@ -94,9 +108,16 @@ export default function TransactionActive({
         }
       };
       blockchainSave();
+
+      // Get finalization delay from environment variable or default to 2000ms (2 seconds)
+      const finalizationDelay = parseInt(
+        process.env.NEXT_PUBLIC_FINALIZATION_DELAY || '2000',
+        10
+      );
+
       setTimeout(() => {
         router.push('/');
-      }, 2000);
+      }, finalizationDelay);
     }
   }, [status?.participants, status?.transaction?.id, router, id]);
 
@@ -152,9 +173,12 @@ export default function TransactionActive({
         <PageHeader />
         <div className="flex flex-1 items-center justify-center p-8">
           <Card className="w-full max-w-md border-neutral-800/60 bg-neutral-900/40">
-            <CardContent className="pt-6">
+            <CardContent className="pt-2 pb-1.5">
               <div className="text-center">
-                <p className="text-neutral-400">Loading transaction...</p>
+                <p className="text-neutral-400">
+                  Loading transaction
+                  <LoadingDots />
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -477,311 +501,326 @@ export default function TransactionActive({
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-black">
-      <PageHeader />
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1000px] space-y-6 px-8 py-8">
-          {/* Animated Status Banner */}
-          <div className="relative overflow-hidden rounded-lg border border-green-500/30 bg-gradient-to-r from-green-900/20 via-green-800/20 to-green-900/20 p-6">
-            <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent" />
-            <div className="relative flex items-center gap-4">
-              <div className="relative">
-                <Radio className="h-10 w-10 text-green-400" />
-                <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex h-4 w-4 rounded-full bg-green-500" />
-                </span>
-              </div>
-              <div className="flex-1">
-                <h2 className="mb-1 text-xl font-bold text-white">
-                  Transaction Mode Active
-                </h2>
-                <p className="text-sm text-green-300">
-                  Live monitoring enabled • Safety features activated
-                </p>
-              </div>
-              <Badge className="border-green-500/30 bg-green-500/20 text-green-300">
-                LIVE
-              </Badge>
+    <div className="flex min-h-screen w-full flex-col items-center justify-center pt-22 pb-8">
+      <div className="w-full max-w-5xl space-y-6">
+        {/* Animated Status Banner */}
+        <div className="relative w-full border border-green-500/30 bg-linear-to-r from-green-900/20 via-green-800/20 to-green-900/20 p-6 px-10">
+          <div className="animate-shimmer absolute inset-0 bg-linear-to-r from-transparent via-green-500/10 to-transparent" />
+          <div className="relative flex items-center gap-6">
+            <div className="relative">
+              <Radio className="h-10 w-10 text-green-400" />
+              <span className="absolute top-1/2 left-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-5" />
+              </span>
             </div>
+            <div className="flex-1">
+              <h2 className="mb-1 text-xl font-bold text-white">
+                Transaction Mode Active
+              </h2>
+              <p className="text-sm text-green-300">
+                Live monitoring enabled • Safety features activated
+              </p>
+            </div>
+            <Badge className="border-green-500/30 bg-green-500/20 text-green-300">
+              LIVE
+            </Badge>
           </div>
+        </div>
 
-          {/* Transaction Details */}
-          <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardHeader>
-              <CardTitle className="text-white">Transaction Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Item Information */}
-              <div className="mb-6 space-y-4">
-                <div className="rounded-lg bg-black/40 p-4">
-                  <h3 className="mb-3 text-sm font-medium text-neutral-300">
-                    Item Information
+        {/* Transaction Details */}
+        <Card className="border-none pt-0 shadow-xl">
+          <CardHeader className="bg-muted/15 border border-b-white/5 px-8 pt-4 pb-3">
+            <CardTitle className="text-lg text-white">
+              Transaction Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Summary Row */}
+            <div className="mb-4 flex items-center justify-between rounded-lg border bg-black/40 p-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
+                  <Package className="text-primary h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-foreground font-semibold">
+                    {transaction.item_name || 'Transaction Item'}
                   </h3>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div>
-                      <p className="text-xs text-neutral-500">Item Name</p>
-                      <p className="text-sm text-white">
-                        {transaction.item_name || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-500">Category</p>
-                      <p className="text-sm text-white">
-                        {transaction.category || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-500">Condition</p>
-                      <p className="text-sm text-white">
-                        {transaction.condition || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-500">Quantity</p>
-                      <p className="text-sm text-white">
-                        {transaction.quantity || '1'}
-                      </p>
-                    </div>
-                  </div>
-                  {transaction.item_description && (
-                    <div className="mt-3">
-                      <p className="text-xs text-neutral-500">Description</p>
-                      <p className="text-sm text-white">
-                        {transaction.item_description}
-                      </p>
-                    </div>
-                  )}
+                  <p className="text-muted-foreground text-sm">
+                    {transaction.category || 'General item'}
+                  </p>
                 </div>
               </div>
+              <div className="text-right">
+                <p className="text-foreground text-2xl font-bold">
+                  ₱{transformedTransaction.price.toLocaleString()}
+                </p>
+              </div>
+            </div>
 
-              {/* Transaction Type and Location */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex items-start gap-3 rounded-lg bg-black/40 p-3">
+            {/* Details Grid */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Exchange Method */}
+              <div className="border bg-black/40 p-4">
+                <div className="mb-3 flex items-center gap-2">
                   {React.createElement(
                     getTransactionTypeIcon(
                       transformedTransaction.type || 'meetup'
                     ),
-                    {
-                      className: 'mt-0.5 h-5 w-5 flex-shrink-0 text-blue-400',
-                    }
+                    { className: 'h-4 w-4 text-blue-500' }
                   )}
-                  <div>
-                    <p className="mb-1 text-xs text-neutral-500">
-                      {getTransactionTypeLabel(
-                        transformedTransaction.type || 'meetup'
-                      )}
-                    </p>
-                    <p className="text-sm text-white">
-                      {transformedTransaction.location}
-                    </p>
-                  </div>
+                  <span className="text-foreground text-sm font-medium">
+                    {getTransactionTypeLabel(
+                      transformedTransaction.type || 'meetup'
+                    )}
+                  </span>
                 </div>
-                <div className="flex items-start gap-3 rounded-lg bg-black/40 p-3">
-                  <Clock className="mt-0.5 h-5 w-5 flex-shrink-0 text-purple-400" />
-                  <div>
-                    <p className="mb-1 text-xs text-neutral-500">Time</p>
-                    <p className="text-sm text-white">
-                      {transformedTransaction.time}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-muted-foreground text-sm">
+                  {transformedTransaction.location}
+                </p>
               </div>
 
-              {/* Additional Details based on transaction type */}
+              {/* Time */}
+              <div className="border bg-black/40 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-purple-500" />
+                  <span className="text-foreground text-sm font-medium">
+                    Schedule
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {transformedTransaction.time}
+                </p>
+              </div>
+
+              {/* Condition */}
+              <div className="border bg-black/40 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span className="text-foreground text-sm font-medium">
+                    Condition
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {transaction.condition || 'Not specified'}
+                </p>
+              </div>
+
+              {/* Quantity */}
+              <div className="border bg-black/40 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Package className="h-4 w-4 text-amber-500" />
+                  <span className="text-foreground text-sm font-medium">
+                    Quantity
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {transaction.quantity || '1'}
+                </p>
+              </div>
+
+              {/* Description (if available) */}
+              {transaction.item_description && (
+                <div className="bg-card rounded-lg border p-4 md:col-span-2">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Package className="h-4 w-4 text-green-500" />
+                    <span className="text-foreground text-sm font-medium">
+                      Description
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {transaction.item_description}
+                  </p>
+                </div>
+              )}
+
+              {/* Delivery Details */}
               {transaction.transaction_type === 'delivery' &&
                 transaction.delivery_method && (
-                  <div className="mt-4 rounded-lg bg-black/40 p-3">
-                    <p className="mb-1 text-xs text-neutral-500">
-                      Delivery Method
-                    </p>
-                    <p className="text-sm text-white">
+                  <div className="bg-card rounded-lg border p-4 md:col-span-2">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-orange-500" />
+                      <span className="text-foreground text-sm font-medium">
+                        Delivery Method
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
                       {transaction.delivery_method}
                     </p>
                   </div>
                 )}
 
+              {/* Online Details */}
               {transaction.transaction_type === 'online' && (
-                <div className="mt-4 space-y-3">
+                <>
                   {transaction.online_platform && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <p className="mb-1 text-xs text-neutral-500">Platform</p>
-                      <p className="text-sm text-white">
+                    <div className="bg-card rounded-lg border p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-cyan-500" />
+                        <span className="text-foreground text-sm font-medium">
+                          Platform
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
                         {transaction.online_platform}
                       </p>
                     </div>
                   )}
                   {transaction.online_contact && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <p className="mb-1 text-xs text-neutral-500">Contact</p>
-                      <p className="text-sm text-white">
+                    <div className="bg-card rounded-lg border p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-blue-500" />
+                        <span className="text-foreground text-sm font-medium">
+                          Contact
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
                         {transaction.online_contact}
                       </p>
                     </div>
                   )}
                   {transaction.online_instructions && (
-                    <div className="rounded-lg bg-black/40 p-3">
-                      <p className="mb-1 text-xs text-neutral-500">
-                        Instructions
-                      </p>
-                      <p className="text-sm text-white">
+                    <div className="bg-card rounded-lg border p-4 md:col-span-2">
+                      <div className="mb-3 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
+                        <span className="text-foreground text-sm font-medium">
+                          Instructions
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
                         {transaction.online_instructions}
                       </p>
                     </div>
                   )}
-                </div>
+                </>
               )}
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="mt-4 rounded-lg bg-black/40 p-3">
-                <p className="mb-2 text-xs text-neutral-500">Amount</p>
-                <p className="text-2xl font-bold text-white">
-                  ₱{transformedTransaction.price.toLocaleString()}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Deliverable Status - Always Show */}
-          <Card className="border-orange-500/30 bg-gradient-to-b from-orange-900/20 to-orange-950/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Package className="h-5 w-5 text-orange-400" />
-                Deliverable Status
-                {escrowData && (
-                  <>
-                    <Shield className="h-4 w-4 text-green-400" />
-                    <span className="text-sm font-medium text-green-400">
-                      Escrow Protected
-                    </span>
-                  </>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Item Deliverable */}
-                <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/20">
-                      <Package className="h-4 w-4 text-orange-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">
-                        {transaction.item_name || 'Item'}
-                      </p>
-                      <p className="text-sm text-neutral-400">
+        {/* Deliverable Status - Always Show */}
+        <Card className="border-orange-500/30 bg-gradient-to-b from-orange-900/20 to-orange-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Package className="h-5 w-5 text-orange-400" />
+              Deliverable Status
+              {escrowData && (
+                <>
+                  <Shield className="h-4 w-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">
+                    Escrow Protected
+                  </span>
+                </>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Item Deliverable */}
+              <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/20">
+                    <Package className="h-4 w-4 text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">
+                      {transaction.item_name || 'Item'}
+                    </p>
+                    <div className="flex flex-row gap-1 text-xs text-neutral-400">
+                      <p>
                         {transaction.item_description || 'Item to be delivered'}
                       </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <Badge
-                        className={
-                          status?.participants?.every((p) => p.item_confirmed)
-                            ? 'border-green-500/30 bg-green-500/20 text-green-300'
-                            : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
-                        }
-                      >
-                        {status?.participants?.every((p) => p.item_confirmed)
-                          ? 'Confirmed'
-                          : 'Pending'}
-                      </Badge>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      •
+                      <p>
                         {transaction.quantity || '1'} unit
                         {transaction.quantity && transaction.quantity > 1
                           ? 's'
                           : ''}
                       </p>
                     </div>
-                    {(() => {
-                      const allItemConfirmed = status?.participants?.every(
-                        (p) => p.item_confirmed
-                      );
-                      const canConfirm = canConfirmDeliverable('item');
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    className={
+                      status?.participants?.every((p) => p.item_confirmed)
+                        ? 'border-green-500/30 bg-green-500/20 px-3 py-1 text-green-300'
+                        : 'border-orange-500/30 bg-orange-500/20 px-3 py-1 text-orange-300'
+                    }
+                  >
+                    {status?.participants?.every((p) => p.item_confirmed)
+                      ? 'Confirmed'
+                      : 'Pending'}
+                  </Badge>
 
-                      // If escrow is active, show file upload instead of manual confirmation
-                      if (escrowData) {
-                        return (
-                          !allItemConfirmed &&
-                          canConfirm && (
-                            <UploadProofDialog
-                              deliverableId={`item-${id}`}
-                              deliverableTitle={transaction.item_name || 'Item'}
-                              deliverableType="product"
-                              onProofSubmitted={() => {
-                                // Refresh data after proof submission
-                                window.location.reload();
-                              }}
-                            >
-                              <Button
-                                size="sm"
-                                className="bg-blue-600 text-white hover:bg-blue-700"
-                              >
-                                <Upload className="mr-1 h-4 w-4" />
-                                Upload Proof
-                              </Button>
-                            </UploadProofDialog>
-                          )
-                        );
-                      }
+                  {(() => {
+                    const allItemConfirmed = status?.participants?.every(
+                      (p) => p.item_confirmed
+                    );
+                    const canConfirm = canConfirmDeliverable('item');
 
-                      // Manual confirmation for non-escrow transactions
+                    // If escrow is active, show file upload instead of manual confirmation
+                    if (escrowData) {
                       return (
                         !allItemConfirmed &&
                         canConfirm && (
-                          <Button
-                            onClick={() => handleConfirmDeliverable('item')}
-                            size="sm"
-                            className="bg-green-600 text-white hover:bg-green-700"
+                          <UploadProofDialog
+                            deliverableId={`item-${id}`}
+                            deliverableTitle={transaction.item_name || 'Item'}
+                            deliverableType="product"
+                            onProofSubmitted={() => {
+                              // Refresh data after proof submission
+                              window.location.reload();
+                            }}
                           >
-                            <CheckCircle2 className="mr-1 h-4 w-4" />
-                            Confirm
-                          </Button>
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                              <Upload className="mr-1 h-4 w-4" />
+                              Upload Proof
+                            </Button>
+                          </UploadProofDialog>
                         )
                       );
-                    })()}
-                    {!status?.participants?.every((p) => p.item_confirmed) &&
-                      !canConfirmDeliverable('item') && (
-                        <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
-                          {escrowData
-                            ? 'Upload proof for oracle verification'
-                            : 'Waiting for receiver'}
-                        </div>
-                      )}
-                  </div>
-                </div>
+                    }
 
-                {/* Payment Deliverable */}
-                <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
-                      <DollarSign className="h-4 w-4 text-green-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">Payment</p>
-                      <p className="text-sm text-neutral-400">
-                        ₱{transformedTransaction.price.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <Badge
-                        className={
-                          status?.participants?.every(
-                            (p) => p.payment_confirmed
-                          )
-                            ? 'border-green-500/30 bg-green-500/20 text-green-300'
-                            : 'border-orange-500/30 bg-orange-500/20 text-orange-300'
-                        }
-                      >
-                        {status?.participants?.every((p) => p.payment_confirmed)
-                          ? 'Confirmed'
-                          : 'Pending'}
+                    // Manual confirmation for non-escrow transactions
+                    return (
+                      !allItemConfirmed &&
+                      canConfirm && (
+                        <Button
+                          onClick={() => handleConfirmDeliverable('item')}
+                          size="sm"
+                          className="bg-green-600 text-white hover:bg-green-700"
+                        >
+                          <CheckCircle2 className="mr-1 h-4 w-4" />
+                          Confirm
+                        </Button>
+                      )
+                    );
+                  })()}
+                  {!status?.participants?.every((p) => p.item_confirmed) &&
+                    !canConfirmDeliverable('item') && (
+                      <Badge className="border-blue-800/50 bg-blue-900/20 px-3 py-1 text-xs text-blue-300/70">
+                        {escrowData
+                          ? 'Upload proof for oracle verification'
+                          : 'Waiting for receiver'}
                       </Badge>
-                      <p className="mt-1 text-xs text-neutral-500">
+                    )}
+                </div>
+              </div>
+
+              {/* Payment Deliverable */}
+              <div className="flex items-center justify-between rounded-lg bg-black/40 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
+                    <DollarSign className="h-4 w-4 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Payment</p>
+                    <div className="flex flex-row gap-1 text-xs text-neutral-400">
+                      <p>₱{transformedTransaction.price.toLocaleString()}</p>•
+                      <p>
                         {transaction.transaction_type === 'meetup'
                           ? 'Cash on meetup'
                           : transaction.transaction_type === 'delivery'
@@ -789,278 +828,292 @@ export default function TransactionActive({
                             : 'Online payment'}
                       </p>
                     </div>
-                    {(() => {
-                      const allPaymentConfirmed = status?.participants?.every(
-                        (p) => p.payment_confirmed
-                      );
-                      const canConfirm = canConfirmDeliverable('payment');
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    className={
+                      status?.participants?.every((p) => p.payment_confirmed)
+                        ? 'border-green-500/30 bg-green-500/20 px-3 py-1 text-green-300'
+                        : 'border-orange-500/30 bg-orange-500/20 px-3 py-1 text-orange-300'
+                    }
+                  >
+                    {status?.participants?.every((p) => p.payment_confirmed)
+                      ? 'Confirmed'
+                      : 'Pending'}
+                  </Badge>
 
-                      // If escrow is active, show file upload instead of manual confirmation
-                      if (escrowData) {
-                        return (
-                          !allPaymentConfirmed &&
-                          canConfirm && (
-                            <UploadProofDialog
-                              deliverableId={`payment-${id}`}
-                              deliverableTitle="Payment"
-                              deliverableType="payment"
-                              onProofSubmitted={() => {
-                                // Refresh data after proof submission
-                                window.location.reload();
-                              }}
-                            >
-                              <Button
-                                size="sm"
-                                className="bg-blue-600 text-white hover:bg-blue-700"
-                              >
-                                <Upload className="mr-1 h-4 w-4" />
-                                Upload Proof
-                              </Button>
-                            </UploadProofDialog>
-                          )
-                        );
-                      }
+                  {(() => {
+                    const allPaymentConfirmed = status?.participants?.every(
+                      (p) => p.payment_confirmed
+                    );
+                    const canConfirm = canConfirmDeliverable('payment');
 
-                      // Manual confirmation for non-escrow transactions
+                    // If escrow is active, show file upload instead of manual confirmation
+                    if (escrowData) {
                       return (
                         !allPaymentConfirmed &&
                         canConfirm && (
-                          <Button
-                            onClick={() => handleConfirmDeliverable('payment')}
-                            size="sm"
-                            className="bg-green-600 text-white hover:bg-green-700"
+                          <UploadProofDialog
+                            deliverableId={`payment-${id}`}
+                            deliverableTitle="Payment"
+                            deliverableType="payment"
+                            onProofSubmitted={() => {
+                              // Refresh data after proof submission
+                              window.location.reload();
+                            }}
                           >
-                            <CheckCircle2 className="mr-1 h-4 w-4" />
-                            Confirm
-                          </Button>
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                              <Upload className="mr-1 h-4 w-4" />
+                              Upload Proof
+                            </Button>
+                          </UploadProofDialog>
                         )
                       );
-                    })()}
-                    {!status?.participants?.every((p) => p.payment_confirmed) &&
-                      !canConfirmDeliverable('payment') && (
-                        <div className="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-500">
-                          {escrowData
-                            ? 'Upload proof for oracle verification'
-                            : 'Waiting for receiver'}
-                        </div>
-                      )}
-                  </div>
-                </div>
+                    }
 
-                {/* Progress Summary */}
-                <div className="mt-4 rounded-lg bg-black/40 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm text-neutral-300">
-                      Overall Progress
-                    </span>
-                    <span className="text-sm text-white">
-                      {allDeliverablesConfirmed ? '100%' : '50%'}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-neutral-700">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        allDeliverablesConfirmed
-                          ? 'bg-green-500'
-                          : 'bg-orange-500'
-                      }`}
-                      style={{
-                        width: allDeliverablesConfirmed ? '100%' : '50%',
-                      }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    {allDeliverablesConfirmed
-                      ? 'All deliverables confirmed successfully'
-                      : escrowData
-                        ? 'Upload proof files for oracle verification'
-                        : 'Waiting for deliverable confirmations'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Participants Status */}
-          <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
-            <CardHeader>
-              <CardTitle className="text-white">Participants</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {/* Participant */}
-                <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
-                  <div className="flex items-center gap-3">
-                    <UserAvatar
-                      name={buyer?.name || 'Unknown Participant'}
-                      avatar={buyer?.avatar}
-                      size="md"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {buyer?.name || 'Unknown Participant'}
-                      </p>
-                      <p className="text-xs text-neutral-500">Participant</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {buyer?.has_confirmed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-400" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-yellow-400" />
+                    // Manual confirmation for non-escrow transactions
+                    return (
+                      !allPaymentConfirmed &&
+                      canConfirm && (
+                        <Button
+                          onClick={() => handleConfirmDeliverable('payment')}
+                          size="sm"
+                          className="bg-green-600 text-white hover:bg-green-700"
+                        >
+                          <CheckCircle2 className="mr-1 h-4 w-4" />
+                          Confirm
+                        </Button>
+                      )
+                    );
+                  })()}
+                  {!status?.participants?.every((p) => p.payment_confirmed) &&
+                    !canConfirmDeliverable('payment') && (
+                      <Badge className="border-blue-800/50 bg-blue-900/20 px-3 py-1 text-xs text-blue-300/70">
+                        {escrowData
+                          ? 'Upload proof for oracle verification'
+                          : 'Waiting for receiver'}
+                      </Badge>
                     )}
-                    <span
-                      className={`text-xs ${buyer?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
-                    >
-                      {buyer?.has_confirmed ? 'Confirmed' : 'Pending'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Creator */}
-                <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
-                  <div className="flex items-center gap-3">
-                    <UserAvatar
-                      name={seller?.name || 'Unknown Creator'}
-                      avatar={seller?.avatar}
-                      size="md"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {seller?.name || 'Unknown Creator'}
-                      </p>
-                      <p className="text-xs text-neutral-500">Creator</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {seller?.has_confirmed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-400" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-yellow-400" />
-                    )}
-                    <span
-                      className={`text-xs ${seller?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
-                    >
-                      {seller?.has_confirmed ? 'Confirmed' : 'Pending'}
-                    </span>
-                  </div>
                 </div>
               </div>
 
-              {/* Confirmation Button */}
-              {!status?.participants?.find((p) => p.user_id === currentUserId)
-                ?.has_confirmed && (
-                <div className="mt-4 rounded-lg border border-blue-800/50 bg-blue-900/20 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-200">
-                        Confirm Transaction
-                      </p>
-                      <p className="text-xs text-blue-300/70">
-                        {allDeliverablesConfirmed
-                          ? 'All deliverables confirmed. Ready to finalize transaction.'
-                          : escrowData
-                            ? 'Upload proof files for oracle verification before proceeding'
-                            : 'Confirm all deliverables before proceeding'}
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleConfirmTransaction}
-                      disabled={!allDeliverablesConfirmed}
-                      className={`${
-                        allDeliverablesConfirmed
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'cursor-not-allowed bg-gray-600 text-gray-400'
-                      }`}
-                      size="sm"
-                    >
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
+              {/* Progress Summary */}
+              <div className="mt-4 rounded-lg bg-black/40 p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm text-neutral-300">
+                    Overall Progress
+                  </span>
+                  <span className="text-sm text-white">
+                    {allDeliverablesConfirmed ? '100%' : '50%'}
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-neutral-700">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      allDeliverablesConfirmed
+                        ? 'bg-green-500'
+                        : 'bg-orange-500'
+                    }`}
+                    style={{
+                      width: allDeliverablesConfirmed ? '100%' : '50%',
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-neutral-500">
+                  {allDeliverablesConfirmed
+                    ? 'All deliverables confirmed successfully'
+                    : escrowData
+                      ? 'Upload proof files for oracle verification'
+                      : 'Waiting for deliverable confirmations'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Participants Status */}
+        <Card className="border-neutral-800/60 bg-gradient-to-b from-neutral-900/40 to-neutral-950/60">
+          <CardHeader>
+            <CardTitle className="text-white">Participants</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Participant */}
+              <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
+                <div className="flex items-center gap-3">
+                  <UserAvatar
+                    name={buyer?.name || 'Unknown Participant'}
+                    avatar={buyer?.avatar}
+                    size="md"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-white">
+                      {buyer?.name || 'Unknown Participant'}
+                    </p>
+                    <p className="text-xs text-neutral-500">Participant</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {buyer?.has_confirmed ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  ) : (
+                    <Clock className="h-5 w-5 text-yellow-400" />
+                  )}
+                  <span
+                    className={`text-xs ${buyer?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
+                  >
+                    {buyer?.has_confirmed ? 'Confirmed' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Creator */}
+              <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-black/40 p-4">
+                <div className="flex items-center gap-3">
+                  <UserAvatar
+                    name={seller?.name || 'Unknown Creator'}
+                    avatar={seller?.avatar}
+                    size="md"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-white">
+                      {seller?.name || 'Unknown Creator'}
+                    </p>
+                    <p className="text-xs text-neutral-500">Creator</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {seller?.has_confirmed ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  ) : (
+                    <Clock className="h-5 w-5 text-yellow-400" />
+                  )}
+                  <span
+                    className={`text-xs ${seller?.has_confirmed ? 'text-green-400' : 'text-yellow-400'}`}
+                  >
+                    {seller?.has_confirmed ? 'Confirmed' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirmation Button */}
+            {!status?.participants?.find((p) => p.user_id === currentUserId)
+              ?.has_confirmed && (
+              <div className="mt-4 rounded-lg border border-blue-800/50 bg-blue-900/20 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-200">
+                      Confirm Transaction
+                    </p>
+                    <p className="text-xs text-blue-300/70">
                       {allDeliverablesConfirmed
-                        ? 'Confirm'
+                        ? 'All deliverables confirmed. Ready to finalize transaction.'
                         : escrowData
-                          ? 'Upload Proof Files First'
-                          : 'Complete Deliverables First'}
-                    </Button>
+                          ? 'Upload proof files for oracle verification before proceeding'
+                          : 'Confirm all deliverables before proceeding'}
+                    </p>
                   </div>
+                  <Button
+                    onClick={handleConfirmTransaction}
+                    disabled={!allDeliverablesConfirmed}
+                    className={`${
+                      allDeliverablesConfirmed
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'cursor-not-allowed bg-gray-600 text-gray-400'
+                    }`}
+                    size="sm"
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    {allDeliverablesConfirmed
+                      ? 'Confirm'
+                      : escrowData
+                        ? 'Upload Proof Files First'
+                        : 'Complete Deliverables First'}
+                  </Button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Waiting for other party */}
-              {status?.participants?.find((p) => p.user_id === currentUserId)
-                ?.has_confirmed &&
-                !status?.participants?.every((p) => p.has_confirmed) && (
-                  <div className="mt-4 rounded-lg border border-yellow-800/50 bg-yellow-900/20 p-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 animate-pulse text-yellow-400" />
-                      <div>
-                        <p className="text-sm font-medium text-yellow-200">
-                          Waiting for other party to confirm
-                        </p>
-                        <p className="text-xs text-yellow-300/70">
-                          You have confirmed. Waiting for the other participant
-                          to complete their confirmation.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              {/* Both Confirmed Status */}
-              {status?.participants?.every((p) => p.has_confirmed) && (
-                <div className="mt-4 rounded-lg border border-green-800/50 bg-green-900/20 p-4">
+            {/* Waiting for other party */}
+            {status?.participants?.find((p) => p.user_id === currentUserId)
+              ?.has_confirmed &&
+              !status?.participants?.every((p) => p.has_confirmed) && (
+                <div className="mt-4 rounded-lg border border-yellow-800/50 bg-yellow-900/20 p-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 animate-pulse text-green-400" />
+                    <Clock className="h-5 w-5 animate-pulse text-yellow-400" />
                     <div>
-                      <p className="text-sm font-medium text-green-200">
-                        Both parties confirmed! Transaction completed
-                        successfully.
+                      <p className="text-sm font-medium text-yellow-200">
+                        Waiting for other party to confirm
                       </p>
-                      <p className="text-xs text-green-300/70">
-                        Redirecting to homepage...
+                      <p className="text-xs text-yellow-300/70">
+                        You have confirmed. Waiting for the other participant to
+                        complete their confirmation.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
 
-          {/* Emergency Contact */}
-          <Card className="border-red-500/30 bg-gradient-to-b from-red-900/20 to-red-950/20">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 text-red-400" />
-                <div>
-                  <h3 className="mb-2 text-sm font-medium text-white">
-                    Emergency Contact
-                  </h3>
-                  <p className="mb-3 text-xs text-neutral-400">
-                    If you encounter any issues during the transaction, contact
-                    our support team immediately.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-500/30 text-red-300 hover:bg-red-500/10"
-                    >
-                      <Phone className="mr-2 h-4 w-4" />
-                      Call Support
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-500/30 text-red-300 hover:bg-red-500/10"
-                    >
-                      <AlertCircle className="mr-2 h-4 w-4" />
-                      Report Issue
-                    </Button>
+            {/* Both Confirmed Status */}
+            {status?.participants?.every((p) => p.has_confirmed) && (
+              <div className="mt-4 rounded-lg border border-green-800/50 bg-green-900/20 p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 animate-pulse text-green-400" />
+                  <div>
+                    <p className="text-sm font-medium text-green-200">
+                      Both parties confirmed! Transaction completed
+                      successfully.
+                    </p>
+                    <p className="text-xs text-green-300/70">
+                      Redirecting to homepage...
+                    </p>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Emergency Contact */}
+        <Card className="border-red-500/30 bg-gradient-to-b from-red-900/20 to-red-950/20">
+          <CardContent>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 text-red-400" />
+              <div>
+                <h3 className="mb-2 text-sm font-medium text-white">
+                  Emergency Contact
+                </h3>
+                <p className="mb-3 text-xs text-neutral-400">
+                  If you encounter any issues during the transaction, contact
+                  our support team immediately.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                  >
+                    <Phone className="mr-2 h-4 w-4" />
+                    Call Support
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                  >
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    Report Issue
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

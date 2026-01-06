@@ -85,7 +85,7 @@ export function ConfirmationDialog({ onConfirm }: ConfirmationDialogProps) {
 
   const stepNames = [
     '',
-    'Screenshot Analysis',
+    'Convo Analysis',
     'Resolve Conflicts',
     'Item Details',
     'Exchange Info',

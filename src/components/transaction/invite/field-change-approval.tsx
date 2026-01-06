@@ -117,7 +117,7 @@ export function FieldChangeApproval({
 
   const stepNames = [
     '',
-    'Screenshot Analysis',
+    'Convo Analysis',
     'Resolve Conflicts',
     'Item Details',
     'Exchange Details',

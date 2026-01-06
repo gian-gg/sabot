@@ -9,6 +9,16 @@ import { ScreenshotAnalysis } from '@/components/transaction/id/screenshot-analy
 import { DataConflictResolver } from '@/components/transaction/invite/data-conflict-resolver';
 import { FieldChangeApproval } from '@/components/transaction/invite/field-change-approval';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,22 +56,49 @@ import {
   MapPin,
   Package,
   Shield,
+  TrendingUp,
   Truck,
   Unlock,
-  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 
+// Debug wrapper for toast to track all calls
+const originalToastSuccess = toast.success;
+const originalToastInfo = toast.info;
+const originalToastError = toast.error;
+
+toast.success = (...args) => {
+  console.log(`[TOAST-SUCCESS] Called with:`, args);
+  console.trace('Toast success call stack');
+  return originalToastSuccess.apply(toast, args);
+};
+
+toast.info = (...args) => {
+  console.log(`[TOAST-INFO] Called with:`, args);
+  console.trace('Toast info call stack');
+  return originalToastInfo.apply(toast, args);
+};
+
+toast.error = (...args) => {
+  console.log(`[TOAST-ERROR] Called with:`, args);
+  console.trace('Toast error call stack');
+  return originalToastError.apply(toast, args);
+};
+
 const STEPS = [
-  { id: 1, name: 'Screenshot Analysis', icon: Shield },
+  { id: 1, name: 'Convo Analysis', icon: Shield },
   { id: 2, name: 'Resolve Conflicts', icon: GitMerge },
   { id: 3, name: 'Item Details', icon: Package },
   { id: 4, name: 'Exchange Info', icon: MapPin },
   { id: 5, name: 'Safety Options', icon: Shield },
   { id: 6, name: 'Review', icon: CheckCircle2 },
 ];
+
+interface Step3ConfirmationData {
+  confirmations: Record<string, { confirmed: boolean; timestamp: number }>;
+}
 
 interface TransactionFormData {
   item_name: string;
@@ -102,6 +139,10 @@ export function CreateTransactionForm({
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showStepConfirmDialog, setShowStepConfirmDialog] = useState(false);
+  const [waitingForOtherParty, setWaitingForOtherParty] = useState(false);
+  const [currentUserConfirmedStep3, setCurrentUserConfirmedStep3] =
+    useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(
     userId || null
   );
@@ -121,12 +162,110 @@ export function CreateTransactionForm({
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
   const [currentUserConfirmed, setCurrentUserConfirmed] = useState(false);
 
+  // Generate storage key based on transaction ID or user IDs
+  const getStorageKey = () => {
+    if (transactionId) {
+      return `transaction-form-${transactionId}`;
+    }
+    // For new transactions, use user IDs to create a unique key
+    return `transaction-form-${currentUserId || 'temp'}-${otherUserId || 'temp'}`;
+  };
+
+  // Save form state to localStorage
+  const saveFormState = () => {
+    if (typeof window === 'undefined') return;
+
+    const state = {
+      currentStep,
+      formData,
+      fieldLocks,
+      conflictsWereResolved,
+      analysisCompleted,
+      extractedData,
+      multipleAnalyses,
+      hasConflicts,
+      bothPartiesReady,
+      escrowEnabled,
+      arbiterEnabled,
+      escrowData,
+      currentUserConfirmedStep3,
+      waitingForOtherParty,
+      savedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save form state:', error);
+    }
+  };
+
+  // Load form state from localStorage
+  const loadFormState = () => {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        const state = JSON.parse(saved);
+        // Only load if saved within last 24 hours
+        if (state.savedAt && Date.now() - state.savedAt < 24 * 60 * 60 * 1000) {
+          return state;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load form state:', error);
+    }
+    return null;
+  };
+
+  // Clear saved state
+  const clearFormState = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(getStorageKey());
+    } catch (error) {
+      console.error('Failed to clear form state:', error);
+    }
+  };
+
   // Scroll to top whenever the step changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentStep]);
+
+  // Load saved state on mount
+  useEffect(() => {
+    const savedState = loadFormState();
+    if (savedState) {
+      setCurrentStep(savedState.currentStep || 1);
+      setFormData(savedState.formData || formData);
+      setFieldLocks(savedState.fieldLocks || fieldLocks);
+      setConflictsWereResolved(savedState.conflictsWereResolved || false);
+      setAnalysisCompleted(savedState.analysisCompleted || false);
+      setExtractedData(savedState.extractedData || null);
+      setMultipleAnalyses(savedState.multipleAnalyses || []);
+      setHasConflicts(savedState.hasConflicts || false);
+      setBothPartiesReady(savedState.bothPartiesReady || false);
+      setEscrowEnabled(savedState.escrowEnabled || false);
+      setArbiterEnabled(savedState.arbiterEnabled || false);
+      setEscrowData(savedState.escrowData || escrowData);
+      setCurrentUserConfirmedStep3(
+        savedState.currentUserConfirmedStep3 || false
+      );
+      setWaitingForOtherParty(savedState.waitingForOtherParty || false);
+
+      // If we were waiting for other party, show the dialog again
+      if (savedState.waitingForOtherParty && savedState.currentStep === 2) {
+        setShowStepConfirmDialog(true);
+      }
+
+      console.log('Loaded saved form state:', savedState);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Track when current user confirms in conflict resolution
   useEffect(() => {
@@ -139,6 +278,60 @@ export function CreateTransactionForm({
       }
     }
   }, [conflictResolution, currentUserId, userId]);
+
+  // Listen for step 3 transition confirmations from both parties
+  useEffect(() => {
+    if (!conflictResolution || !currentUserId || currentStep !== 2) return;
+
+    const sharedSelections = conflictResolution.sharedSelections;
+
+    // Check for step 3 confirmations
+    const step3Confirmations =
+      sharedSelections['step3Confirmation' as keyof AnalysisData];
+    if (step3Confirmations) {
+      const confirmationData =
+        step3Confirmations.value as Step3ConfirmationData;
+
+      if (confirmationData?.confirmations) {
+        const allUserIds = Object.keys(confirmationData.confirmations);
+        const allConfirmed =
+          allUserIds.length >= 2 &&
+          Object.values(confirmationData.confirmations).every(
+            (c) => c.confirmed
+          );
+
+        // If both parties confirmed and we're waiting, proceed to step 3
+        if (allConfirmed && waitingForOtherParty) {
+          setWaitingForOtherParty(false);
+          setShowStepConfirmDialog(false);
+          const newStep = Math.min(currentStep + 1, STEPS.length);
+          setCurrentStep(newStep);
+
+          // Save state after step change
+          setTimeout(() => saveFormState(), 100);
+
+          toast.success('Both parties agreed. Moving to item details.');
+        }
+
+        // Update waiting state based on other party's confirmation
+        const otherPartyConfirmed = allUserIds
+          .filter((id) => id !== currentUserId)
+          .some((id) => confirmationData.confirmations[id]?.confirmed);
+
+        if (currentUserConfirmedStep3 && !otherPartyConfirmed) {
+          setWaitingForOtherParty(true);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    conflictResolution,
+    conflictResolution?.sharedSelections,
+    currentUserId,
+    currentStep,
+    waitingForOtherParty,
+    currentUserConfirmedStep3,
+  ]);
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
@@ -238,13 +431,15 @@ export function CreateTransactionForm({
     fetchUserData();
   }, [transactionId]);
 
+  // Track the last lock change timestamp per field to avoid processing our own changes
+  const lastLockChangeRef = React.useRef<Map<string, number>>(new Map());
+
   // Sync field lock states from other party
   useEffect(() => {
     if (!conflictResolution || !currentUserId) return;
 
     const sharedSelections = conflictResolution.sharedSelections;
     const lockUpdates: Partial<typeof fieldLocks> = {};
-    const notifiedFields = new Set<string>();
 
     Object.entries(sharedSelections).forEach(([key, selection]) => {
       if (key.startsWith('fieldLock_') && selection) {
@@ -255,49 +450,76 @@ export function CreateTransactionForm({
           timestamp: number;
         };
 
-        // Only apply lock changes from other party
-        if (lockData.userId !== currentUserId) {
-          const fieldKey = lockData.field;
-          const previousState = fieldLocks[fieldKey];
+        const fieldKey = lockData.field;
+        const fieldKeyStr = String(fieldKey);
 
-          // Only update if state actually changed
-          if (previousState !== lockData.locked) {
-            lockUpdates[fieldKey] = lockData.locked;
+        // COMPLETELY SKIP processing our own changes - this should eliminate duplicate toasts
+        if (lockData.userId === currentUserId) {
+          console.log(
+            `[LockSync] 🚫 Skipping own change: field=${fieldKeyStr}, userId=${lockData.userId}`
+          );
+          return; // Skip entirely
+        }
 
-            // ✅ NEW: Store consensus value when both parties lock the field
-            if (lockData.locked) {
-              const currentValue = formData[fieldKey] || '';
-              consensusValuesRef.current.set(fieldKey, currentValue);
-              console.log(
-                `[ConsensusTracking] 🔒 Both parties locked ${String(fieldKey)} with consensus value: "${currentValue}"`
-              );
-            }
+        console.log(
+          `[LockSync] Processing other party: field=${fieldKeyStr}, userId=${lockData.userId}, locked=${lockData.locked}`
+        );
 
-            // Show notification about other party's action (only once per field)
-            if (!notifiedFields.has(fieldKey)) {
-              notifiedFields.add(fieldKey);
-              if (lockData.locked) {
-                toast.info(
-                  `Other party locked ${getFieldDisplayName(fieldKey)}`,
-                  {
-                    duration: 2000,
-                  }
-                );
-              } else {
-                toast.info(
-                  `Other party unlocked ${getFieldDisplayName(fieldKey)}`,
-                  {
-                    duration: 2000,
-                  }
-                );
-              }
-            }
+        const previousState = fieldLocks[fieldKey];
+        const lastProcessedTime =
+          lastLockChangeRef.current.get(fieldKeyStr) || 0;
+
+        // Only update if state actually changed AND we haven't processed this timestamp
+        if (
+          previousState !== lockData.locked &&
+          lockData.timestamp > lastProcessedTime
+        ) {
+          console.log(
+            `[LockSync] ✅ Applying change: field=${fieldKeyStr}, locked=${lockData.locked}`
+          );
+
+          lockUpdates[fieldKey] = lockData.locked;
+          lastLockChangeRef.current.set(fieldKeyStr, lockData.timestamp);
+
+          // ✅ NEW: Store consensus value when both parties lock the field
+          if (lockData.locked) {
+            const currentValue = formData[fieldKey] || '';
+            consensusValuesRef.current.set(fieldKey, currentValue);
+            console.log(
+              `[ConsensusTracking] 🔒 Other party locked ${fieldKeyStr} with consensus value: "${currentValue}"`
+            );
           }
+
+          // Always show notification for other party's changes
+          console.log(
+            `[LockSync] 🔔 Showing other party toast: field=${fieldKeyStr}, locked=${lockData.locked}`
+          );
+
+          if (lockData.locked) {
+            toast.info(
+              `Other party locked ${getFieldDisplayName(fieldKeyStr)}`,
+              {
+                duration: 2000,
+              }
+            );
+          } else {
+            toast.info(
+              `Other party unlocked ${getFieldDisplayName(fieldKeyStr)}`,
+              {
+                duration: 2000,
+              }
+            );
+          }
+        } else {
+          console.log(
+            `[LockSync] ❌ Skipping change: field=${fieldKeyStr}, reason=${previousState === lockData.locked ? 'no state change' : 'already processed'}`
+          );
         }
       }
     });
 
     if (Object.keys(lockUpdates).length > 0) {
+      console.log(`[LockSync] 📝 Applying updates:`, lockUpdates);
       setFieldLocks((prev) => ({ ...prev, ...lockUpdates }));
     }
   }, [
@@ -524,8 +746,36 @@ export function CreateTransactionForm({
 
   // Helper to toggle individual field lock
   const toggleFieldLock = (field: keyof typeof fieldLocks) => {
+    const timestamp = Date.now();
+    const fieldStr = String(field);
+    const callId = Math.random().toString(36).substr(2, 9);
+
+    console.log(`[LockToggle-${callId}] 🔄 === STARTING TOGGLE ===`);
+    console.log(`[LockToggle-${callId}] Field: ${fieldStr}`);
+    console.log(`[LockToggle-${callId}] Current state: ${fieldLocks[field]}`);
+    console.log(`[LockToggle-${callId}] Timestamp: ${timestamp}`);
+    console.log(`[LockToggle-${callId}] User ID: ${currentUserId}`);
+    console.log(`[LockToggle-${callId}] Call ID: ${callId}`);
+
+    // Check if this function is being called multiple times rapidly
+    const lastCall = lastLockChangeRef.current.get(`${fieldStr}_lastCall`) || 0;
+    const timeSinceLastCall = timestamp - lastCall;
+    console.log(
+      `[LockToggle-${callId}] Time since last call: ${timeSinceLastCall}ms`
+    );
+
+    if (timeSinceLastCall < 100) {
+      console.log(
+        `[LockToggle-${callId}] 🚫 DUPLICATE CALL DETECTED! Ignoring call within 100ms`
+      );
+      return;
+    }
+
+    lastLockChangeRef.current.set(`${fieldStr}_lastCall`, timestamp);
+
     setFieldLocks((prev) => {
       const newLockState = !prev[field];
+      console.log(`[LockToggle-${callId}] New state will be: ${newLockState}`);
 
       // ✅ NEW: Store consensus value when user locks the field
       if (newLockState) {
@@ -535,38 +785,63 @@ export function CreateTransactionForm({
           currentValue
         );
         console.log(
-          `[ConsensusTracking] 🔒 User locked ${String(field)} with consensus value: "${currentValue}"`
+          `[ConsensusTracking] 🔒 User locked ${fieldStr} with consensus value: "${currentValue}"`
         );
       }
 
+      // Record that we made this change to avoid processing it later
+      lastLockChangeRef.current.set(fieldStr, timestamp);
+      console.log(
+        `[LockToggle-${callId}] Recorded timestamp in map: ${fieldStr} -> ${timestamp}`
+      );
+
       // Show toast notification
+      console.log(`[LockToggle-${callId}] 🔔 === ABOUT TO SHOW TOAST ===`);
       if (newLockState) {
+        console.log(`[LockToggle-${callId}] Calling toast.success for LOCK`);
         toast.success(`Locked ${getFieldDisplayName(field)}`, {
           duration: 2000,
         });
+        console.log(
+          `[LockToggle-${callId}] Called toast.success for LOCK - DONE`
+        );
       } else {
+        console.log(`[LockToggle-${callId}] Calling toast.info for UNLOCK`);
         toast.info(`Unlocked ${getFieldDisplayName(field)} for editing`, {
           duration: 2000,
           description: 'You can now modify this field',
         });
+        console.log(
+          `[LockToggle-${callId}] Called toast.info for UNLOCK - DONE`
+        );
       }
 
       // Broadcast lock state change to other party if using real-time collaboration
-      // Use setTimeout to avoid setState during render
       if (conflictResolution && currentUserId) {
+        console.log(`[LockToggle-${callId}] 📡 Will broadcast in setTimeout`);
         setTimeout(() => {
+          console.log(`[LockToggle-${callId}] 📡 === BROADCASTING NOW ===`);
+          console.log(
+            `[LockToggle-${callId}] Broadcasting: ${fieldStr}, locked=${newLockState}, userId=${currentUserId}`
+          );
           conflictResolution.selectField(
             `fieldLock_${field}` as keyof AnalysisData,
             {
               field,
               locked: newLockState,
               userId: currentUserId,
-              timestamp: Date.now(),
+              timestamp,
             }
           );
+          console.log(`[LockToggle-${callId}] 📡 Broadcast completed`);
         }, 0);
+      } else {
+        console.log(
+          `[LockToggle-${callId}] No conflict resolution or user ID, skipping broadcast`
+        );
       }
 
+      console.log(`[LockToggle-${callId}] === TOGGLE FUNCTION ENDING ===`);
       return { ...prev, [field]: newLockState };
     });
   };
@@ -1185,16 +1460,30 @@ export function CreateTransactionForm({
     transformExtractedData(resolvedData);
   };
 
-  // Helper to get missing fields for step 3
-  const getMissingFields = () => {
-    const missing: string[] = [];
-    if (!formData.item_name) missing.push('item_name');
-    if (!formData.item_description) missing.push('item_description');
-    if (!formData.price) missing.push('price');
-    if (!formData.quantity) missing.push('quantity');
-    if (!formData.category) missing.push('category');
-    return missing;
-  };
+  // Auto-save state when critical data changes (but not on every keystroke)
+  useEffect(() => {
+    // Don't save on initial mount or if we're still loading
+    if (currentStep === 1 && !conflictsWereResolved && !analysisCompleted)
+      return;
+
+    const saveTimeout = setTimeout(() => {
+      saveFormState();
+    }, 1000); // Debounce saves by 1 second
+
+    return () => clearTimeout(saveTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentStep,
+    conflictsWereResolved,
+    analysisCompleted,
+    fieldLocks,
+    escrowEnabled,
+    arbiterEnabled,
+    hasConflicts,
+    bothPartiesReady,
+    currentUserConfirmedStep3,
+    waitingForOtherParty,
+  ]);
 
   const canProceedToNext = useMemo(() => {
     switch (currentStep) {
@@ -1293,7 +1582,17 @@ export function CreateTransactionForm({
 
   const handleNext = () => {
     if (canProceedToNext) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+      // Check if transitioning from step 2 to step 3 (conflicts to item details)
+      if (currentStep === 2 && conflictsWereResolved) {
+        setShowStepConfirmDialog(true);
+        return;
+      }
+
+      const newStep = Math.min(currentStep + 1, STEPS.length);
+      setCurrentStep(newStep);
+
+      // Save state after step change
+      setTimeout(() => saveFormState(), 100);
     } else {
       // Provide feedback on what's missing
       if (currentStep === 3) {
@@ -1322,6 +1621,75 @@ export function CreateTransactionForm({
       } else {
         toast.error('Please fill in all required fields');
       }
+    }
+  };
+
+  const handleStepConfirmation = () => {
+    if (!conflictResolution || !currentUserId) return;
+
+    setCurrentUserConfirmedStep3(true);
+
+    // Broadcast step 3 confirmation to other party
+    const currentTime = Date.now();
+    const existingData = conflictResolution.sharedSelections[
+      'step3Confirmation' as keyof AnalysisData
+    ]?.value as Step3ConfirmationData;
+
+    conflictResolution.selectField(
+      'step3Confirmation' as keyof AnalysisData,
+      {
+        confirmations: {
+          ...(existingData?.confirmations || {}),
+          [currentUserId]: {
+            confirmed: true,
+            timestamp: currentTime,
+          },
+        },
+      } as Step3ConfirmationData
+    );
+
+    // Check if other party has already confirmed
+    const existingConfirmations = existingData?.confirmations || {};
+    const otherPartyConfirmed = Object.keys(existingConfirmations)
+      .filter((id) => id !== currentUserId)
+      .some((id) => existingConfirmations[id]?.confirmed);
+
+    if (otherPartyConfirmed) {
+      // Other party already confirmed, proceed immediately
+      setShowStepConfirmDialog(false);
+      const newStep = Math.min(currentStep + 1, STEPS.length);
+      setCurrentStep(newStep);
+
+      // Save state after step change
+      setTimeout(() => saveFormState(), 100);
+
+      toast.success('Both parties agreed. Moving to item details.');
+    } else {
+      // Wait for other party to confirm
+      setWaitingForOtherParty(true);
+      toast.info('Waiting for other party to agree...');
+    }
+  };
+
+  const handleStepCancellation = () => {
+    setShowStepConfirmDialog(false);
+    setWaitingForOtherParty(false);
+    setCurrentUserConfirmedStep3(false);
+
+    // Remove our confirmation if we had confirmed
+    if (conflictResolution && currentUserId && currentUserConfirmedStep3) {
+      const existingData = conflictResolution.sharedSelections[
+        'step3Confirmation' as keyof AnalysisData
+      ]?.value as Step3ConfirmationData;
+      const updatedConfirmations = { ...(existingData?.confirmations || {}) };
+      delete updatedConfirmations[currentUserId];
+
+      conflictResolution.selectField(
+        'step3Confirmation' as keyof AnalysisData,
+        {
+          confirmations: updatedConfirmations,
+        } as Step3ConfirmationData
+      );
     }
   };
 
@@ -1431,11 +1799,13 @@ export function CreateTransactionForm({
       // Navigate to active transaction page if updating, or call callback if creating
       if (transactionId) {
         toast.success('Transaction finalized successfully!');
+        clearFormState(); // Clear saved state on success
         setTimeout(() => {
           router.push(ROUTES.TRANSACTION.ACTIVE(finalTransactionId!));
         }, 800);
       } else if (onTransactionCreated) {
         toast.success('Transaction created successfully');
+        clearFormState(); // Clear saved state on success
         onTransactionCreated(finalTransactionId!);
       }
     } catch (error) {
@@ -1535,10 +1905,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -1575,56 +1944,8 @@ export function CreateTransactionForm({
                 </Alert>
               )}
 
-            {/* Missing Fields Alert */}
-            {getMissingFields().length > 0 && (
-              <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-                <AlertDescription className="text-amber-800 dark:text-amber-200">
-                  ⚠️{' '}
-                  {getMissingFields()
-                    .map((field) => {
-                      const fieldNames: Record<string, string> = {
-                        item_name: 'Item Name',
-                        item_description: 'Description',
-                        price: 'Price',
-                        quantity: 'Quantity',
-                        condition: 'Condition',
-                        category: 'Category',
-                      };
-                      return fieldNames[field];
-                    })
-                    .join(', ')}{' '}
-                  {getMissingFields().length === 1 ? 'is' : 'are'} currently
-                  missing
-                </AlertDescription>
-              </Alert>
-            )}
-
             {/* Unlocked Fields Alert */}
             {(() => {
-              const requiredFieldNames: (keyof TransactionFormData)[] = [
-                'item_name',
-                'item_description',
-                'price',
-                'quantity',
-                'category',
-                'condition',
-              ];
-
-              const unlockedFields = requiredFieldNames.filter(
-                (field) => formData[field] && !fieldLocks[field]
-              );
-
-              if (unlockedFields.length > 0) {
-                return (
-                  <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
-                    <Lock className="h-4 w-4" />
-                    <AlertDescription className="text-red-800 dark:text-red-200">
-                      🔓 Please lock the following fields before proceeding:{' '}
-                      {unlockedFields.map(getFieldDisplayName).join(', ')}
-                    </AlertDescription>
-                  </Alert>
-                );
-              }
               return null;
             })()}
 
@@ -1664,7 +1985,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('item_name')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1711,7 +2032,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('product_model')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1765,7 +2086,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('category')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1818,7 +2139,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('condition')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1859,7 +2180,7 @@ export function CreateTransactionForm({
                       onClick={() => toggleFieldLock('quantity')}
                       className="shrink-0"
                     >
-                      <Unlock className="h-4 w-4" />
+                      <Unlock className="text-primary h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -1904,7 +2225,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('item_description')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                 </div>
@@ -1948,7 +2269,7 @@ export function CreateTransactionForm({
                     onClick={() => toggleFieldLock('price')}
                     className="shrink-0"
                   >
-                    <Unlock className="h-4 w-4" />
+                    <Unlock className="text-primary h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -1968,10 +2289,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -2021,8 +2341,9 @@ export function CreateTransactionForm({
                     variant="outline"
                     size="sm"
                     onClick={() => toggleFieldLock('transaction_type')}
+                    className="text-primary hover:text-primary"
                   >
-                    <Unlock className="mr-2 h-4 w-4" />
+                    <Unlock className="text-primary mr-2 h-4 w-4" />
                     Lock
                   </Button>
                 )}
@@ -2127,7 +2448,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('meeting_location')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2173,7 +2494,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('meeting_time')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -2227,7 +2548,7 @@ export function CreateTransactionForm({
                             onClick={() => toggleFieldLock('delivery_address')}
                             className="shrink-0"
                           >
-                            <Unlock className="h-4 w-4" />
+                            <Unlock className="text-primary h-4 w-4" />
                           </Button>
                         )}
                     </div>
@@ -2270,7 +2591,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('delivery_method')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2325,7 +2646,7 @@ export function CreateTransactionForm({
                           onClick={() => toggleFieldLock('online_platform')}
                           className="shrink-0"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="text-primary h-4 w-4" />
                         </Button>
                       )}
                   </div>
@@ -2366,7 +2687,7 @@ export function CreateTransactionForm({
                         onClick={() => toggleFieldLock('online_contact')}
                         className="shrink-0"
                       >
-                        <Unlock className="h-4 w-4" />
+                        <Unlock className="text-primary h-4 w-4" />
                       </Button>
                     )}
                   </div>
@@ -2407,9 +2728,9 @@ export function CreateTransactionForm({
                           variant="outline"
                           size="icon"
                           onClick={() => toggleFieldLock('online_instructions')}
-                          className="shrink-0"
+                          className="shrink-0 border-red-500 bg-red-950 hover:bg-red-900"
                         >
-                          <Unlock className="h-4 w-4" />
+                          <Unlock className="h-4 w-4 text-red-800" />
                         </Button>
                       )}
                   </div>
@@ -2439,10 +2760,9 @@ export function CreateTransactionForm({
                     : 'border-yellow-500/30 bg-yellow-900/20'
                 }`}
               >
-                <Users className="h-4 w-4" />
                 <AlertDescription>
                   {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-4 px-2">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                       Live collaboration active - changes sync in real-time
                     </span>
@@ -2458,46 +2778,88 @@ export function CreateTransactionForm({
               {/* Escrow Protection Section */}
               <div className="space-y-1">
                 <Card className="border-2 shadow-lg">
-                  <EscrowProtectionEnhanced
-                    enabled={escrowEnabled}
-                    onEnabledChange={updateEscrowEnabled}
-                    onEscrowDataChange={(data) => {
-                      setEscrowData(data);
-                      // Don't auto-enable arbiter from escrow
-                      updateArbiterEnabled(false);
-                    }}
-                    agreementTitle={formData.item_name}
-                    agreementTerms={formData.item_description}
-                    itemDetails={{
-                      name: formData.item_name,
-                      description: formData.item_description,
-                      price: parseFloat(formData.price || '0'),
-                      quantity: parseInt(formData.quantity || '1'),
-                      category: formData.category,
-                      condition: formData.condition,
-                    }}
-                    initiatorId={currentUserId || ''}
-                    participantId={otherUserId || ''}
-                    initiatorName={currentUserName}
-                    participantName={otherUserName}
-                    conflictResolution={conflictResolution}
-                    currentUserId={currentUserId || undefined}
-                    currentStep={currentStep}
-                  />
+                  <CardHeader className="border-b">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
+                          <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">
+                            Escrow Protection
+                          </CardTitle>
+                          <p className="text-muted-foreground text-sm">
+                            Secure holding until deliverables are completed
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={escrowEnabled}
+                        onCheckedChange={updateEscrowEnabled}
+                        aria-label="Enable escrow protection"
+                      />
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    {escrowEnabled ? (
+                      <div className="space-y-4">
+                        <EscrowProtectionEnhanced
+                          enabled={escrowEnabled}
+                          onEscrowDataChange={(data) => {
+                            setEscrowData(data);
+                          }}
+                          agreementTitle={formData.item_name}
+                          agreementTerms={formData.item_description}
+                          itemDetails={{
+                            name: formData.item_name,
+                            description: formData.item_description,
+                            price: parseFloat(formData.price || '0'),
+                            quantity: parseInt(formData.quantity || '1'),
+                            category: formData.category,
+                            condition: formData.condition,
+                          }}
+                          initiatorId={currentUserId || ''}
+                          participantId={otherUserId || ''}
+                          initiatorName={currentUserName}
+                          participantName={otherUserName}
+                          conflictResolution={conflictResolution}
+                          currentUserId={currentUserId || undefined}
+                          currentStep={currentStep}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground mb-5 text-sm leading-relaxed">
+                          Escrow protection ensures that payments are only
+                          released when both parties have fully completed and
+                          verified their respective parts of the transaction.
+                        </p>
+                        <Alert className="border-blue-200 dark:border-blue-900 dark:bg-blue-950">
+                          <Shield className="h-5 w-5 text-blue-400" />
+                          <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
+                            With escrow protection, funds and deliverables are
+                            held safely until both parties fulfill their
+                            obligations.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
+                  </CardContent>
                 </Card>
               </div>
 
               {/* Arbiter Oversight Section */}
               <div className="space-y-1">
                 <Card className="border-2 shadow-lg">
-                  <CardHeader className="bg-muted/30 border-b">
+                  <CardHeader className="border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-950">
                           <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-base">
                             Arbiter Oversight
                           </CardTitle>
                           <p className="text-muted-foreground text-sm">
@@ -2509,12 +2871,11 @@ export function CreateTransactionForm({
                         checked={arbiterEnabled}
                         onCheckedChange={updateArbiterEnabled}
                         aria-label="Enable arbiter oversight"
-                        className="ring-1 ring-amber-200 ring-offset-1 data-[state=checked]:bg-amber-600 data-[state=checked]:ring-amber-400 dark:ring-amber-800"
                       />
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-6">
+                  <CardContent>
                     {arbiterEnabled ? (
                       <div className="space-y-4">
                         <ArbiterSelection
@@ -2532,17 +2893,17 @@ export function CreateTransactionForm({
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <p className="text-muted-foreground text-sm leading-relaxed">
+                        <p className="text-muted-foreground mb-5 text-sm leading-relaxed">
                           Add an independent arbiter to oversee this transaction
                           and mediate in case of disputes. This provides an
                           extra layer of security and trust.
                         </p>
-                        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-                          <Shield className="h-4 w-4 text-amber-600" />
+                        <Alert className="border-amber-200 dark:border-amber-900 dark:bg-amber-950">
+                          <Shield className="h-5 w-5 text-amber-400!" />
                           <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>How it works:</strong> An arbiter is a
-                            neutral third party who can help resolve disputes
-                            and ensure fair outcomes for both parties.
+                            An arbiter is a neutral third party who can help
+                            resolve disputes and ensure fair outcomes for both
+                            parties.
                           </AlertDescription>
                         </Alert>
                       </div>
@@ -2557,29 +2918,6 @@ export function CreateTransactionForm({
       case 6:
         return (
           <div className="space-y-6">
-            {/* Live Collaboration Status */}
-            {conflictResolution && (
-              <Alert
-                className={`${
-                  conflictResolution.isConnected
-                    ? 'border-blue-500/30 bg-blue-900/20'
-                    : 'border-yellow-500/30 bg-yellow-900/20'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                <AlertDescription>
-                  {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-                      Live collaboration active - both parties reviewing
-                    </span>
-                  ) : (
-                    'Connecting to collaboration session...'
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle>Transaction Summary</CardTitle>
@@ -2637,7 +2975,7 @@ export function CreateTransactionForm({
                 </div>
 
                 {formData.transaction_type === 'online' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-5 grid grid-cols-2 gap-4">
                     {formData.online_contact && (
                       <div>
                         <p className="text-muted-foreground text-sm">
@@ -2680,24 +3018,28 @@ export function CreateTransactionForm({
 
                 {arbiterEnabled && (
                   <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-                    <Shield className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800 dark:text-amber-200">
-                      <strong>Arbiter Oversight Enabled</strong>
-                      <br />
-                      Independent third-party mediation included
+                    <Shield className="h-4 w-4 text-amber-600!" />
+                    <AlertDescription className="flex flex-row text-amber-800 dark:text-amber-200">
+                      <strong>Arbiter Oversight Enabled</strong> (Independent
+                      third-party mediation included)
                     </AlertDescription>
                   </Alert>
                 )}
 
-                <Alert className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-                  <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-                    Market Insight: Average price for similar{' '}
-                    {formData.category} listings: ₱
-                    {(parseFloat(formData.price || '0') * 1.06)
-                      .toFixed(0)
-                      .toLocaleString()}
-                    . Current offer is 6% below market average - within safe
-                    range.
+                <Alert className="border-blue-500/30 bg-blue-900/20">
+                  <AlertDescription className="flex flex-row text-sm">
+                    <span className="flex flex-row items-center gap-2 text-white">
+                      <TrendingUp className="h-4 w-4" />
+                      Market Insight
+                    </span>
+                    <span className="italic">
+                      Average price for similar {formData.category} listings: ₱
+                      {(parseFloat(formData.price || '0') * 1.06)
+                        .toFixed(0)
+                        .toLocaleString()}
+                      . Current offer is 6% below market average - within safe
+                      range.
+                    </span>
                   </AlertDescription>
                 </Alert>
               </CardContent>
@@ -2712,22 +3054,36 @@ export function CreateTransactionForm({
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-20 pb-8">
-      <div
-        className={`w-full transition-all duration-300 ${currentStep === 3 || currentStep === 5 ? 'max-w-6xl' : 'max-w-3xl'}`}
-      >
+      <div className={`w-full max-w-5xl transition-all duration-300`}>
         {/* Progress Indicator */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {STEPS.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep === step.id;
-              const isCompleted = currentStep > step.id;
+          <div className="relative">
+            {/* Full connecting line background */}
+            <div className="bg-muted absolute top-6 right-6 left-6 h-0.5 -translate-y-1/2" />
 
-              return (
-                <React.Fragment key={step.id}>
-                  <div className="flex flex-col items-center">
+            {/* Progress line */}
+            <div
+              className="bg-primary absolute top-6 left-6 h-0.5 -translate-y-1/2 transition-all duration-300"
+              style={{
+                width:
+                  currentStep > 1
+                    ? `calc(${((currentStep - 1) / (STEPS.length - 1)) * 97}% )`
+                    : '0%',
+              }}
+            />
+
+            {/* Steps in flex layout */}
+            <div className="flex items-center justify-between">
+              {STEPS.map((step) => {
+                const Icon = step.icon;
+                const isActive = currentStep === step.id;
+                const isCompleted = currentStep > step.id;
+
+                return (
+                  <div key={step.id} className="flex flex-col items-center">
+                    {/* Step circle */}
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                      className={`bg-background relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                         isActive
                           ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-lg'
                           : isCompleted
@@ -2741,24 +3097,19 @@ export function CreateTransactionForm({
                         React.createElement(Icon, { className: 'h-5 w-5' })
                       )}
                     </div>
+
+                    {/* Step label */}
                     <p
-                      className={`mt-2 text-xs font-medium transition-colors ${isActive ? 'text-primary' : ''}`}
+                      className={`mt-2 text-center text-xs font-medium transition-colors ${isActive ? 'text-primary' : ''}`}
                     >
                       {step.name}
                     </p>
                   </div>
-                  {index < STEPS.length - 1 && (
-                    <div
-                      className={`h-0.5 flex-1 transition-all duration-300 ${
-                        isCompleted ? 'bg-primary' : 'bg-muted'
-                      }`}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-10 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">
               {currentStep === 1 && '🔍 Analyze screenshots'}
               {currentStep === 2 && '🔀 Resolve any conflicts'}
@@ -2774,8 +3125,8 @@ export function CreateTransactionForm({
         </div>
 
         {/* Form Card */}
-        <Card className="border-2 shadow-xl">
-          <CardHeader className="bg-muted/30 space-y-3 border-b">
+        <Card className="border-2 pt-0 shadow-xl">
+          <CardHeader className="bg-muted/15 border-b px-10 pt-6">
             <CardTitle className="text-2xl">
               {currentStep === 1 && 'Screenshot Analysis'}
               {currentStep === 2 && 'Resolve Data Conflicts'}
@@ -2785,14 +3136,14 @@ export function CreateTransactionForm({
               {currentStep === 6 &&
                 (transactionId ? 'Review & Confirm' : 'Create Transaction')}
             </CardTitle>
-            <CardDescription className="text-base">
+            <CardDescription className="text-sm">
               {currentStep === 1 &&
                 'AI-powered analysis of your conversation screenshots to extract transaction details and detect fraud'}
               {currentStep === 2 &&
                 'Review and resolve any conflicts between the two screenshot analyses'}
               {currentStep === 3 &&
                 (transactionId
-                  ? 'Update transaction details'
+                  ? 'Update transaction details and make sure to lock the fields before proceeding'
                   : "Describe what you're buying or selling")}
               {currentStep === 4 &&
                 "Choose how you'll exchange (meetup or delivery)"}
@@ -2802,7 +3153,7 @@ export function CreateTransactionForm({
                 'Review and confirm your transaction details'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 p-8">
+          <CardContent className="space-y-6 p-8 pt-0">
             {renderStepContent()}
 
             {/* Navigation Buttons */}
@@ -2868,6 +3219,63 @@ export function CreateTransactionForm({
           onReject={handleRejectChange}
         />
       )}
+
+      {/* Step Transition Confirmation Dialog */}
+      <AlertDialog
+        open={showStepConfirmDialog}
+        onOpenChange={setShowStepConfirmDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {waitingForOtherParty
+                ? 'Waiting for Other Party'
+                : 'Proceed to Item Details?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {waitingForOtherParty ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <span>
+                      You&apos;ve agreed to proceed to item details. Waiting for
+                      the other party to also agree...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    You&apos;re about to move from conflict resolution to item
+                    details. Your progress will be saved, but you won&apos;t be
+                    able to return to the previous step once you continue.
+                    <br />
+                    <br />
+                    <strong>Note:</strong> Both parties must agree to proceed.
+                    When you refresh the page, you&apos;ll be taken directly to
+                    step 3 (Item Details) with all your resolved conflicts
+                    preserved.
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {waitingForOtherParty ? (
+              <AlertDialogCancel onClick={handleStepCancellation}>
+                Cancel & Stay Here
+              </AlertDialogCancel>
+            ) : (
+              <>
+                <AlertDialogCancel onClick={handleStepCancellation}>
+                  Stay Here
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleStepConfirmation}>
+                  Continue to Item Details
+                </AlertDialogAction>
+              </>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

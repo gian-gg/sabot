@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -15,7 +15,6 @@ import {
   Award,
   CheckCircle,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 
 interface ArbiterCandidate {
@@ -38,6 +37,16 @@ interface ArbiterSelectionProps {
   selectedArbiter?: ArbiterCandidate;
   isWaitingForApproval?: boolean;
 }
+
+// Helper function to get arbiter image path
+const getArbiterImagePath = (name: string): string => {
+  // Convert name to filename format
+  const fileName = name
+    .toLowerCase()
+    .replace('dr. ', '') // Remove title
+    .replace(/\s+/g, '-'); // Replace spaces with hyphens
+  return `/images/${fileName}.jpg`;
+};
 
 const RECOMMENDED_ARBITERS: ArbiterCandidate[] = [
   {
@@ -131,7 +140,7 @@ export function ArbiterSelection({
     <div className="space-y-4">
       {/* Search */}
       <Card>
-        <CardContent className="p-4">
+        <CardContent>
           <div className="space-y-3">
             <Label htmlFor="arbiter-search" className="text-sm">
               Search for Arbiters
@@ -153,34 +162,37 @@ export function ArbiterSelection({
       {/* Recommended Arbiters */}
       {showRecommended && (
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader>
             <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-500" />
                 <span className="text-lg">Recommended Arbiters</span>
               </div>
               <Badge
                 variant="secondary"
-                className="w-fit bg-amber-100 text-sm text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                className="text-shadow-primary-foreground w-fit rounded-2xl bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
               >
-                <Star className="mr-1 h-3 w-3" />
+                <Star className="mr-0.5 h-3 w-3" />
                 Top Rated
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-80 space-y-3 overflow-y-auto">
+            <div className="space-y-3">
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
                   className="cursor-pointer border-l-4 border-l-amber-200 transition-all hover:shadow-md dark:border-l-amber-800"
                   onClick={() => handleProposeArbiter(candidate)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="py-0 pl-10">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={getArbiterImagePath(candidate.name)}
+                              alt={candidate.name}
+                            />
                             <AvatarFallback className="bg-amber-100 text-sm dark:bg-amber-900">
                               {candidate.name
                                 .split(' ')
@@ -189,25 +201,28 @@ export function ArbiterSelection({
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-center gap-2">
+                            <div className="mb-1 flex items-center gap-2.5">
                               <h4 className="text-sm font-medium">
                                 {candidate.name}
                               </h4>
-                              <Badge variant="secondary" className="text-sm">
-                                <Star className="mr-1 h-3 w-3" />
+                              <Badge
+                                variant="secondary"
+                                className="rounded-2xl px-3 py-1 text-xs"
+                              >
+                                <Star className="mr-0.5 h-3 w-3" />
                                 Recommended
                               </Badge>
                             </div>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-muted-foreground text-xs">
                               {candidate.specializations.join(', ')}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="mt-5 grid grid-cols-2 items-center gap-2 px-10 text-sm">
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <Star className="h-4 w-4 text-white" />
                           <span className="font-medium">
                             {candidate.rating}
                           </span>
@@ -261,6 +276,10 @@ export function ArbiterSelection({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={getArbiterImagePath(candidate.name)}
+                              alt={candidate.name}
+                            />
                             <AvatarFallback className="bg-blue-100 text-sm dark:bg-blue-900">
                               {candidate.name
                                 .split(' ')
@@ -269,19 +288,19 @@ export function ArbiterSelection({
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-sm font-medium">
+                            <h4 className="mb-1 text-sm font-medium">
                               {candidate.name}
                             </h4>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-muted-foreground text-xs">
                               {candidate.specializations.join(', ')}
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="mt-5 grid grid-cols-2 items-center gap-2 px-10 text-sm">
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <Star className="h-4 w-4 text-white" />
                           <span className="font-medium">
                             {candidate.rating}
                           </span>
@@ -340,6 +359,10 @@ export function ArbiterSelection({
           <CardContent>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Avatar className="h-12 w-12">
+                <AvatarImage
+                  src={getArbiterImagePath(selectedArbiter.name)}
+                  alt={selectedArbiter.name}
+                />
                 <AvatarFallback className="bg-green-100 dark:bg-green-900">
                   {selectedArbiter.name
                     .split(' ')
