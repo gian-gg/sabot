@@ -295,14 +295,15 @@ export function TransactionDetailsModal({
               <Button variant="default" className="w-full" size="lg" asChild>
                 <Link
                   href={
-                    transaction.status === 'active' ||
-                    transaction.status === 'screenshots_uploaded'
-                      ? `/transaction/${transaction.id}`
-                      : transaction.status === 'waiting_for_participant'
-                        ? `/transaction/invite?id=${transaction.id}`
-                        : transaction.status === 'both_joined'
-                          ? `/transaction/upload?id=${transaction.id}`
-                          : `/transaction/invite?id=${transaction.id}`
+                    transaction.status === 'active'
+                      ? `/transaction/${transaction.id}/active`
+                      : transaction.status === 'screenshots_uploaded'
+                        ? `/transaction/${transaction.id}`
+                        : transaction.status === 'waiting_for_participant'
+                          ? `/transaction/invite?id=${transaction.id}`
+                          : transaction.status === 'both_joined'
+                            ? `/transaction/upload?id=${transaction.id}`
+                            : `/transaction/invite?id=${transaction.id}`
                   }
                   className="flex items-center justify-center gap-2"
                 >
