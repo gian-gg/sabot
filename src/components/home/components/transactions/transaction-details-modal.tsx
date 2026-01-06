@@ -285,7 +285,7 @@ export function TransactionDetailsModal({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
           <div className="mt-5 space-y-8">
             {/* Go to Transaction Page Button */}
             {(transaction.status === 'active' ||
@@ -294,7 +294,16 @@ export function TransactionDetailsModal({
               transaction.status === 'screenshots_uploaded') && (
               <Button variant="default" className="w-full" size="lg" asChild>
                 <Link
-                  href={`/transaction/invite?id=${transaction.id}`}
+                  href={
+                    transaction.status === 'active' ||
+                    transaction.status === 'screenshots_uploaded'
+                      ? `/transaction/${transaction.id}`
+                      : transaction.status === 'waiting_for_participant'
+                        ? `/transaction/invite?id=${transaction.id}`
+                        : transaction.status === 'both_joined'
+                          ? `/transaction/upload?id=${transaction.id}`
+                          : `/transaction/invite?id=${transaction.id}`
+                  }
                   className="flex items-center justify-center gap-2"
                 >
                   Go to Transaction
@@ -880,9 +889,9 @@ export function TransactionDetailsModal({
                 <Button variant="outline" className="flex-1" asChild>
                   <Link
                     href={`mailto:${transaction.transaction_participants[1].participant_email}`}
-                    className="flex items-center gap-2"
+                    className="flex h-12 items-center justify-center gap-2"
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="h-3.5 w-3.5" />
                     Contact Counterparty
                   </Link>
                 </Button>

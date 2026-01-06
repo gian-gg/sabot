@@ -56,6 +56,7 @@ import {
   MapPin,
   Package,
   Shield,
+  TrendingUp,
   Truck,
   Unlock,
   Users,
@@ -1955,30 +1956,6 @@ export function CreateTransactionForm({
                 </Alert>
               )}
 
-            {/* Missing Fields Alert */}
-            {getMissingFields().length > 0 && (
-              <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-                <AlertDescription className="text-amber-800 dark:text-amber-200">
-                  ⚠️{' '}
-                  {getMissingFields()
-                    .map((field) => {
-                      const fieldNames: Record<string, string> = {
-                        item_name: 'Item Name',
-                        item_description: 'Description',
-                        price: 'Price',
-                        quantity: 'Quantity',
-                        condition: 'Condition',
-                        category: 'Category',
-                      };
-                      return fieldNames[field];
-                    })
-                    .join(', ')}{' '}
-                  {getMissingFields().length === 1 ? 'is' : 'are'} currently
-                  missing
-                </AlertDescription>
-              </Alert>
-            )}
-
             {/* Unlocked Fields Alert */}
             {(() => {
               const requiredFieldNames: (keyof TransactionFormData)[] = [
@@ -2966,29 +2943,6 @@ export function CreateTransactionForm({
       case 6:
         return (
           <div className="space-y-6">
-            {/* Live Collaboration Status */}
-            {conflictResolution && (
-              <Alert
-                className={`${
-                  conflictResolution.isConnected
-                    ? 'border-blue-500/30 bg-blue-900/20'
-                    : 'border-yellow-500/30 bg-yellow-900/20'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                <AlertDescription>
-                  {conflictResolution.isConnected ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-                      Live collaboration active - both parties reviewing
-                    </span>
-                  ) : (
-                    'Connecting to collaboration session...'
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle>Transaction Summary</CardTitle>
@@ -3046,7 +3000,7 @@ export function CreateTransactionForm({
                 </div>
 
                 {formData.transaction_type === 'online' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-5 grid grid-cols-2 gap-4">
                     {formData.online_contact && (
                       <div>
                         <p className="text-muted-foreground text-sm">
@@ -3089,24 +3043,28 @@ export function CreateTransactionForm({
 
                 {arbiterEnabled && (
                   <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-                    <Shield className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800 dark:text-amber-200">
-                      <strong>Arbiter Oversight Enabled</strong>
-                      <br />
-                      Independent third-party mediation included
+                    <Shield className="h-4 w-4 text-amber-600!" />
+                    <AlertDescription className="flex flex-row text-amber-800 dark:text-amber-200">
+                      <strong>Arbiter Oversight Enabled</strong> (Independent
+                      third-party mediation included)
                     </AlertDescription>
                   </Alert>
                 )}
 
-                <Alert className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-                  <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-                    Market Insight: Average price for similar{' '}
-                    {formData.category} listings: ₱
-                    {(parseFloat(formData.price || '0') * 1.06)
-                      .toFixed(0)
-                      .toLocaleString()}
-                    . Current offer is 6% below market average - within safe
-                    range.
+                <Alert className="border-blue-500/30 bg-blue-900/20">
+                  <AlertDescription className="flex flex-row text-sm">
+                    <span className="flex flex-row items-center gap-2 text-white">
+                      <TrendingUp className="h-4 w-4" />
+                      Market Insight
+                    </span>
+                    <span className="italic">
+                      Average price for similar {formData.category} listings: ₱
+                      {(parseFloat(formData.price || '0') * 1.06)
+                        .toFixed(0)
+                        .toLocaleString()}
+                      . Current offer is 6% below market average - within safe
+                      range.
+                    </span>
                   </AlertDescription>
                 </Alert>
               </CardContent>
