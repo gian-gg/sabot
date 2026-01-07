@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { CreateAgreementPayload } from '@/types/agreement';
+import { getAgreementLimitsStatus } from '@/lib/supabase/db/agreements';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +27,30 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const payload: CreateAgreementPayload = await request.json();
+
+    // Check agreement limits
+    console.log('Checking agreement limits for user:', user.id);
+    const limits = await getAgreementLimitsStatus(user.id);
+
+    if (!limits.canCreateAgreement) {
+      console.log('Agreement creation blocked - limits reached:', limits);
+      const waitingHit = !limits.waiting.canCreate;
+      const inProgressHit = !limits.inProgress.canCreate;
+
+      let errorMessage = 'Agreement creation limit reached. ';
+      if (waitingHit && inProgressHit) {
+        errorMessage += `Both waiting (${limits.waiting.current}/${limits.waiting.max}) and in-progress (${limits.inProgress.current}/${limits.inProgress.max}) limits reached.`;
+      } else if (waitingHit) {
+        errorMessage += `Waiting limit reached (${limits.waiting.current}/${limits.waiting.max}).`;
+      } else if (inProgressHit) {
+        errorMessage += `In-progress limit reached (${limits.inProgress.current}/${limits.inProgress.max}).`;
+      }
+
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 429 } // Too Many Requests
+      );
+    }
 
     // Get creator info from user metadata
     const creatorName =

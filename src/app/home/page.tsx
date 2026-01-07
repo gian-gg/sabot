@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
-import TransactionsSection from '@/components/home/transactions-section';
-import { ActiveContractsSection } from '@/components/home/active-contracts-section';
+import TransactionsSection from '@/components/home/components/transactions/transactions-section';
+import AgreementsSection from '@/components/home/components/agreement/agreements-section';
 import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { useUserStore } from '@/store/user/userStore';
 import { AlertTriangle } from 'lucide-react';
@@ -12,27 +12,34 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 
 import { getTransactionDetailsByUserID } from '@/lib/supabase/db/transactions';
+import { getAgreementsByUserID } from '@/lib/supabase/db/agreements';
 import type { TransactionDetails } from '@/types/transaction';
+import type { AgreementWithParticipants } from '@/types/agreement';
 
 export default function Home() {
   const user = useUserStore();
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionDetails[]>([]);
+  const [agreements, setAgreements] = useState<AgreementWithParticipants[]>([]);
   const [activeTab, setActiveTab] = useState<'transactions' | 'agreements'>(
     'transactions'
   );
 
   useEffect(() => {
     setLoading(true);
-    const fetchTransactions = async (userid: string) => {
-      const recentTransactions = await getTransactionDetailsByUserID(userid);
+    const fetchData = async (userid: string) => {
+      const [recentTransactions, recentAgreements] = await Promise.all([
+        getTransactionDetailsByUserID(userid),
+        getAgreementsByUserID(userid),
+      ]);
       setTransactions(recentTransactions);
+      setAgreements(recentAgreements);
       setLoading(false);
     };
 
     if (user.id) {
-      fetchTransactions(user.id);
+      fetchData(user.id);
     }
   }, [user.id]);
 
@@ -58,7 +65,9 @@ export default function Home() {
                   {activeTab === 'transactions' && (
                     <TransactionsSection recentTransactions={transactions} />
                   )}
-                  {activeTab === 'agreements' && <ActiveContractsSection />}
+                  {activeTab === 'agreements' && (
+                    <AgreementsSection recentAgreements={agreements} />
+                  )}
                 </div>
               </>
             )}

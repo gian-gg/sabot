@@ -3053,7 +3053,7 @@ export function CreateTransactionForm({
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-20 pb-8">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-24 pb-16">
       <div className={`w-full max-w-5xl transition-all duration-300`}>
         {/* Progress Indicator */}
         <div className="mb-8">
@@ -3125,8 +3125,8 @@ export function CreateTransactionForm({
         </div>
 
         {/* Form Card */}
-        <Card className="border-2 pt-0 shadow-xl">
-          <CardHeader className="bg-muted/15 border-b px-10 pt-6">
+        <Card className="border-2 border-none pt-0 shadow-xl">
+          <CardHeader className="bg-muted/15 border border-b-white/5 px-10 py-6">
             <CardTitle className="text-2xl">
               {currentStep === 1 && 'Screenshot Analysis'}
               {currentStep === 2 && 'Resolve Data Conflicts'}

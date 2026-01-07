@@ -118,15 +118,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Join - Participant added successfully:', participant.id);
 
-    // Update agreement with invitee data and status to 'both_joined'
+    // Update agreement with invitee data and status to 'in-progress'
     console.log(
-      'Join - Updating agreement with invitee data and status to both_joined...'
+      'Join - Updating agreement with invitee data and status to in-progress...'
     );
     console.log('Join - Avatar URL to store:', inviteeAvatarUrl);
     const { data: updateData, error: updateError } = await supabase
       .from('agreements')
       .update({
-        status: 'both_joined',
+        status: 'in-progress',
         invitee_id: user.id,
         invitee_name: inviteeName,
         invitee_email: inviteeEmail,

@@ -38,7 +38,7 @@ export type AgreementType =
   | 'Sales'
   | 'Custom';
 
-export type AgreementStatus = 'draft' | 'active' | 'finalized' | 'signed';
+export type AgreementStatus = 'draft' | 'in-progress' | 'finalized' | 'signed';
 
 export interface Agreement {
   id: string;
@@ -229,7 +229,7 @@ export const mockAgreements: Agreement[] = [
     title: 'Service Agreement',
     createdAt: '2025-01-14T09:00:00Z',
     updatedAt: '2025-01-14T16:45:00Z',
-    status: 'active',
+    status: 'in-progress',
     parties: [
       {
         id: '3',
