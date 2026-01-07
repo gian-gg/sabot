@@ -33,15 +33,12 @@ import {
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import AreaChartComponent from './components/transactions/area-chart-component';
-import PieChartComponent from './components/transactions/pie-chart-component';
-import StatsCard from './components/transactions/stats-card';
-import TransactionItem from './components/transactions/transaction-item';
-import { TransactionDetailsModal } from './components/transactions/transaction-details-modal';
-import {
-  FilterDialog,
-  type TransactionFilters,
-} from './components/transactions/filter-dialog';
+import AreaChartComponent from './area-chart-component';
+import PieChartComponent from './pie-chart-component';
+import StatsCard from './stats-card';
+import TransactionItem from './transaction-item';
+import { TransactionDetailsModal } from './transaction-details-modal';
+import { FilterDialog, type TransactionFilters } from './filter-dialog';
 
 import type { TransactionDetails } from '@/types/transaction';
 
@@ -426,7 +423,7 @@ export default function TransactionsSection({
   }, [recentTransactions]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

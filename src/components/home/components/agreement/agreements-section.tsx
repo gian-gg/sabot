@@ -10,9 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import type { AgreementStatus } from '@/types/agreement';
 import {
-  CheckCircle2,
   FileText,
   Filter,
   Search,
@@ -22,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import StatsCard from './components/transactions/stats-card';
+import StatsCard from '../transactions/stats-card';
 import { ActiveContractsSection } from './active-contracts-section';
 
 import type { AgreementWithParticipants } from '@/types/agreement';
@@ -85,6 +83,16 @@ export default function AgreementsSection({
 
   return (
     <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Agreements</h2>
+          <p className="text-muted-foreground mt-1">
+            Manage and keep track of your contracts
+          </p>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard

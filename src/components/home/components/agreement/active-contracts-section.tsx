@@ -46,7 +46,7 @@ export function ActiveContractsSection({
   const getOtherPartyName = (agreement: AgreementWithParticipants) => {
     // Find the participant who is not the creator
     const otherParty = agreement.participants.find((p) => p.role === 'invitee');
-    return otherParty?.name || otherParty?.participant_name || 'Unknown Party';
+    return otherParty?.name || 'Unknown Party';
   };
 
   return (

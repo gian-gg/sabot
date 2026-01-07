@@ -2,24 +2,21 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AcceptAgreementPage } from '@/components/agreement/accept/page';
-import { Card, CardContent } from '@/components/ui/card';
+import { AcceptAgreementPage } from '@/components/agreement/invite/accept-invitation-page';
 import { Loader2 } from 'lucide-react';
 
-function AcceptContent() {
+function AcceptPageContent() {
   const searchParams = useSearchParams();
   const agreementId = searchParams.get('id');
 
   if (!agreementId) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="py-12">
-            <p className="text-muted-foreground text-center">
-              Invalid agreement ID
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen w-screen items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">
+            Invalid invitation link. Agreement ID is required.
+          </p>
+        </div>
       </div>
     );
   }
@@ -27,23 +24,16 @@ function AcceptContent() {
   return <AcceptAgreementPage agreementId={agreementId} />;
 }
 
-function AcceptLoading() {
+export default function AgreementAcceptPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
-      <Card className="w-full max-w-2xl">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="mb-4 h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">Loading agreement...</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-export default function AcceptPage() {
-  return (
-    <Suspense fallback={<AcceptLoading />}>
-      <AcceptContent />
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen w-screen items-center justify-center">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <AcceptPageContent />
     </Suspense>
   );
 }

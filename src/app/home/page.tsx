@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { HeroSection } from '@/components/home/hero-section';
 import { TabNavigation } from '@/components/home/tab-navigation';
-import TransactionsSection from '@/components/home/transactions-section';
-import AgreementsSection from '@/components/home/agreements-section';
+import TransactionsSection from '@/components/home/components/transactions/transactions-section';
+import AgreementsSection from '@/components/home/components/agreement/agreements-section';
 import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { useUserStore } from '@/store/user/userStore';
 import { AlertTriangle } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 
 import { getTransactionDetailsByUserID } from '@/lib/supabase/db/transactions';
+import { getAgreementsByUserID } from '@/lib/supabase/db/agreements';
 import type { TransactionDetails } from '@/types/transaction';
 import type { AgreementWithParticipants } from '@/types/agreement';
 
@@ -28,13 +29,12 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     const fetchData = async (userid: string) => {
-      const [recentTransactions] = await Promise.all([
+      const [recentTransactions, recentAgreements] = await Promise.all([
         getTransactionDetailsByUserID(userid),
-        // TODO: Add getAgreementsByUserID function when ready
+        getAgreementsByUserID(userid),
       ]);
       setTransactions(recentTransactions);
-      // TODO: setAgreements(recentAgreements);
-      setAgreements([]); // Empty for now
+      setAgreements(recentAgreements);
       setLoading(false);
     };
 
