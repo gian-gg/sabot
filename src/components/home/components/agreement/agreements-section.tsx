@@ -22,6 +22,7 @@ import { useMemo, useState } from 'react';
 
 import StatsCard from '../transactions/stats-card';
 import { ActiveContractsSection } from './active-contracts-section';
+import { AgreementDetailsModal } from './agreement-details-modal';
 
 import type { AgreementWithParticipants } from '@/types/agreement';
 
@@ -31,6 +32,9 @@ export default function AgreementsSection({
   recentAgreements: AgreementWithParticipants[];
 }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAgreement, setSelectedAgreement] =
+    useState<AgreementWithParticipants | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Calculate agreement statistics
   const agreementStats = useMemo(() => {
@@ -206,7 +210,14 @@ export default function AgreementsSection({
                               ? 'In Progress'
                               : agreement.status}
                         </Badge>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedAgreement(agreement);
+                            setIsDetailsModalOpen(true);
+                          }}
+                        >
                           View
                         </Button>
                       </div>
@@ -218,6 +229,13 @@ export default function AgreementsSection({
           </div>
         </CardContent>
       </Card>
+
+      {/* Details Modal */}
+      <AgreementDetailsModal
+        agreement={selectedAgreement}
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+      />
 
       {/* Active Contracts Section */}
       <ActiveContractsSection agreements={recentAgreements} />

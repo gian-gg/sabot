@@ -42,3 +42,13 @@ export const formatStatusLabel = (status: string): string => {
   };
   return statusMap[status] || status;
 };
+
+export const formatAgreementStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    waiting_for_participant: 'Waiting for participant',
+    'in-progress': 'In progress',
+    finalized: 'Finalized',
+    cancelled: 'Cancelled',
+  };
+  return statusMap[status] || status;
+};

@@ -64,9 +64,6 @@ export function GasFeeWarningDialog() {
           {/* Onboarding Benefits - Full Width */}
           <div className="bg-muted/50 space-y-3 rounded-lg border p-5">
             <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
-              <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded">
-                <span className="text-xs">✓</span>
-              </div>
               Onboarding Benefits
             </div>
             <ul className="text-muted-foreground grid gap-2 text-xs sm:grid-cols-2">

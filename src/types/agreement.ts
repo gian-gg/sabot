@@ -19,6 +19,7 @@ export interface DBAgreement {
   creator_id: string;
   status: AgreementStatus;
   title?: string;
+  description?: string;
   agreement_type?: AgreementType;
   created_at: string;
   updated_at: string;
@@ -31,7 +32,14 @@ export interface AgreementParticipant {
   role: ParticipantRole;
   has_confirmed: boolean;
   joined_at: string;
-  // Enriched profile fields (added by API)
+  // Database fields from agreement_participants table
+  participant_name?: string;
+  participant_email?: string;
+  participant_avatar_url?: string;
+  confirmed_at?: string;
+  has_signed?: boolean;
+  signed_at?: string;
+  // Enriched profile fields (added by API) - for backward compatibility
   name?: string;
   email?: string;
   avatar?: string;
