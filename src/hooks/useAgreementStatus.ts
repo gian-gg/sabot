@@ -75,6 +75,15 @@ export function useAgreementStatus(agreementId: string | null) {
         // Fetch updated status
         await fetchStatus('broadcast');
       })
+      .on('broadcast', { event: 'idea_blocks_submitted' }, async (payload) => {
+        console.log(
+          '[AgreementStatus] ⚡ Broadcast event received: idea_blocks_submitted',
+          payload
+        );
+
+        // Fetch updated status
+        await fetchStatus('broadcast');
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log('[AgreementStatus] 📡 Subscribed to realtime channel');

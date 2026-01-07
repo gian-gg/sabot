@@ -10,12 +10,37 @@ import {
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useAgreementStatus } from '@/hooks/useAgreementStatus';
+import { toast } from 'sonner';
 
 function ConfigureContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const agreementId = searchParams.get('id');
+
+  const { status } = useAgreementStatus(agreementId);
+
+  // Trigger automatic transition when both submit idea blocks
+  useEffect(() => {
+    if (
+      status?.both_submitted_idea_blocks &&
+      status.agreement.status === 'in-progress'
+    ) {
+      console.log('Both submitted idea blocks! Navigating to editor...');
+      toast.success(
+        'Both parties submitted idea blocks! Proceeding to editor...'
+      );
+      setTimeout(() => {
+        router.push(`/agreement/${agreementId}/active`);
+      }, 1500);
+    }
+  }, [
+    status?.both_submitted_idea_blocks,
+    status?.agreement.status,
+    agreementId,
+    router,
+  ]);
 
   if (!agreementId) {
     return (
@@ -32,7 +57,7 @@ function ConfigureContent() {
   }
 
   const handleQuestionnaireComplete = () => {
-    // Navigate directly to the editor
+    // This will be called when both parties have submitted
     router.push(`/agreement/${agreementId}/active`);
   };
 
@@ -50,7 +75,10 @@ function ConfigureContent() {
           </div>
         </CardHeader>
         <CardContent>
-          <ProjectQuestionnaire onComplete={handleQuestionnaireComplete} />
+          <ProjectQuestionnaire
+            agreementId={agreementId}
+            onComplete={handleQuestionnaireComplete}
+          />
         </CardContent>
       </Card>
     </div>

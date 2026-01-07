@@ -51,6 +51,8 @@ export async function GET(
         confirmed_at,
         has_signed,
         signed_at,
+        idea_blocks_submitted,
+        idea_blocks_submitted_at,
         joined_at
       `
       )
@@ -105,14 +107,28 @@ export async function GET(
     );
     const currentUserRole = currentUserParticipant?.role;
 
-    // Check if ready for next step (both joined)
-    const isReadyForNextStep = participantsData?.length === 2;
+    // Check if ready for next step based on agreement stage
     const bothJoined = participantsData?.length === 2;
+    const bothSubmittedIdeaBlocks =
+      participantsData?.length === 2 &&
+      participantsData.every((p) => p.idea_blocks_submitted === true);
+
+    let isReadyForNextStep = false;
+
+    // Ready to move from configure to active editor when both submit idea blocks
+    if (agreement.status === 'in-progress' && bothSubmittedIdeaBlocks) {
+      isReadyForNextStep = true;
+    }
+    // Ready to move from invite to configure when both joined
+    else if (bothJoined && !bothSubmittedIdeaBlocks) {
+      isReadyForNextStep = true;
+    }
 
     console.log(`📊 Status API [${agreementId.slice(0, 8)}]:`, {
       status: agreement.status,
       participantCount: participantsData?.length,
       bothJoined,
+      bothSubmittedIdeaBlocks,
       is_ready_for_next_step: isReadyForNextStep,
       user: user.id.slice(0, 8),
       hasTerms: !!agreement.terms,
@@ -124,6 +140,7 @@ export async function GET(
       participants: participantsData,
       current_user_role: currentUserRole,
       is_ready_for_next_step: isReadyForNextStep,
+      both_submitted_idea_blocks: bothSubmittedIdeaBlocks,
     });
   } catch (error) {
     console.error('Unexpected error:', error);

@@ -39,6 +39,8 @@ export interface AgreementParticipant {
   confirmed_at?: string;
   has_signed?: boolean;
   signed_at?: string;
+  idea_blocks_submitted?: boolean;
+  idea_blocks_submitted_at?: string;
   // Enriched profile fields (added by API) - for backward compatibility
   name?: string;
   email?: string;
@@ -91,4 +93,5 @@ export interface AgreementStatusResponse {
   participants: AgreementParticipant[];
   current_user_role?: ParticipantRole;
   is_ready_for_next_step: boolean;
+  both_submitted_idea_blocks?: boolean;
 }
