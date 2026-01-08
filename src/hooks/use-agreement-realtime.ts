@@ -13,6 +13,9 @@ export interface AgreementParticipant {
   name?: string;
   email?: string;
   avatar?: string;
+  participant_name?: string;
+  participant_email?: string;
+  participant_avatar_url?: string;
 }
 
 interface UseAgreementRealtimeOptions {

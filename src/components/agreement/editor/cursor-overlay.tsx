@@ -43,7 +43,7 @@ export function CursorOverlay({ awareness }: CursorOverlayProps) {
           cursor.y !== undefined
         ) {
           remoteCursors.push({
-            id: user.id || clientId.toString(),
+            id: `cursor-${clientId}`, // Use clientId which should be unique
             name: user.name || 'Anonymous',
             color: user.color || '#1DB954',
             x: cursor.x,

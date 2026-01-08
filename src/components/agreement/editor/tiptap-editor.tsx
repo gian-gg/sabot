@@ -15,6 +15,7 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 // import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import { SignatureExtension } from '@/lib/tiptap/signature-extension';
 import { Loader } from 'lucide-react';
 import { EditorToolbar } from './editor-toolbar';
 
@@ -29,6 +30,7 @@ interface TiptapEditorProps {
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
   ydoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   isConnected: boolean;
+  signatureImage?: string | null;
 }
 
 export function TiptapEditor({
@@ -42,6 +44,7 @@ export function TiptapEditor({
   onEditorReady,
   ydoc,
   isConnected,
+  signatureImage,
 }: TiptapEditorProps) {
   console.log('[TiptapEditor] Component render', {
     ydocReady: !!ydoc,
@@ -75,6 +78,8 @@ export function TiptapEditor({
           multicolor: true,
         }),
         Typography,
+        // Signature extension
+        SignatureExtension,
         // Collaborative editing extensions (only add if ydoc is ready)
         ...(ydoc
           ? [
@@ -175,6 +180,20 @@ export function TiptapEditor({
     // Clear existing content and set template content
     editor.commands.setContent(templateContent);
   }, [editor, templateContent]);
+
+  // Handle signature image insertion
+  useEffect(() => {
+    if (!editor || !signatureImage) return;
+
+    console.log('[TiptapEditor] Inserting signature image into editor');
+
+    // Insert signature at current cursor position or at the end
+    editor.commands.setSignature({
+      src: signatureImage,
+      alt: 'Digital Signature',
+      title: `Signature added on ${new Date().toLocaleDateString()}`,
+    });
+  }, [editor, signatureImage]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -391,12 +410,68 @@ export function TiptapEditor({
           page-break-inside: avoid;
         }
 
+        :global(.signature-container) {
+          max-width: 400px;
+        }
+
+        :global(.signature-image-wrapper) {
+          position: relative;
+          width: 300px;
+          height: 80px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          padding: 0.5rem;
+        }
+
+        :global(.signature-image) {
+          max-width: 280px;
+          max-height: 70px;
+          object-fit: contain;
+          object-position: left center;
+          /* Add subtle styling to make signature visible in editor */
+          filter: brightness(0.7) contrast(1.2);
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border: 1px dashed #d1d5db;
+          padding: 4px;
+          border-radius: 4px;
+        }
+
+        /* In print/PDF, signatures should be clean and normal */
+        @media print {
+          :global(.signature-image) {
+            filter: none;
+            background: none;
+            border: none;
+            padding: 0;
+          }
+        }
+
+        :global(.signature-placeholder) {
+          color: var(--muted-foreground);
+          font-style: italic;
+          font-size: 0.8rem;
+          cursor: pointer;
+        }
+
+        :global(.signature-placeholder:hover) {
+          color: var(--primary);
+        }
+
         :global(.signature-line) {
           width: 300px;
           border-bottom: 1px solid currentColor;
           margin-bottom: 0.5rem;
           height: 40px;
           display: block;
+        }
+
+        :global(.signature-date) {
+          font-size: 0.8rem;
+          color: var(--muted-foreground);
+          margin-top: 0.5rem;
         }
 
         /* Party Information Block */

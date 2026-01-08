@@ -223,7 +223,7 @@ export function EditorLayout({
   };
 
   const handleApplySignature = (signatureData: string) => {
-    // Store the signature image
+    // Store the signature image (white/light version)
     setSignatureImage(signatureData);
     toast.success('Signature applied to document!');
   };
@@ -246,7 +246,7 @@ export function EditorLayout({
         includePageNumbers: true,
         includeTimestamp: true,
         documentId,
-        signatureImage: signatureImage || undefined,
+        signatureImage: signatureImage || undefined, // Black signature, good for PDF
       });
 
       toast.success('Agreement exported successfully!');
@@ -284,6 +284,7 @@ export function EditorLayout({
           templateContent={templateContent}
           ydoc={ydoc}
           isConnected={collabConnected}
+          signatureImage={signatureImage}
         />
 
         {/* Right: Minimal Sidebar with Icon Navigation */}

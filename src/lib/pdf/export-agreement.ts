@@ -230,11 +230,17 @@ function parseElement(
 
   // Handle legal block types
   if (dataType === 'signature') {
+    // Look for signature image within the signature block
+    const signatureImg = element.querySelector(
+      '.signature-image'
+    ) as HTMLImageElement;
+    const actualSignatureImage = signatureImg?.src || signatureImage;
+
     lines.push({
       type: 'signature-block',
-      height: signatureImage ? 50 : 40,
+      height: actualSignatureImage ? 50 : 35, // Reduced height since no label
       text: '',
-      signatureImage,
+      signatureImage: actualSignatureImage,
     } as PDFLine);
     lines.push({ type: 'spacing', height: 10, text: '' });
     return lines;
@@ -419,14 +425,26 @@ function addSignatureBlock(
   pdf: jsPDF,
   x: number,
   y: number,
-  _width: number,
+  width: number,
   signatureImage?: string
 ) {
   if (signatureImage) {
-    // If signature image exists, display it
+    // If signature image exists, add it to PDF (signatures are already black)
     try {
-      // Convert base64 data URL to image and add to PDF
-      pdf.addImage(signatureImage, 'PNG', x, y, 60, 25);
+      // Create a border around the signature area
+      pdf.setDrawColor(200, 200, 200);
+      pdf.rect(x, y, 80, 30);
+
+      // Add the signature image (black signatures will show properly in PDF)
+      pdf.addImage(signatureImage, 'PNG', x + 2, y + 2, 76, 26);
+
+      // Add date below signature
+      pdf.setFont('Helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      const currentDate = new Date().toLocaleDateString();
+      pdf.text(`Signed on: ${currentDate}`, x, y + 40);
+
       return;
     } catch (error) {
       console.warn('Failed to add signature image to PDF:', error);
@@ -435,25 +453,25 @@ function addSignatureBlock(
   }
 
   // Default empty signature block
-  const lineWidth = 50;
-  const lineY = y + 5;
+  const lineWidth = 80;
+  const lineY = y + 20;
 
-  // Signature line
-  pdf.setDrawColor(0, 0, 0);
-  pdf.line(x, lineY, x + lineWidth, lineY);
+  // Signature area border
+  pdf.setDrawColor(200, 200, 200);
+  pdf.rect(x, y, lineWidth, 30);
+
+  // Signature line inside the box
+  pdf.setDrawColor(150, 150, 150);
+  pdf.line(x + 5, lineY, x + lineWidth - 5, lineY);
 
   // Labels
   pdf.setFont('Helvetica', 'normal');
-  pdf.setFontSize(10);
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('Signature:', x, y + 15);
-  pdf.text('_______________________', x + 25, y + 15);
+  pdf.setFontSize(9);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text('Please sign above', x + 25, y + 35);
 
-  pdf.text('Print Name:', x, y + 25);
-  pdf.text('_______________________', x + 25, y + 25);
-
-  pdf.text('Date:', x, y + 35);
-  pdf.text('_______________________', x + 25, y + 35);
+  // Date field
+  pdf.text('Date: ___________________', x, y + 45);
 }
 
 /**
