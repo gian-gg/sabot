@@ -50,6 +50,9 @@ export function EditorLayout({
   const [isConnected, setIsConnected] = useState(false);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
   const [showAIErrorModal, setShowAIErrorModal] = useState(false);
+  const [templateContent, setTemplateContent] = useState<string | undefined>(
+    undefined
+  );
 
   // Get collaboration awareness for cursor tracking
   const { awareness } = useCollaboration({
@@ -153,13 +156,20 @@ export function EditorLayout({
   const editorRef = useRef<HTMLDivElement>(null);
 
   const handleTemplateSelect = (template: Template) => {
-    // Update editor content with template HTML
-    setEditorContent(template.content);
+    // Update editor title
     setEditorTitle(template.name);
 
     // Combine legal blocks with template-specific blocks
     const templateBlocks = template.ideaBlocks || [];
     setCurrentIdeaBlocks(templateBlocks);
+
+    // Set template content - this will trigger the TipTap editor to inject it
+    setTemplateContent(template.content);
+
+    // Reset template content after a brief delay to allow one-time injection
+    setTimeout(() => {
+      setTemplateContent(undefined);
+    }, 100);
 
     // Close the template selector
     setTemplateSelectorOpen(false);
@@ -253,6 +263,7 @@ export function EditorLayout({
           onConnectionStatusChange={setIsConnected}
           onOpenSignature={() => setIsSignatureOpen(true)}
           editorRef={editorRef}
+          templateContent={templateContent}
         />
 
         {/* Right: Minimal Sidebar with Icon Navigation */}

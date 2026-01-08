@@ -26,6 +26,8 @@ interface TiptapEditorProps {
   onConnectionStatusChange?: (isConnected: boolean) => void;
   onOpenSignature?: () => void;
   editorRef?: React.RefObject<HTMLDivElement | null>;
+  templateContent?: string;
+  onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
 }
 
 export function TiptapEditor({
@@ -35,6 +37,8 @@ export function TiptapEditor({
   onConnectionStatusChange,
   onOpenSignature,
   editorRef,
+  templateContent,
+  onEditorReady,
 }: TiptapEditorProps) {
   const { ydoc, isConnected, awareness, localUser } = useCollaboration({
     documentId,
@@ -149,13 +153,30 @@ export function TiptapEditor({
       onContentChange(html);
     }
 
+    // Notify parent that editor is ready so they can inject template content
+    if (onEditorReady) {
+      onEditorReady(editor);
+    }
+
     return () => {
       console.log(
         '[TiptapEditor] useEffect cleanup - removing update listener'
       );
       editor.off('update', handleUpdate);
     };
-  }, [editor, onContentChange, ydoc, isConnected]);
+  }, [editor, onContentChange, onEditorReady, ydoc, isConnected]);
+
+  // Handle template content injection
+  useEffect(() => {
+    if (!editor || !templateContent) return;
+
+    console.log('[TiptapEditor] Injecting template content', {
+      contentLength: templateContent.length,
+    });
+
+    // Clear existing content and set template content
+    editor.commands.setContent(templateContent);
+  }, [editor, templateContent]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {

@@ -347,6 +347,16 @@ Make the content specific to their inputs and professionally written.`;
           payload: { agreementId, bothSubmitted: true },
         });
 
+        // Broadcast agreement_update to trigger immediate status refresh on both clients
+        console.log(
+          '📡 [GenerateWithPrompts] Broadcasting agreement update event...'
+        );
+        await supabase.channel(`agreement:${agreementId}`).send({
+          type: 'broadcast',
+          event: 'agreement_update',
+          payload: { agreementId, bothSubmitted: true },
+        });
+
         console.log(
           '✅ [GenerateWithPrompts] AI generation completed successfully!',
           {

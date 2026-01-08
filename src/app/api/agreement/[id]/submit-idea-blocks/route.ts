@@ -195,6 +195,16 @@ export async function POST(
       },
     });
 
+    // Also broadcast agreement_update to trigger immediate status refresh
+    await supabase.channel(`agreement:${agreementId}`).send({
+      type: 'broadcast',
+      event: 'agreement_update',
+      payload: {
+        agreementId,
+        bothSubmitted,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       bothSubmitted,
