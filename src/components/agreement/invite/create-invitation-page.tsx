@@ -45,6 +45,27 @@ export function CreateInvitationPage() {
 
   const { status } = useAgreementStatus(agreementId);
 
+  // Navigate to configure agreement when both users join
+  useEffect(() => {
+    console.log('Creator - Status check:', {
+      status: status?.agreement.status,
+      participantCount: status?.participants.length,
+      isReady: status?.is_ready_for_next_step,
+    });
+
+    if (status?.is_ready_for_next_step) {
+      console.log(
+        'Creator - Both joined! Navigating to configure agreement...'
+      );
+      toast.success(
+        "Other party has joined! Let's configure the agreement together..."
+      );
+      setTimeout(() => {
+        router.push(`/agreement/configure?id=${agreementId}`);
+      }, 1500);
+    }
+  }, [status, agreementId, router]);
+
   // Check for existing agreement ID in URL first, then create if needed
   useEffect(() => {
     // Prevent duplicate creation requests during strict mode
@@ -191,8 +212,7 @@ export function CreateInvitationPage() {
     );
   }
 
-  const participantCount = status?.participants.length || 1;
-  const isWaitingForParticipant = participantCount < 2;
+  const isWaitingForParticipant = !status?.is_ready_for_next_step;
 
   return (
     <div className="flex min-h-screen w-screen items-center justify-center p-4 pt-18">

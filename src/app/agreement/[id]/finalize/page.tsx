@@ -139,24 +139,24 @@ export default function FinalizePage({
             participant: {
               id: string;
               user_id: string;
-              participant_name: string;
-              participant_email: string;
-              participant_avatar_url?: string;
               role: string;
-              has_confirmed?: boolean;
+              has_confirmed: boolean;
+              participant_name?: string;
+              participant_email?: string;
+              participant_avatar_url?: string;
             },
             index: number
           ) => ({
-            id: participant.id,
-            user_id: participant.user_id,
-            name: participant.participant_name,
-            email: participant.participant_email,
+            id: participant.user_id,
+            name: participant.participant_name || 'Unknown',
+            email: participant.participant_email || '',
             avatar: participant.participant_avatar_url,
             color: colors[index % colors.length],
-            role: participant.role,
             verified: true,
-            hasConfirmed: participant.has_confirmed || false,
-            trustScore: 85,
+            hasConfirmed: participant.has_confirmed,
+            trustScore: Math.floor(Math.random() * 100) + 1,
+            role: participant.role,
+            user_id: participant.user_id,
           })
         );
 
@@ -202,24 +202,17 @@ export default function FinalizePage({
     fetchAgreement();
   }, [id, storedTitle, storedContent]);
 
-  // Map realtime participants to display format
-  const displayParties =
-    realtimeParticipants.length > 0
-      ? realtimeParticipants.map((p) => ({
-          id: p.user_id,
-          user_id: p.user_id,
-          name: p.name || 'Unknown',
-          email: p.email || '',
-          avatar: p.avatar,
-          color:
-            agreementData.parties?.find((party) => party.user_id === p.user_id)
-              ?.color || '#666',
-          verified: true,
-          hasConfirmed: p.has_confirmed,
-          trustScore: 85,
-          role: p.role,
-        }))
-      : agreementData.parties || [];
+  // Auto-redirect when agreement is finalized (for all users)
+  useEffect(() => {
+    if (realtimeAllConfirmed) {
+      console.log(
+        '[FinalizePage] All participants confirmed, redirecting to finalized page...'
+      );
+      setTimeout(() => {
+        router.push(`/agreement/${id}/finalized`);
+      }, 2000);
+    }
+  }, [realtimeAllConfirmed, router, id]);
 
   // Determine current user's confirmation status
   const currentUserConfirmed = realtimeParticipants.some(
@@ -303,11 +296,12 @@ export default function FinalizePage({
 
         if (statusError) throw statusError;
 
-        console.log('[handleConfirm] Agreement finalized');
+        console.log(
+          '[handleConfirm] Agreement finalized - redirect will be handled by useEffect'
+        );
 
-        setTimeout(() => {
-          router.push(`/agreement/${id}/finalized`);
-        }, 2000);
+        // Note: Redirect is now handled by the useEffect that watches realtimeAllConfirmed
+        // This ensures ALL users get redirected, not just the one who made the final confirmation
       }
     } catch (error) {
       console.error('[handleConfirm] Error:', error);
@@ -340,6 +334,20 @@ export default function FinalizePage({
     // TODO: Navigate to user profile
     router.push(`/profile/${userId}`);
   };
+
+  // Create display parties from realtime participants data
+  const displayParties = realtimeParticipants.map((participant, index) => ({
+    id: participant.user_id,
+    name: participant.participant_name || participant.name || 'Unknown',
+    email: participant.participant_email || participant.email || '',
+    avatar: participant.participant_avatar_url || participant.avatar,
+    color: ['#1DB954', '#FF6B6B', '#4A90E2', '#F5A623'][index % 4],
+    verified: true,
+    hasConfirmed: participant.has_confirmed,
+    trustScore: Math.floor(Math.random() * 100) + 1,
+    role: participant.role,
+    user_id: participant.user_id,
+  }));
 
   return (
     <div className="bg-background min-h-screen">

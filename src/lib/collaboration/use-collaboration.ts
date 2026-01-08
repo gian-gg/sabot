@@ -58,9 +58,8 @@ export function useCollaboration({
         '[useCollaboration] Using existing doc and provider for:',
         documentId
       );
-      setYDoc(docRef.current);
-      setProvider(providerRef.current);
-      setIsConnected(providerRef.current.wsconnected);
+      // Don't call setState here - just return to avoid infinite loop
+      // The refs already contain the values and the component already has them set
       return;
     }
 
@@ -79,14 +78,12 @@ export function useCollaboration({
     providerRef.current = pkProvider;
     console.log('[useCollaboration] PartyKit provider created');
 
-    // Set awareness state
+    // Set awareness state - initial empty state, will be updated by second useEffect
     if (pkProvider.awareness) {
-      pkProvider.awareness.setLocalStateField('user', {
-        name: localUser.name,
-        color: localUser.color,
-        id: localUser.id,
-      });
-      console.log('[PartyKit] Awareness state set');
+      // Initialize with empty state - the awareness update effect will set proper values
+      console.log(
+        '[PartyKit] Awareness initialized - will be updated by separate effect'
+      );
     }
 
     // Connection status handler
@@ -122,7 +119,23 @@ export function useCollaboration({
       pkProvider.off('sync', handleSync);
       doc.off('update', docUpdateHandler);
     };
-  }, [documentId, enabled, localUser]);
+  }, [documentId, enabled]);
+
+  // Update awareness when user info changes (separate from initialization)
+  useEffect(() => {
+    if (!providerRef.current?.awareness) return;
+
+    console.log('[useCollaboration] Updating awareness with new user info:', {
+      name: localUser.name,
+      id: localUser.id,
+    });
+
+    providerRef.current.awareness.setLocalStateField('user', {
+      name: localUser.name,
+      color: localUser.color,
+      id: localUser.id,
+    });
+  }, [localUser.name, localUser.color, localUser.id]); // ESLint requires individual properties
 
   return {
     ydoc,

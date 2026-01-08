@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
 import { MinimalRightSidebar } from '@/components/agreement/editor/minimal-right-sidebar';
 import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
@@ -14,8 +14,17 @@ import {
 } from '@/lib/pdf/export-agreement';
 import { type Template } from '@/lib/templates/template-loader';
 import { useDocumentStore } from '@/store/document/documentStore';
+import { useUserStore } from '@/store/user/userStore';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface EditorLayoutProps {
   documentId: string;
@@ -41,11 +50,32 @@ export function EditorLayout({
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
   const [isConnected, setIsConnected] = useState(false);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const [showAIErrorModal, setShowAIErrorModal] = useState(false);
+  const [templateContent, setTemplateContent] = useState<string | undefined>(
+    undefined
+  );
+
+  // Get current user info from store
+  const { name: userName, id: userId } = useUserStore();
+
+  // Memoize user object to prevent recreation on every render
+  const userInfo = useMemo(
+    () => ({
+      name: userName || 'Guest',
+      id: userId,
+    }),
+    [userName, userId]
+  );
 
   // Get collaboration awareness for cursor tracking
-  const { awareness } = useCollaboration({
+  const {
+    awareness,
+    ydoc,
+    isConnected: collabConnected,
+  } = useCollaboration({
     documentId,
     enabled: true,
+    user: userInfo,
   });
 
   // Document store
@@ -68,6 +98,18 @@ export function EditorLayout({
     setContent,
     setIdeaBlocks,
   ]);
+
+  // Check if AI generation had an error on mount
+  useEffect(() => {
+    const hasAIError = sessionStorage.getItem('aiGenerationError');
+    if (hasAIError === 'true') {
+      setShowAIErrorModal(true);
+      sessionStorage.removeItem('aiGenerationError');
+    }
+
+    // Dismiss any loading toasts from the previous page
+    toast.dismiss();
+  }, []);
 
   // Track mouse position and broadcast to awareness
   useEffect(() => {
@@ -132,13 +174,20 @@ export function EditorLayout({
   const editorRef = useRef<HTMLDivElement>(null);
 
   const handleTemplateSelect = (template: Template) => {
-    // Update editor content with template HTML
-    setEditorContent(template.content);
+    // Update editor title
     setEditorTitle(template.name);
 
     // Combine legal blocks with template-specific blocks
     const templateBlocks = template.ideaBlocks || [];
     setCurrentIdeaBlocks(templateBlocks);
+
+    // Set template content - this will trigger the TipTap editor to inject it
+    setTemplateContent(template.content);
+
+    // Reset template content after a brief delay to allow one-time injection
+    setTimeout(() => {
+      setTemplateContent(undefined);
+    }, 100);
 
     // Close the template selector
     setTemplateSelectorOpen(false);
@@ -174,7 +223,7 @@ export function EditorLayout({
   };
 
   const handleApplySignature = (signatureData: string) => {
-    // Store the signature image
+    // Store the signature image (white/light version)
     setSignatureImage(signatureData);
     toast.success('Signature applied to document!');
   };
@@ -197,7 +246,7 @@ export function EditorLayout({
         includePageNumbers: true,
         includeTimestamp: true,
         documentId,
-        signatureImage: signatureImage || undefined,
+        signatureImage: signatureImage || undefined, // Black signature, good for PDF
       });
 
       toast.success('Agreement exported successfully!');
@@ -232,6 +281,10 @@ export function EditorLayout({
           onConnectionStatusChange={setIsConnected}
           onOpenSignature={() => setIsSignatureOpen(true)}
           editorRef={editorRef}
+          templateContent={templateContent}
+          ydoc={ydoc}
+          isConnected={collabConnected}
+          signatureImage={signatureImage}
         />
 
         {/* Right: Minimal Sidebar with Icon Navigation */}
@@ -259,6 +312,31 @@ export function EditorLayout({
         onOpenChange={setTemplateSelectorOpen}
         onSelectTemplate={handleTemplateSelect}
       />
+
+      {/* AI Error Modal */}
+      <AlertDialog open={showAIErrorModal} onOpenChange={setShowAIErrorModal}>
+        <AlertDialogContent>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            AI Generation Unavailable
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <div>
+                AI generation encountered an error and fallback blocks were
+                used.
+              </div>
+              <div className="text-sm">
+                No worries! You can now edit and complete your agreement
+                manually with the provided sections.
+              </div>
+            </div>
+          </AlertDialogDescription>
+          <AlertDialogAction onClick={() => setShowAIErrorModal(false)}>
+            Got it
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -287,7 +287,7 @@ export function TransactionDetailsModal({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <div className="mt-5 space-y-8">
-            {/* Go to Transaction Page Button */}
+            {/* Go to Transaction Page Button - For Active/In Progress Statuses */}
             {(transaction.status === 'active' ||
               transaction.status === 'waiting_for_participant' ||
               transaction.status === 'both_joined' ||
@@ -309,6 +309,21 @@ export function TransactionDetailsModal({
                 >
                   Go to Transaction
                   <ArrowUpRight className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
+
+            {/* View on Blockchain Button - For Completed Transactions */}
+            {transaction.status === 'completed' && transaction.hash && (
+              <Button variant="default" className="w-full" size="lg" asChild>
+                <Link
+                  href={`https://sepolia-blockscout.lisk.com/tx/${transaction.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View on Blockchain
                 </Link>
               </Button>
             )}
@@ -901,19 +916,6 @@ export function TransactionDetailsModal({
               {/* Completed Transaction Actions */}
               {transaction.status === 'completed' && (
                 <>
-                  {transaction.hash && (
-                    <Button variant="outline" className="flex-1" asChild>
-                      <Link
-                        href={`https://sepolia-blockscout.lisk.com/tx/${transaction.hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex h-12 items-center justify-center gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        View on Blockchain
-                      </Link>
-                    </Button>
-                  )}
                   <Button
                     onClick={handleExportPDF}
                     disabled={isExporting}

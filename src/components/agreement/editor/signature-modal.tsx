@@ -42,13 +42,15 @@ export function SignatureModal({
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Set black pen stroke
+    // Set black pen stroke (for PDF) - will be styled lighter in editor with CSS
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
   }, [open]);
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -57,12 +59,34 @@ export function SignatureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.moveTo(x, y);
+  };
+
+  const startDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
+    e.preventDefault();
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -71,7 +95,29 @@ export function SignatureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    ctx.lineTo(x, y);
     ctx.stroke();
   };
 
@@ -86,13 +132,25 @@ export function SignatureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Clear and reset canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Reset white background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Reset stroke settings (black for PDF, styled lighter in editor)
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
   };
 
   const saveSignature = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Save the black signature (good for PDF, will be styled lighter in editor)
     const dataUrl = canvas.toDataURL();
     setSavedSignature(dataUrl);
 
@@ -132,12 +190,15 @@ export function SignatureModal({
                 ref={canvasRef}
                 width={600}
                 height={200}
-                className="w-full cursor-crosshair rounded-lg border border-gray-300"
+                className="w-full cursor-crosshair touch-none rounded-lg border border-gray-300"
                 style={{ backgroundColor: '#FFFFFF' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseLeave={stopDrawing}
+                onTouchStart={startDrawingTouch}
+                onTouchMove={drawTouch}
+                onTouchEnd={stopDrawing}
               />
             </Card>
             <div className="flex gap-2">

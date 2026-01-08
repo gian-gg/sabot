@@ -1,7 +1,7 @@
 import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
-import { Header } from '@/components/core/header';
+import { ConditionalHeader } from '@/components/core/conditional-header';
 import { FooterWrapper } from '@/components/core/footer-wrapper';
 import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
@@ -29,7 +29,7 @@ export default async function RootLayout({
         <HydrateUser user={user as AuthUser | null} />
 
         <ErrorBoundary>
-          <Header />
+          <ConditionalHeader />
 
           <main className="flex min-h-[600px] flex-col overflow-x-hidden">
             {children}
