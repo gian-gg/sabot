@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAgreementStatus } from '@/hooks/useAgreementStatus';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 interface ProjectQuestionnaireProps {
   agreementId: string;
@@ -21,6 +20,7 @@ export function ProjectQuestionnaire({
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentUserSubmitted, setCurrentUserSubmitted] = useState(false);
+  const supabase = createClient();
 
   const { status } = useAgreementStatus(agreementId);
 
@@ -30,6 +30,57 @@ export function ProjectQuestionnaire({
       console.log('✅ Ready to proceed to editor');
     }
   }, [currentUserSubmitted, status?.both_submitted_idea_blocks]);
+
+  // Listen for AI generation complete broadcast
+  useEffect(() => {
+    const channel = supabase
+      .channel(`agreement:${agreementId}`)
+      .on('broadcast', { event: 'ai_generation_complete' }, async (payload) => {
+        console.log(
+          '📡 [ProjectQuestionnaire] Received AI generation complete broadcast:',
+          payload
+        );
+
+        const { ideaBlocks, hasError } = payload.payload;
+
+        if (ideaBlocks && Array.isArray(ideaBlocks)) {
+          // Check if there was an error
+          if (hasError) {
+            sessionStorage.setItem('aiGenerationError', 'true');
+          }
+
+          // Submit idea blocks for this user
+          try {
+            const submitResponse = await fetch(
+              `/api/agreement/${agreementId}/submit-idea-blocks`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ideaBlocks }),
+              }
+            );
+
+            if (submitResponse.ok) {
+              console.log(
+                '✅ [ProjectQuestionnaire] Idea blocks submitted via broadcast'
+              );
+              toast.success('Content ready!');
+              setCurrentUserSubmitted(true);
+            }
+          } catch (error) {
+            console.error(
+              '❌ [ProjectQuestionnaire] Failed to submit idea blocks from broadcast:',
+              error
+            );
+          }
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [agreementId]);
 
   // Remove all the complex event listeners and polling - let parent handle transitions
 
@@ -81,14 +132,10 @@ export function ProjectQuestionnaire({
 
       // If both prompts were submitted, we have AI-generated content
       if (generatedData.bothPromptsReceived && generatedData.ideaBlocks) {
-        console.log(
-          '🤖 [ProjectQuestionnaire] Both prompts received! Submitting AI-generated content:',
-          {
-            ideaBlocksCount: generatedData.ideaBlocks.length,
-            combinedPrompt:
-              generatedData.combinedPrompt?.substring(0, 100) + '...',
-          }
-        );
+        // Check if there was an error during AI generation
+        if (generatedData.hasError) {
+          sessionStorage.setItem('aiGenerationError', 'true');
+        }
 
         // Submit the AI-generated idea blocks
         const submitResponse = await fetch(
@@ -100,54 +147,12 @@ export function ProjectQuestionnaire({
           }
         );
 
-        console.log(
-          '📤 [ProjectQuestionnaire] Idea blocks submission status:',
-          submitResponse.status
-        );
-
         if (!submitResponse.ok) {
-          const errorData = await submitResponse.json().catch(() => ({}));
-          console.error(
-            '❌ [ProjectQuestionnaire] Idea blocks submission failed:',
-            errorData
-          );
-          throw new Error(errorData.error || 'Failed to submit idea blocks');
+          throw new Error('Failed to submit idea blocks');
         }
 
-        const submitData = await submitResponse.json();
-        console.log(
-          '✅ [ProjectQuestionnaire] Idea blocks submitted successfully:',
-          {
-            bothSubmitted: submitData.bothSubmitted,
-            ideaBlocksCount: submitData.ideaBlocksCount,
-          }
-        );
-
-        toast.success(
-          'AI-generated content ready! Both users can now proceed.'
-        );
+        toast.success('Content ready!');
         setCurrentUserSubmitted(true);
-
-        // Force a status refresh to ensure both users see the update
-        console.log(
-          '🔄 [ProjectQuestionnaire] Forcing status refresh to trigger transition...'
-        );
-        const statusResponse = await fetch(
-          `/api/agreement/${agreementId}/status`
-        );
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json();
-          console.log('📊 [ProjectQuestionnaire] Status after submission:', {
-            bothSubmittedIdeaBlocks: statusData.both_submitted_idea_blocks,
-            agreementStatus: statusData.agreement?.status,
-          });
-        }
-
-        console.log(
-          '🎯 [ProjectQuestionnaire] Letting parent page handle navigation based on status changes'
-        );
-        // Don't call onComplete() here - let the parent page handle navigation
-        // based on status changes from useAgreementStatus
       } else {
         // Only one prompt submitted so far, waiting for the other
         toast.success('Input submitted! Waiting for the other party...');
@@ -200,41 +205,43 @@ export function ProjectQuestionnaire({
   }
 
   return (
-    <Card>
-      <CardContent className="space-y-6">
-        <Label>What are you building?</Label>
-        <Textarea
-          placeholder="e.g., A partnership agreement for a software development project between two companies..."
-          value={response}
-          onChange={(e) => setResponse(e.target.value)}
-          className="min-h-32 resize-none"
-        />
-        <div className="border-primary/30 bg-primary/10 flex items-center gap-2 rounded-lg border p-3">
-          <ShieldCheck className="text-primary h-4 w-4 flex-shrink-0" />
-          <p className="text-primary text-xs">
-            Describe your project or agreement needs. Once both parties submit
-            their inputs, we&apos;ll use AI to generate personalized content
-            instantly for your collaboration.
-          </p>
-        </div>
-        <Button
-          onClick={handleSubmit}
-          disabled={!response.trim() || isGenerating || currentUserSubmitted}
-          className="w-full"
-          size="lg"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing with AI...
-            </>
-          ) : currentUserSubmitted ? (
-            'Submitted'
-          ) : (
-            <>Submit Your Input</>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardContent className="space-y-6">
+          <Label>What are you building?</Label>
+          <Textarea
+            placeholder="e.g., A partnership agreement for a software development project between two companies..."
+            value={response}
+            onChange={(e) => setResponse(e.target.value)}
+            className="min-h-32 resize-none"
+          />
+          <div className="border-primary/30 bg-primary/10 flex items-center gap-2 rounded-lg border p-3">
+            <ShieldCheck className="text-primary h-4 w-4 flex-shrink-0" />
+            <p className="text-primary text-xs">
+              Describe your project or agreement needs. Once both parties submit
+              their inputs, we&apos;ll use AI to generate personalized content
+              instantly for your collaboration.
+            </p>
+          </div>
+          <Button
+            onClick={handleSubmit}
+            disabled={!response.trim() || isGenerating || currentUserSubmitted}
+            className="w-full"
+            size="lg"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing with AI...
+              </>
+            ) : currentUserSubmitted ? (
+              'Submitted'
+            ) : (
+              <>Submit Your Input</>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   );
 }

@@ -16,6 +16,14 @@ import { type Template } from '@/lib/templates/template-loader';
 import { useDocumentStore } from '@/store/document/documentStore';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface EditorLayoutProps {
   documentId: string;
@@ -41,6 +49,7 @@ export function EditorLayout({
   const [currentIdeaBlocks, setCurrentIdeaBlocks] = useState(initialIdeaBlocks);
   const [isConnected, setIsConnected] = useState(false);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const [showAIErrorModal, setShowAIErrorModal] = useState(false);
 
   // Get collaboration awareness for cursor tracking
   const { awareness } = useCollaboration({
@@ -68,6 +77,15 @@ export function EditorLayout({
     setContent,
     setIdeaBlocks,
   ]);
+
+  // Check if AI generation had an error on mount
+  useEffect(() => {
+    const hasAIError = sessionStorage.getItem('aiGenerationError');
+    if (hasAIError === 'true') {
+      setShowAIErrorModal(true);
+      sessionStorage.removeItem('aiGenerationError');
+    }
+  }, []);
 
   // Track mouse position and broadcast to awareness
   useEffect(() => {
@@ -259,6 +277,31 @@ export function EditorLayout({
         onOpenChange={setTemplateSelectorOpen}
         onSelectTemplate={handleTemplateSelect}
       />
+
+      {/* AI Error Modal */}
+      <AlertDialog open={showAIErrorModal} onOpenChange={setShowAIErrorModal}>
+        <AlertDialogContent>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            AI Generation Unavailable
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <div>
+                AI generation encountered an error and fallback blocks were
+                used.
+              </div>
+              <div className="text-sm">
+                No worries! You can now edit and complete your agreement
+                manually with the provided sections.
+              </div>
+            </div>
+          </AlertDialogDescription>
+          <AlertDialogAction onClick={() => setShowAIErrorModal(false)}>
+            Got it
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -323,14 +323,18 @@ Make the content specific to their inputs and professionally written.`;
         );
         pendingPrompts.delete(agreementId);
 
-        // Broadcast the completion event to all participants
+        // Broadcast the completion event to all participants with idea blocks
         console.log(
-          '📡 [GenerateWithPrompts] Broadcasting AI generation complete event...'
+          '📡 [GenerateWithPrompts] Broadcasting AI generation complete event with idea blocks...'
         );
         await supabase.channel(`agreement:${agreementId}`).send({
           type: 'broadcast',
           event: 'ai_generation_complete',
-          payload: { agreementId, success: true },
+          payload: {
+            agreementId,
+            success: true,
+            ideaBlocks: parsedResponse.ideaBlocks || [],
+          },
         });
 
         // Also broadcast idea_blocks_submitted event since we're about to submit them
@@ -365,15 +369,64 @@ Make the content specific to their inputs and professionally written.`;
           genError
         );
 
-        // On error, just return without proceeding
-        return NextResponse.json(
+        // Create basic fallback blocks so users can still proceed
+        const fallbackBlocks = [
           {
-            success: false,
-            error: 'AI generation failed. Please try again.',
-            bothPromptsReceived: false,
+            id: `${Date.now()}-1`,
+            title: 'Agreement Section 1',
+            content:
+              'This section is pending AI-generated content. Please fill in the details based on your agreement.',
           },
-          { status: 500 }
-        );
+          {
+            id: `${Date.now()}-2`,
+            title: 'Agreement Section 2',
+            content:
+              'This section is pending AI-generated content. Please fill in the details based on your agreement.',
+          },
+          {
+            id: `${Date.now()}-3`,
+            title: 'Agreement Section 3',
+            content:
+              'This section is pending AI-generated content. Please fill in the details based on your agreement.',
+          },
+          {
+            id: `${Date.now()}-4`,
+            title: 'Agreement Section 4',
+            content:
+              'This section is pending AI-generated content. Please fill in the details based on your agreement.',
+          },
+          {
+            id: `${Date.now()}-5`,
+            title: 'Agreement Section 5',
+            content:
+              'This section is pending AI-generated content. Please fill in the details based on your agreement.',
+          },
+        ];
+
+        // Clean up the prompts
+        pendingPrompts.delete(agreementId);
+
+        // Broadcast completion event so both users can proceed
+        await supabase.channel(`agreement:${agreementId}`).send({
+          type: 'broadcast',
+          event: 'ai_generation_complete',
+          payload: {
+            agreementId,
+            success: false,
+            hasError: true,
+            ideaBlocks: fallbackBlocks,
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          bothPromptsReceived: true,
+          ideaBlocks: fallbackBlocks,
+          hasError: true,
+          errorMessage:
+            'AI generation temporarily unavailable. You can still edit and complete your agreement.',
+          shouldProceedToEditor: true,
+        });
       }
     } else {
       // Only one prompt so far, waiting for the other party

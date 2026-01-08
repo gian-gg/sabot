@@ -113,6 +113,15 @@ export async function GET(
       participantsData?.length === 2 &&
       participantsData.every((p) => p.idea_blocks_submitted === true);
 
+    console.log('🔍 [StatusAPI] Participants check:', {
+      participantCount: participantsData?.length,
+      participants: participantsData?.map((p) => ({
+        userId: p.user_id.slice(0, 8),
+        idea_blocks_submitted: p.idea_blocks_submitted,
+      })),
+      bothSubmittedIdeaBlocks,
+    });
+
     let isReadyForNextStep = false;
 
     // Ready to move from configure to active editor when both submit idea blocks
