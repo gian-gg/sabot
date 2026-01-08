@@ -85,6 +85,9 @@ export function EditorLayout({
       setShowAIErrorModal(true);
       sessionStorage.removeItem('aiGenerationError');
     }
+
+    // Dismiss any loading toasts from the previous page
+    toast.dismiss();
   }, []);
 
   // Track mouse position and broadcast to awareness

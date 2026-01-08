@@ -137,21 +137,11 @@ export function ProjectQuestionnaire({
           sessionStorage.setItem('aiGenerationError', 'true');
         }
 
-        // Submit the AI-generated idea blocks
-        const submitResponse = await fetch(
-          `/api/agreement/${agreementId}/submit-idea-blocks`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ideaBlocks: generatedData.ideaBlocks }),
-          }
+        // Don't submit here - the broadcast listener will handle it for both users
+        console.log(
+          '✅ [ProjectQuestionnaire] AI generation complete, waiting for broadcast to trigger submission'
         );
-
-        if (!submitResponse.ok) {
-          throw new Error('Failed to submit idea blocks');
-        }
-
-        toast.success('Content ready!');
+        toast.success('Content generated! Preparing to proceed...');
         setCurrentUserSubmitted(true);
       } else {
         // Only one prompt submitted so far, waiting for the other
@@ -160,7 +150,10 @@ export function ProjectQuestionnaire({
       }
     } catch (error) {
       console.error('💥 [ProjectQuestionnaire] Error in submission process:', {
-        error: error instanceof Error ? error.message : error,
+        error,
+        errorType: typeof error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
       toast.error(
         error instanceof Error ? error.message : 'Failed to process submission'

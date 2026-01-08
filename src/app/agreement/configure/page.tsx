@@ -45,13 +45,16 @@ function ConfigureContent() {
         }
       );
 
-      toast.success(
-        'Both parties submitted idea blocks! Proceeding to editor...'
-      );
+      // Show persistent loading toast during transition - stays until new page loads
+      toast.loading('🎉 Content ready! Moving to editor...', {
+        duration: Infinity, // Stay visible during entire navigation
+      });
+
       setTimeout(() => {
         console.log('🎯 [ConfigurePage] Executing navigation to active editor');
+        // Don't dismiss toast - let it stay visible during page load
         router.push(`/agreement/${agreementId}/active`);
-      }, 1000); // Reduced timeout for faster transition
+      }, 500); // Short delay just to ensure toast renders
     }
   }, [
     status?.both_submitted_idea_blocks,
