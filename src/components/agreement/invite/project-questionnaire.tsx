@@ -15,7 +15,7 @@ interface ProjectQuestionnaireProps {
 
 export function ProjectQuestionnaire({
   agreementId,
-  onComplete: _onComplete, // Keep for interface compatibility but don't use
+  onComplete, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: ProjectQuestionnaireProps) {
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -80,7 +80,7 @@ export function ProjectQuestionnaire({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [agreementId]);
+  }, [agreementId, supabase]);
 
   // Remove all the complex event listeners and polling - let parent handle transitions
 

@@ -58,6 +58,8 @@ function ConfigureContent() {
   }, [
     status?.both_submitted_idea_blocks,
     status?.agreement.status,
+    status?.is_ready_for_next_step,
+    status?.participants?.length,
     agreementId,
     router,
   ]);

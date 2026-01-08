@@ -78,14 +78,12 @@ export function useCollaboration({
     providerRef.current = pkProvider;
     console.log('[useCollaboration] PartyKit provider created');
 
-    // Set awareness state
+    // Set awareness state - initial empty state, will be updated by second useEffect
     if (pkProvider.awareness) {
-      pkProvider.awareness.setLocalStateField('user', {
-        name: localUser.name,
-        color: localUser.color,
-        id: localUser.id,
-      });
-      console.log('[PartyKit] Awareness state set');
+      // Initialize with empty state - the awareness update effect will set proper values
+      console.log(
+        '[PartyKit] Awareness initialized - will be updated by separate effect'
+      );
     }
 
     // Connection status handler
@@ -137,7 +135,7 @@ export function useCollaboration({
       color: localUser.color,
       id: localUser.id,
     });
-  }, [localUser]);
+  }, [localUser.name, localUser.color, localUser.id]); // ESLint requires individual properties
 
   return {
     ydoc,

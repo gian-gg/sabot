@@ -25,6 +25,7 @@ export function useAgreementStatus(agreementId: string | null) {
     // Fetch status with source tracking
     const fetchStatus = async (source: 'broadcast' | 'manual' = 'manual') => {
       try {
+        console.log(`[AgreementStatus] Fetching status from source: ${source}`);
         const response = await fetch(`/api/agreement/${agreementId}/status`);
         if (!response.ok) {
           throw new Error('Failed to fetch status');
