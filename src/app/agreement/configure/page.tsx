@@ -23,17 +23,35 @@ function ConfigureContent() {
 
   // Trigger automatic transition when both submit idea blocks
   useEffect(() => {
+    console.log('🔄 [ConfigurePage] Status update:', {
+      bothSubmittedIdeaBlocks: status?.both_submitted_idea_blocks,
+      agreementStatus: status?.agreement.status,
+      isReadyForNextStep: status?.is_ready_for_next_step,
+      participantCount: status?.participants?.length,
+      agreementId,
+      timestamp: new Date().toISOString(),
+    });
+
     if (
       status?.both_submitted_idea_blocks &&
       status.agreement.status === 'in-progress'
     ) {
-      console.log('Both submitted idea blocks! Navigating to editor...');
+      console.log(
+        '🚀 [ConfigurePage] Both submitted idea blocks! Navigating to editor...',
+        {
+          agreementId,
+          agreementStatus: status.agreement.status,
+          participantCount: status.participants?.length,
+        }
+      );
+
       toast.success(
         'Both parties submitted idea blocks! Proceeding to editor...'
       );
       setTimeout(() => {
+        console.log('🎯 [ConfigurePage] Executing navigation to active editor');
         router.push(`/agreement/${agreementId}/active`);
-      }, 1500);
+      }, 1000); // Reduced timeout for faster transition
     }
   }, [
     status?.both_submitted_idea_blocks,
@@ -58,6 +76,9 @@ function ConfigureContent() {
 
   const handleQuestionnaireComplete = () => {
     // This will be called when both parties have submitted
+    console.log(
+      '🎯 [ConfigurePage] Questionnaire complete callback triggered - navigating to active editor'
+    );
     router.push(`/agreement/${agreementId}/active`);
   };
 

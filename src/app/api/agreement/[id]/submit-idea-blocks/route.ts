@@ -22,6 +22,12 @@ export async function POST(
     const { id: agreementId } = await params;
     const { ideaBlocks }: { ideaBlocks: IdeaBlock[] } = await request.json();
 
+    console.log('📝 [SubmitIdeaBlocks] POST called:', {
+      agreementId,
+      userId: user.id,
+      ideaBlocksCount: ideaBlocks?.length,
+    });
+
     if (!ideaBlocks || !Array.isArray(ideaBlocks)) {
       return NextResponse.json(
         { error: 'Invalid idea blocks data' },
@@ -53,6 +59,18 @@ export async function POST(
     }
 
     // Update participant to mark idea blocks as submitted
+    console.log(
+      '📝 [SubmitIdeaBlocks] Updating participant to mark idea blocks as submitted:',
+      {
+        agreementId,
+        userId: user.id,
+        updateData: {
+          idea_blocks_submitted: true,
+          idea_blocks_submitted_at: new Date().toISOString(),
+        },
+      }
+    );
+
     const { error: updateParticipantError } = await supabase
       .from('agreement_participants')
       .update({
@@ -63,12 +81,17 @@ export async function POST(
       .eq('user_id', user.id);
 
     if (updateParticipantError) {
-      console.error('Failed to update participant:', updateParticipantError);
+      console.error(
+        '❌ [SubmitIdeaBlocks] Failed to update participant:',
+        updateParticipantError
+      );
       return NextResponse.json(
         { error: 'Failed to update participant' },
         { status: 500 }
       );
     }
+
+    console.log('✅ [SubmitIdeaBlocks] Participant updated successfully');
 
     // Store or update idea blocks in agreement content
     const { data: existingContent, error: contentSelectError } = await supabase

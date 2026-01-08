@@ -27,25 +27,13 @@ export function useAgreementStatus(agreementId: string | null) {
       try {
         const response = await fetch(`/api/agreement/${agreementId}/status`);
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error ||
-              `HTTP ${response.status}: Failed to fetch agreement status`
-          );
+          throw new Error('Failed to fetch status');
         }
         const data = await response.json();
         setStatus(data);
         setError(null);
-
-        // Log successful fetch with source
-        if (source === 'broadcast') {
-          console.log(
-            '[AgreementStatus] ⚡ Broadcast: received update',
-            data.agreement.status
-          );
-        }
       } catch (err) {
-        console.error('[AgreementStatus] ❌ Error fetching status:', err);
+        console.error('[AgreementStatus] Error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
@@ -54,6 +42,11 @@ export function useAgreementStatus(agreementId: string | null) {
 
     // Initial fetch
     fetchStatus('manual');
+
+    // Poll every 2 seconds
+    const pollInterval = setInterval(() => {
+      fetchStatus('manual');
+    }, 2000);
 
     // Subscribe to Supabase Broadcast channel
     const channel = supabase
@@ -81,7 +74,42 @@ export function useAgreementStatus(agreementId: string | null) {
           payload
         );
 
+        // If both parties submitted and this is from AI generation, trigger completion
+        if (payload.bothSubmitted) {
+          window.dispatchEvent(
+            new CustomEvent('ai-generation-complete', {
+              detail: { agreementId: payload.agreementId || agreementId },
+            })
+          );
+        }
+
         // Fetch updated status
+        await fetchStatus('broadcast');
+      })
+      .on('broadcast', { event: 'prompt_submitted' }, async (payload) => {
+        console.log(
+          '[AgreementStatus] ⚡ Broadcast event received: prompt_submitted',
+          payload
+        );
+
+        // Fetch updated status
+        await fetchStatus('broadcast');
+      })
+      .on('broadcast', { event: 'ai_generation_complete' }, async (payload) => {
+        console.log(
+          '[AgreementStatus] ⚡ Broadcast event received: ai_generation_complete',
+          payload
+        );
+
+        // Immediately trigger completion for both users
+        // This ensures both parties proceed to the editor
+        window.dispatchEvent(
+          new CustomEvent('ai-generation-complete', {
+            detail: { agreementId: payload.agreementId },
+          })
+        );
+
+        // Also fetch updated status
         await fetchStatus('broadcast');
       })
       .subscribe((status) => {
@@ -95,6 +123,9 @@ export function useAgreementStatus(agreementId: string | null) {
       console.log(
         `[AgreementStatus] 🛑 Cleaning up real-time updates for agreement: ${agreementId}`
       );
+
+      // Clear polling interval
+      clearInterval(pollInterval);
 
       // Remove channel
       supabase.removeChannel(channel);
