@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { EditorHeader } from '@/components/agreement/editor/editor-header';
 import { MinimalRightSidebar } from '@/components/agreement/editor/minimal-right-sidebar';
 import { TiptapEditor } from '@/components/agreement/editor/tiptap-editor';
@@ -14,6 +14,7 @@ import {
 } from '@/lib/pdf/export-agreement';
 import { type Template } from '@/lib/templates/template-loader';
 import { useDocumentStore } from '@/store/document/documentStore';
+import { useUserStore } from '@/store/user/userStore';
 import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
@@ -54,10 +55,27 @@ export function EditorLayout({
     undefined
   );
 
+  // Get current user info from store
+  const { name: userName, id: userId } = useUserStore();
+
+  // Memoize user object to prevent recreation on every render
+  const userInfo = useMemo(
+    () => ({
+      name: userName || 'Guest',
+      id: userId,
+    }),
+    [userName, userId]
+  );
+
   // Get collaboration awareness for cursor tracking
-  const { awareness } = useCollaboration({
+  const {
+    awareness,
+    ydoc,
+    isConnected: collabConnected,
+  } = useCollaboration({
     documentId,
     enabled: true,
+    user: userInfo,
   });
 
   // Document store
@@ -264,6 +282,8 @@ export function EditorLayout({
           onOpenSignature={() => setIsSignatureOpen(true)}
           editorRef={editorRef}
           templateContent={templateContent}
+          ydoc={ydoc}
+          isConnected={collabConnected}
         />
 
         {/* Right: Minimal Sidebar with Icon Navigation */}

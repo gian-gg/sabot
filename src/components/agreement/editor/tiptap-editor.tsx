@@ -15,7 +15,6 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 // import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import { useCollaboration } from '@/lib/collaboration/use-collaboration';
 import { Loader } from 'lucide-react';
 import { EditorToolbar } from './editor-toolbar';
 
@@ -28,6 +27,8 @@ interface TiptapEditorProps {
   editorRef?: React.RefObject<HTMLDivElement | null>;
   templateContent?: string;
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
+  ydoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  isConnected: boolean;
 }
 
 export function TiptapEditor({
@@ -39,12 +40,9 @@ export function TiptapEditor({
   editorRef,
   templateContent,
   onEditorReady,
+  ydoc,
+  isConnected,
 }: TiptapEditorProps) {
-  const { ydoc, isConnected, awareness, localUser } = useCollaboration({
-    documentId,
-    enabled: true,
-  });
-
   console.log('[TiptapEditor] Component render', {
     ydocReady: !!ydoc,
     isConnected,
@@ -113,7 +111,7 @@ export function TiptapEditor({
       immediatelyRender: false,
       shouldRerenderOnTransaction: true, // ✅ CRITICAL: Must be true for Yjs updates to render
     },
-    [ydoc, awareness, localUser] // ✅ Add dependencies to recreate editor when collaboration is ready
+    [ydoc] // Only depend on ydoc since we're not using awareness or localUser anymore
   );
 
   // Handle editor updates in useEffect to avoid state updates during render
