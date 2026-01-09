@@ -12,30 +12,88 @@ import { AlertTriangle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
+import {
+  getGasFeeWarningSeen,
+  setGasFeeWarningSeen,
+} from '@/lib/supabase/db/user';
 
 export function GasFeeWarningDialog() {
   const [open, setOpen] = useState(false);
   const [understood, setUnderstood] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen this dialog before
-    const hasSeenGasFeeWarning = localStorage.getItem('hasSeenGasFeeWarning');
+    const checkWarningStatus = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-    if (!hasSeenGasFeeWarning) {
-      // Show dialog after a brief delay for better UX
-      const timer = setTimeout(() => {
-        setOpen(true);
-      }, 500);
+        if (!user) {
+          // No user logged in, fall back to localStorage
+          const hasSeenGasFeeWarning = localStorage.getItem(
+            'hasSeenGasFeeWarning'
+          );
+          if (!hasSeenGasFeeWarning) {
+            const timer = setTimeout(() => setOpen(true), 500);
+            return () => clearTimeout(timer);
+          }
+          return;
+        }
 
-      return () => clearTimeout(timer);
-    }
+        // User is logged in, check Supabase
+        const hasSeen = await getGasFeeWarningSeen(user.id);
+
+        if (!hasSeen) {
+          const timer = setTimeout(() => setOpen(true), 500);
+          return () => clearTimeout(timer);
+        }
+      } catch (error) {
+        console.error('Error checking gas fee warning status:', error);
+        // Fall back to localStorage on error
+        const hasSeenGasFeeWarning = localStorage.getItem(
+          'hasSeenGasFeeWarning'
+        );
+        if (!hasSeenGasFeeWarning) {
+          const timer = setTimeout(() => setOpen(true), 500);
+          return () => clearTimeout(timer);
+        }
+      }
+    };
+
+    checkWarningStatus();
   }, []);
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (!understood) return;
-    // Mark as seen in localStorage
-    localStorage.setItem('hasSeenGasFeeWarning', 'true');
-    setOpen(false);
+
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // User is logged in, save to Supabase
+        await setGasFeeWarningSeen(user.id);
+      } else {
+        // No user logged in, fall back to localStorage
+        localStorage.setItem('hasSeenGasFeeWarning', 'true');
+      }
+
+      setOpen(false);
+    } catch (error) {
+      console.error('Error saving gas fee warning status:', error);
+      // Fall back to localStorage on error
+      localStorage.setItem('hasSeenGasFeeWarning', 'true');
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,11 +179,11 @@ export function GasFeeWarningDialog() {
             </div>
             <Button
               onClick={handleClose}
-              disabled={!understood}
+              disabled={!understood || loading}
               className="shrink-0"
               size="lg"
             >
-              Continue
+              {loading ? 'Saving...' : 'Continue'}
             </Button>
           </div>
         </AlertDialogFooter>

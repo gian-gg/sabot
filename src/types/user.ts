@@ -5,6 +5,7 @@ export type UserRole = 'user' | 'admin';
 export interface UserVerificationData {
   verification_status: VerificationStatus;
   role: UserRole;
+  has_seen_gas_fee_warning?: boolean;
 }
 
 export interface SessionType {
