@@ -237,3 +237,51 @@ export async function getAllUserIds(
     return [];
   }
 }
+
+export async function getGasFeeWarningSeen(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('user_data')
+    .select('has_seen_gas_fee_warning')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return false; // Default to false if no data or error
+  }
+
+  return data.has_seen_gas_fee_warning ?? false;
+}
+
+export async function setGasFeeWarningSeen(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { data, error: updateError } = await supabase
+    .from('user_data')
+    .update({ has_seen_gas_fee_warning: true })
+    .eq('id', userId)
+    .select('id');
+
+  if (updateError) {
+    console.error('Error updating gas fee warning status:', updateError);
+    return false;
+  }
+
+  // If no row was updated, create one
+  if (!data || data.length === 0) {
+    const { error: insertError } = await supabase.from('user_data').insert({
+      id: userId,
+      has_seen_gas_fee_warning: true,
+      verification_status: 'not-started',
+      role: 'user',
+    });
+
+    if (insertError) {
+      console.error('Error creating user gas fee warning status:', insertError);
+      return false;
+    }
+  }
+
+  return true;
+}
