@@ -114,7 +114,7 @@ export function PermissionConsent({ onNext }: StepNavProps) {
         </div>
 
         <Disclaimer variant="info" title="Project Disclosure">
-          This is a submission to Cebu Hacktoberfest 2025. This prototype
+          This is a submission to Lisk Builders Challenge. This prototype
           utilizes AI technology to streamline the implementation and
           development process, demonstrating rapid prototyping capabilities for
           identity verification systems.

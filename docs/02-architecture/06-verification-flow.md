@@ -5,7 +5,7 @@
 The Sabot platform implements a comprehensive identity verification system that combines AI-powered document verification, biometric liveness detection, and face matching to ensure user authenticity. This multi-step process helps build trust in the platform by verifying user identities before they can participate in transactions and escrows.
 
 > **🎯 Hackathon Prototype Notice**  
-> This is a submission for **Cebu Hacktoberfest 2025**. The current implementation is a **prototype** designed to demonstrate the feasibility and workflow of AI-powered identity verification. We utilize Gemini AI for rapid prototyping, which allows us to quickly implement and showcase the verification flow in a hackathon environment.
+> This is a submission for **Lisk Builders Challenge**. The current implementation is a **prototype** designed to demonstrate the feasibility and workflow of AI-powered identity verification. We utilize Gemini AI for rapid prototyping, which allows us to quickly implement and showcase the verification flow in a hackathon environment.
 >
 > **Production vs Prototype:**
 >
@@ -1078,7 +1078,7 @@ This system builds trust in the platform while maintaining user privacy and secu
 
 ### Hackathon Context
 
-As a **Cebu Hacktoberfest 2025** submission, this prototype successfully demonstrates:
+As a **Lisk Builders Challenge** submission, this prototype successfully demonstrates:
 
 - **Feasibility**: Complete end-to-end verification flow
 - **User Experience**: Intuitive, step-by-step process

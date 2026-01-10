@@ -10,7 +10,7 @@ import React from 'react';
 
 export const metadata: Metadata = {
   title: 'sabot',
-  description: '#hacktoberfest',
+  description: '#hacktoberfest #listbuilderschallenge3',
 };
 
 export default async function RootLayout({
