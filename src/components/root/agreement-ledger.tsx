@@ -70,7 +70,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
             <div className="h-2.5 w-2.5 rounded-full bg-neutral-700" />
           </div>
           <span className="text-xs font-medium text-neutral-300">
-            Agreement Ledger
+            Sabot Ledger
           </span>
         </div>
         <Badge
@@ -87,11 +87,11 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="mb-1.5 text-lg font-semibold text-white">
-                Recent Agreements
+                Recent Activity
               </h2>
               <p className="text-xs text-neutral-400">
                 Live feed of the latest {recentAgreements.length}{' '}
-                blockchain-verified agreements
+                blockchain-verified activity
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-white">
-                        Agreement #{agreements.length - index}
+                        Activity #{agreements.length - index}
                       </span>
                       <span className="text-neutral-500">•</span>
                       <span className="text-xs text-neutral-400">

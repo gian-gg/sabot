@@ -46,7 +46,7 @@ export function HeroSection() {
       <Card className="relative overflow-hidden p-0">
         <div className="aspect-video">
           <iframe
-            src="https://www.youtube.com/embed/C1Waaw8ZgMU?si=YourOptionalSiParam&rel=0&modestbranding=1&showinfo=0"
+            src="https://www.youtube.com/embed/duVOl5K5IVE?si=YourOptionalSiParam&rel=0&modestbranding=1&showinfo=0"
             title="Welcome to Sabot"
             className="h-full w-full"
             frameBorder="0"
