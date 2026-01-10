@@ -265,7 +265,7 @@ export function AcceptTransactionPage({
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 pt-14">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-xl">Agreement Invitation</CardTitle>
+          <CardTitle className="text-xl">Transaction Invitation</CardTitle>
           <CardDescription>
             You&apos;ve been invited to a verified transaction
           </CardDescription>
