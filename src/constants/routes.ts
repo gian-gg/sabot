@@ -6,16 +6,11 @@ export const ROUTES = {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',
   },
-  HOME: {
-    ROOT: '/home',
-    VERIFY: '/home/verify',
-    PROFILE: '/home/profile',
-  },
-  ADMIN: {
-    ROOT: '/home/admin',
-  },
-  PROFILE: {
-    VIEW: (id: string) => `/profile/${id}`,
+  USER: {
+    ROOT: '/user',
+    VERIFY: '/user/verify',
+    ADMIN: '/user/admin',
+    VIEW: (id: string) => `/user/${id}`,
   },
   WALLET: '/wallet',
   BUY_TOKENS: '/buy-tokens',

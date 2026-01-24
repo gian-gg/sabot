@@ -19,7 +19,7 @@ const Denied = () => {
               You don&apos;t have permission to access this page.
             </p>
           </div>
-          <Button onClick={() => router.push('/home')} className="mt-4">
+          <Button onClick={() => router.push('/user')} className="mt-4">
             Return to Home
           </Button>
         </CardContent>

@@ -78,7 +78,7 @@ const HeroAction = () => {
   if (user.verificationStatus === 'not-started') {
     return (
       <Button asChild>
-        <Link href={ROUTES.HOME.VERIFY} className="flex items-center gap-2">
+        <Link href={ROUTES.USER.VERIFY} className="flex items-center gap-2">
           <BadgeCheck className="h-4 w-4" />
           Verify Account
         </Link>

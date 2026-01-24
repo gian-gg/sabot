@@ -256,7 +256,7 @@ export default function EscrowDemoPage() {
   const handleCompleteTransaction = () => {
     // Simulate transaction completion
     alert('Transaction completed successfully!');
-    router.push('/home');
+    router.push('/user');
   };
 
   if (loading) {

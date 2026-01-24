@@ -126,7 +126,7 @@ export default function VerifyPage() {
   // Navigate away after verification is complete
   useEffect(() => {
     if (isComplete) {
-      router.replace(ROUTES.HOME.ROOT);
+      router.replace(ROUTES.USER.ROOT);
     }
   }, [isComplete, router]);
 

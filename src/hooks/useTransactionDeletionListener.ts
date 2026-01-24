@@ -15,7 +15,7 @@ export function useTransactionDeletionListener(transactionId: string | null) {
           duration: 5000,
         });
         setTimeout(() => {
-          window.location.href = '/home';
+          window.location.href = '/user';
         }, 2000);
       })
       .on('broadcast', { event: 'transaction_cancelled' }, () => {
@@ -23,7 +23,7 @@ export function useTransactionDeletionListener(transactionId: string | null) {
           duration: 5000,
         });
         setTimeout(() => {
-          window.location.href = '/home';
+          window.location.href = '/user';
         }, 2000);
       })
       .subscribe();

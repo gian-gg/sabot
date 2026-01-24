@@ -7,9 +7,9 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
 
-  let next = searchParams.get('next') ?? '/home';
+  let next = searchParams.get('next') ?? '/user';
   if (!next.startsWith('/')) {
-    next = '/home';
+    next = '/user';
   }
 
   if (code) {

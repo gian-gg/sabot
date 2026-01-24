@@ -332,7 +332,7 @@ export default function FinalizePage({
 
   const handleUserProfile = (userId: string) => {
     // TODO: Navigate to user profile
-    router.push(`/profile/${userId}`);
+    router.push(`/user/${userId}`);
   };
 
   // Create display parties from realtime participants data

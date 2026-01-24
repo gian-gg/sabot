@@ -1,39 +1,41 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
+import CommentThread from '@/components/transaction/comment-thread';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { exportTransactionToPDF } from '@/lib/pdf/export-transaction';
 import { cn } from '@/lib/utils';
-import type { TransactionStatus } from '@/types/transaction';
+import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
+import { useUserStore } from '@/store/user/userStore';
+import type {
+  TransactionDetails,
+  TransactionStatus,
+} from '@/types/transaction';
 import {
   Activity,
   AlertCircle,
+  ArrowUpRight,
   Calendar,
   CheckCircle2,
   Clock,
+  Copy,
   DollarSign,
   ExternalLink,
   FileText,
   MapPin,
   MessageSquare,
   Shield,
-  ArrowUpRight,
+  Trash2,
   User,
   Users,
-  XCircle,
   X,
-  Trash2,
+  XCircle,
 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
-import type { TransactionDetails } from '@/types/transaction';
-import { useUserStore } from '@/store/user/userStore';
-import { Copy } from 'lucide-react';
-import CommentThread from '@/components/transaction/comment-thread';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -65,10 +67,12 @@ export function TransactionDetailsModal({
   transaction,
   open,
   onOpenChange,
+  readOnly = false,
 }: {
   transaction: TransactionDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  readOnly?: boolean;
 }) {
   const [isExporting, setIsExporting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -234,7 +238,7 @@ export function TransactionDetailsModal({
                 </Badge>
 
                 {/* Cancel Button - only for active status */}
-                {isCreator && transaction.status === 'active' && (
+                {!readOnly && isCreator && transaction.status === 'active' && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -249,7 +253,8 @@ export function TransactionDetailsModal({
                 )}
 
                 {/* Delete Button - only for early-stage statuses */}
-                {isCreator &&
+                {!readOnly &&
+                  isCreator &&
                   [
                     'waiting_for_participant',
                     'both_joined',

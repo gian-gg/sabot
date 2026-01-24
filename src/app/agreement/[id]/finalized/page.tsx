@@ -159,7 +159,7 @@ export default function FinalizedPage({
   };
 
   const handleGoHome = () => {
-    router.push('/home');
+    router.push('/user');
   };
 
   const formatDate = (dateString: string) => {

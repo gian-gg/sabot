@@ -33,7 +33,7 @@ export function ReviewTransactionInvitation({
     <Card>
       <CardContent className="flex flex-col gap-6">
         <Link
-          href={`/profile/${inviter.id}`}
+          href={`/user/${inviter.id}`}
           target="_blank"
           rel="noopener noreferrer"
           title="View Profile"

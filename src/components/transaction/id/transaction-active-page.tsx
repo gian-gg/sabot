@@ -437,7 +437,7 @@ export function TransactionActivePage({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => router.push(ROUTES.HOME.ROOT)}
+                onClick={() => router.push(ROUTES.USER.ROOT)}
               >
                 Report
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -449,7 +449,7 @@ export function TransactionActivePage({
         {/* Back to Home */}
         <div className="flex justify-center pt-4">
           <Button variant="ghost" asChild>
-            <Link href={ROUTES.HOME.ROOT}>Back to Home</Link>
+            <Link href={ROUTES.USER.ROOT}>Back to Home</Link>
           </Button>
         </div>
       </div>

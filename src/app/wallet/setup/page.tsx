@@ -50,7 +50,7 @@ const WalletSetup = () => {
       setWallet({ mnemonic, address, privateKey } as WalletDetails);
     } else {
       // If parameters are missing, redirect away as this page is not meant for direct access.
-      router.push('/home');
+      router.push('/user');
     }
   }, [searchParams, router]);
 
@@ -82,7 +82,7 @@ const WalletSetup = () => {
   };
 
   const handleContinue = () => {
-    router.push('/home');
+    router.push('/user');
   };
 
   if (!wallet) {

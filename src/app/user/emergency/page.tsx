@@ -30,7 +30,7 @@ export default function EmergencyPage() {
     // In a real app, this would save to database
     setSaved(true);
     setTimeout(() => {
-      router.push(ROUTES.HOME.ROOT);
+      router.push(ROUTES.USER.ROOT);
     }, 2000);
   };
 

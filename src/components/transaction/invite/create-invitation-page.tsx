@@ -270,7 +270,7 @@ export function CreateTransactionPage() {
                   Retry
                 </Button>
               )}
-              <Button onClick={() => router.push('/home')} variant="outline">
+              <Button onClick={() => router.push('/user')} variant="outline">
                 Go Home
               </Button>
             </div>

@@ -17,7 +17,7 @@ const AdminButton = () => {
   }
   return (
     <Button variant="secondary" size="sm" asChild>
-      <Link href={ROUTES.ADMIN.ROOT}>
+      <Link href={ROUTES.USER.ADMIN}>
         <ShieldUser /> Admin Panel
       </Link>
     </Button>

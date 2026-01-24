@@ -1,6 +1,11 @@
+import CommentIndicator from '@/components/transaction/comment-indicator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { TransactionStatus } from '@/types/transaction';
+import { formatStatusLabel } from '@/lib/utils/helpers';
+import type {
+  TransactionDetails,
+  TransactionStatus,
+} from '@/types/transaction';
 import {
   Activity,
   AlertCircle,
@@ -11,9 +16,6 @@ import {
   XCircle,
 } from 'lucide-react';
 import React from 'react';
-import type { TransactionDetails } from '@/types/transaction';
-import { formatStatusLabel } from '@/lib/utils/helpers';
-import CommentIndicator from '@/components/transaction/comment-indicator';
 
 const statusIcons: Record<TransactionStatus, React.ElementType> = {
   completed: CheckCircle2,
@@ -60,7 +62,10 @@ const TransactionItem = ({
 
   return (
     <div
-      className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors"
+      className={cn(
+        'flex items-center justify-between rounded-lg border p-4 transition-colors',
+        onClick && 'hover:bg-muted/50 cursor-pointer'
+      )}
       onClick={onClick}
     >
       <div className="flex items-center gap-4">
@@ -81,7 +86,7 @@ const TransactionItem = ({
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <span>
-              {transaction.transaction_participants.length > 1
+              {transaction.transaction_participants?.length > 1
                 ? transaction.transaction_participants[1].participant_name
                 : 'N/A'}
             </span>

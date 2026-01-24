@@ -147,7 +147,7 @@ export function AcceptAgreementPage({ agreementId }: AcceptAgreementPageProps) {
         ) {
           toast.error('You cannot accept your own invitation link');
           setTimeout(() => {
-            router.push(ROUTES.HOME.ROOT);
+            router.push(ROUTES.USER.ROOT);
           }, 1500);
           return;
         }
@@ -177,7 +177,7 @@ export function AcceptAgreementPage({ agreementId }: AcceptAgreementPageProps) {
   };
 
   const handleDecline = () => {
-    router.push(ROUTES.HOME.ROOT);
+    router.push(ROUTES.USER.ROOT);
   };
 
   // Show loading state
@@ -218,7 +218,7 @@ export function AcceptAgreementPage({ agreementId }: AcceptAgreementPageProps) {
               </AlertDescription>
             </Alert>
             <Button
-              onClick={() => router.push(ROUTES.HOME.ROOT)}
+              onClick={() => router.push(ROUTES.USER.ROOT)}
               className="w-full"
             >
               Return to Home
@@ -248,7 +248,7 @@ export function AcceptAgreementPage({ agreementId }: AcceptAgreementPageProps) {
               </AlertDescription>
             </Alert>
             <Button
-              onClick={() => router.push(ROUTES.HOME.ROOT)}
+              onClick={() => router.push(ROUTES.USER.ROOT)}
               className="w-full"
             >
               Return to Home

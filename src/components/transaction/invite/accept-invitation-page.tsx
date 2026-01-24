@@ -179,7 +179,7 @@ export function AcceptTransactionPage({
   };
 
   const handleDecline = () => {
-    router.push(ROUTES.HOME.ROOT);
+    router.push(ROUTES.USER.ROOT);
   };
 
   // Show loading state
@@ -220,7 +220,7 @@ export function AcceptTransactionPage({
               </AlertDescription>
             </Alert>
             <Button
-              onClick={() => router.push(ROUTES.HOME.ROOT)}
+              onClick={() => router.push(ROUTES.USER.ROOT)}
               className="w-full"
             >
               Return to Home
@@ -250,7 +250,7 @@ export function AcceptTransactionPage({
               </AlertDescription>
             </Alert>
             <Button
-              onClick={() => router.push(ROUTES.HOME.ROOT)}
+              onClick={() => router.push(ROUTES.USER.ROOT)}
               className="w-full"
             >
               Return to Home

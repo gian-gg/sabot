@@ -104,7 +104,7 @@ export default function HeaderAction({ user }: { user: User }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={ROUTES.HOME.PROFILE}>
+            <Link href={ROUTES.USER.ROOT}>
               <BadgeCheck />
               Account
             </Link>

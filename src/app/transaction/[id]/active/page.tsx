@@ -197,7 +197,7 @@ export default function TransactionActive({
               <div className="text-center">
                 <p className="text-neutral-400">Error: {error}</p>
                 <Button asChild className="mt-4 w-full">
-                  <Link href={ROUTES.HOME.ROOT}>Go Home</Link>
+                  <Link href={ROUTES.USER.ROOT}>Go Home</Link>
                 </Button>
               </div>
             </CardContent>
@@ -219,7 +219,7 @@ export default function TransactionActive({
                 Transaction not found
               </p>
               <Button asChild className="mt-4 w-full">
-                <Link href={ROUTES.HOME.ROOT}>Go Home</Link>
+                <Link href={ROUTES.USER.ROOT}>Go Home</Link>
               </Button>
             </CardContent>
           </Card>

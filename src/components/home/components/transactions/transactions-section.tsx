@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,8 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -18,14 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import type { TransactionStatus } from '@/types/transaction';
 import {
   CheckCircle2,
   DollarSign,
   Filter,
   Search,
-  TrendingUp,
   Trash2,
+  TrendingUp,
   Users,
   X,
   XCircle,
@@ -34,18 +34,20 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import AreaChartComponent from './area-chart-component';
+import { FilterDialog, type TransactionFilters } from './filter-dialog';
 import PieChartComponent from './pie-chart-component';
 import StatsCard from './stats-card';
-import TransactionItem from './transaction-item';
 import { TransactionDetailsModal } from './transaction-details-modal';
-import { FilterDialog, type TransactionFilters } from './filter-dialog';
+import TransactionItem from './transaction-item';
 
 import type { TransactionDetails } from '@/types/transaction';
 
 export default function TransactionsSection({
   recentTransactions,
+  readOnly = false,
 }: {
   recentTransactions: TransactionDetails[];
+  readOnly?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTransaction, setSelectedTransaction] =
@@ -154,6 +156,11 @@ export default function TransactionsSection({
   // Filter and search transactions
   const filteredTransactions = useMemo(() => {
     return recentTransactions.filter((transaction) => {
+      // In read-only mode (public profile), ONLY show completed transactions
+      if (readOnly && transaction.status !== 'completed') {
+        return false;
+      }
+
       // Search filter
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -201,7 +208,7 @@ export default function TransactionsSection({
         matchesMaxAmount
       );
     });
-  }, [searchQuery, filters, recentTransactions]);
+  }, [searchQuery, filters, recentTransactions, readOnly]);
 
   // When in delete mode, only show deletable transactions; when in cancel mode, only show active
   const displayTransactions = useMemo(() => {
@@ -424,16 +431,6 @@ export default function TransactionsSection({
 
   return (
     <div className="space-y-8">
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Transactions</h2>
-          <p className="text-muted-foreground mt-1">
-            Manage and analyze your transaction history
-          </p>
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
@@ -494,7 +491,9 @@ export default function TransactionsSection({
                     </span>
                   ) : (
                     <>
-                      Your latest transaction activity
+                      {readOnly
+                        ? 'Latest transaction activity'
+                        : 'Your latest transaction activity'}
                       {filteredTransactions.length !==
                         recentTransactions.length && (
                         <span className="text-primary ml-2">
@@ -533,78 +532,79 @@ export default function TransactionsSection({
                   )}
                 </Button>
 
-                {/* Action Mode Buttons */}
-                {!isDeleteMode && !isCancelMode ? (
-                  <div className="flex items-center gap-2">
-                    {/* Cancel Button - Amber styling */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsCancelMode(true)}
-                      className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Cancel
-                    </Button>
+                {/* Action Mode Buttons - Hidden in readOnly mode */}
+                {!readOnly &&
+                  (!isDeleteMode && !isCancelMode ? (
+                    <div className="flex items-center gap-2">
+                      {/* Cancel Button - Amber styling */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsCancelMode(true)}
+                        className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Cancel
+                      </Button>
 
-                    {/* Delete Button - Red styling */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsDeleteMode(true)}
-                      className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </div>
-                ) : isCancelMode ? (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={handleBulkCancel}
-                      disabled={
-                        selectedForCancellation.size === 0 || isCancelling
-                      }
-                      className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      {isCancelling
-                        ? 'Cancelling...'
-                        : `Cancel Selected (${selectedForCancellation.size})`}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelCancelMode}
-                      disabled={isCancelling}
-                    >
-                      Exit
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={handleBulkDelete}
-                      disabled={selectedForDeletion.size === 0 || isDeleting}
-                      className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {isDeleting
-                        ? 'Deleting...'
-                        : `Delete Selected (${selectedForDeletion.size})`}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelDelete}
-                      disabled={isDeleting}
-                    >
-                      Exit
-                    </Button>
-                  </div>
-                )}
+                      {/* Delete Button - Red styling */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsDeleteMode(true)}
+                        className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  ) : isCancelMode ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={handleBulkCancel}
+                        disabled={
+                          selectedForCancellation.size === 0 || isCancelling
+                        }
+                        className="border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        {isCancelling
+                          ? 'Cancelling...'
+                          : `Cancel Selected (${selectedForCancellation.size})`}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelCancelMode}
+                        disabled={isCancelling}
+                      >
+                        Exit
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={selectedForDeletion.size === 0 || isDeleting}
+                        className="border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {isDeleting
+                          ? 'Deleting...'
+                          : `Delete Selected (${selectedForDeletion.size})`}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelDelete}
+                        disabled={isDeleting}
+                      >
+                        Exit
+                      </Button>
+                    </div>
+                  ))}
               </div>
             </div>
           </CardHeader>
@@ -736,11 +736,11 @@ export default function TransactionsSection({
                       <TransactionItem
                         transaction={transaction}
                         onClick={
-                          isDeleteMode || isCancelMode
-                            ? () => {
-                                // Prevent opening details modal in action modes
-                              }
-                            : () => handleTransactionClick(transaction)
+                          readOnly
+                            ? undefined
+                            : isDeleteMode || isCancelMode
+                              ? undefined
+                              : () => handleTransactionClick(transaction)
                         }
                       />
                     </div>
@@ -775,6 +775,7 @@ export default function TransactionsSection({
         transaction={selectedTransaction}
         open={isDetailsModalOpen}
         onOpenChange={setIsDetailsModalOpen}
+        readOnly={readOnly}
       />
       <FilterDialog
         open={isFilterDialogOpen}

@@ -37,7 +37,7 @@ const GetStartedButton = () => {
         className="h-10 min-w-[260px] bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
         asChild
       >
-        <Link href="/home">
+        <Link href="/user">
           <span className="flex items-center gap-2">Go to Dashboard</span>
         </Link>
       </Button>

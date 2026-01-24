@@ -20,7 +20,7 @@ export function SubmissionPending() {
       </p>
       <div className="mt-6">
         <Button asChild>
-          <Link href="/home">Go to Home</Link>
+          <Link href="/user">Go to Dashboard</Link>
         </Button>
       </div>
     </div>

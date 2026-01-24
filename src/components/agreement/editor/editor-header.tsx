@@ -76,7 +76,7 @@ export function EditorHeader({
     // Clear the document store
     clearDocument();
     // Navigate back to home
-    router.push('/home');
+    router.push('/user');
     toast.success('Agreement cancelled and changes discarded');
   };
 

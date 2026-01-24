@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function NewEscrowPage() {
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      <PageHeader showBackButton backButtonFallback="/home" />
+      <PageHeader showBackButton backButtonFallback="/user" />
 
       <Suspense fallback={<FormSkeleton />}>
         <CreateEscrowForm />

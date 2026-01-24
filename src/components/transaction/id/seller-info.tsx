@@ -27,7 +27,7 @@ export function SellerInfoCard({ seller, transaction }: SellerInfoProps) {
             </div>
             <div className="flex-1">
               <Link
-                href={ROUTES.PROFILE.VIEW(seller?.id || 'user-2')}
+                href={ROUTES.USER.VIEW(seller?.id || 'user-2')}
                 className="text-base font-semibold text-white hover:underline"
               >
                 {seller?.name || transaction.sellerName}

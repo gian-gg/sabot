@@ -158,7 +158,7 @@ export default function EscrowPage({ params }: EscrowPageProps) {
   if (loading) {
     return (
       <div className="container mx-auto max-w-7xl px-4 py-8">
-        <PageHeader showBackButton backButtonFallback="/home" />
+        <PageHeader showBackButton backButtonFallback="/user" />
         <div className="space-y-6">
           <Skeleton className="h-96 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -171,7 +171,7 @@ export default function EscrowPage({ params }: EscrowPageProps) {
   if (error || !data) {
     return (
       <div className="container mx-auto max-w-7xl px-4 py-8">
-        <PageHeader showBackButton backButtonFallback="/home" />
+        <PageHeader showBackButton backButtonFallback="/user" />
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -191,7 +191,7 @@ export default function EscrowPage({ params }: EscrowPageProps) {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      <PageHeader showBackButton backButtonFallback="/home" />
+      <PageHeader showBackButton backButtonFallback="/user" />
 
       <div className="space-y-6">
         {/* Alert for pending participant */}
