@@ -71,7 +71,7 @@ const DELIVERABLE_TYPES = [
     description: 'Work, consulting, maintenance',
     requiresArbiter: true,
     color:
-      'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200',
+      'bg-blue-50 border-blue-200 text-blue-800
   },
   {
     value: 'item',
@@ -80,7 +80,7 @@ const DELIVERABLE_TYPES = [
     description: 'Goods, products, merchandise',
     requiresArbiter: true,
     color:
-      'bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200',
+      'bg-green-50 border-green-200 text-green-800
   },
   {
     value: 'digital',
@@ -89,7 +89,7 @@ const DELIVERABLE_TYPES = [
     description: 'Files, software, digital content',
     requiresArbiter: false,
     color:
-      'bg-purple-50 border-purple-200 text-purple-800 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-200',
+      'bg-purple-50 border-purple-200 text-purple-800
   },
   {
     value: 'document',
@@ -98,7 +98,7 @@ const DELIVERABLE_TYPES = [
     description: 'Papers, certificates, contracts',
     requiresArbiter: true,
     color:
-      'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-950 dark:border-orange-800 dark:text-orange-200',
+      'bg-orange-50 border-orange-200 text-orange-800
   },
   {
     value: 'cash',
@@ -107,7 +107,7 @@ const DELIVERABLE_TYPES = [
     description: 'Physical cash transactions',
     requiresArbiter: true,
     color:
-      'bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200',
+      'bg-red-50 border-red-200 text-red-800
   },
   {
     value: 'digital_transfer',
@@ -116,7 +116,7 @@ const DELIVERABLE_TYPES = [
     description: 'Online payments, transfers',
     requiresArbiter: false,
     color:
-      'bg-cyan-50 border-cyan-200 text-cyan-800 dark:bg-cyan-950 dark:border-cyan-800 dark:text-cyan-200',
+      'bg-cyan-50 border-cyan-200 text-cyan-800
   },
 ];
 
@@ -516,7 +516,7 @@ export function EscrowProtectionEnhanced({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-3 w-3 shrink-0 rounded-full bg-blue-500"></div>
-                    <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    <h4 className="text-sm font-medium text-blue-700">
                       {initiatorName
                         ? `${initiatorName}'s Obligations`
                         : "Initiator's Obligations"}
@@ -553,7 +553,7 @@ export function EscrowProtectionEnhanced({
                       return (
                         <Card
                           key={deliverable.id}
-                          className="border-l-4 border-l-blue-200 dark:border-l-blue-800"
+                          className="border-l-4 border-l-blue-200"
                         >
                           <CardContent>
                             <div className="space-y-4">
@@ -575,7 +575,7 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="border-amber-200 px-2.5 py-1 text-xs font-normal text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                      className="border-amber-200 px-2.5 py-1 text-xs font-normal text-amber-800"
                                     >
                                       <AlertTriangle className="mr-1 h-3 w-3" />
                                       Arbiter
@@ -719,7 +719,7 @@ export function EscrowProtectionEnhanced({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-3 w-3 shrink-0 rounded-full bg-green-500"></div>
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300">
+                    <h4 className="text-sm font-medium text-green-700">
                       {participantName
                         ? `${participantName}'s Obligations`
                         : "Participant's Obligations"}
@@ -756,7 +756,7 @@ export function EscrowProtectionEnhanced({
                       return (
                         <Card
                           key={deliverable.id}
-                          className="border-l-4 border-l-green-200 dark:border-l-green-800"
+                          className="border-l-4 border-l-green-200"
                         >
                           <CardContent>
                             <div className="space-y-4">
@@ -778,7 +778,7 @@ export function EscrowProtectionEnhanced({
                                   {typeInfo?.requiresArbiter && (
                                     <Badge
                                       variant="secondary"
-                                      className="border-amber-200 px-2.5 py-1 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                      className="border-amber-200 px-2.5 py-1 text-xs text-amber-800"
                                     >
                                       <AlertTriangle className="mr-1 h-3 w-3" />
                                       Arbiter
@@ -945,7 +945,7 @@ export function EscrowProtectionEnhanced({
                       className={`h-4 w-4 ${escrowData.arbiter_required ? 'text-amber-600' : 'text-green-600'}`}
                     />
                     {escrowData.arbiter_required && (
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      <span className="text-xs font-medium text-amber-600">
                         Required
                       </span>
                     )}

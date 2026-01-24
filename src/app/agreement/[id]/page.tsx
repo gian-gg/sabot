@@ -45,7 +45,7 @@ export default function AgreementProgressPage() {
               <CardTitle>Document Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
+              <div className="prose prose-sm max-w-none">
                 <h2>Partnership Agreement</h2>
                 <p className="text-muted-foreground">
                   This agreement is currently being drafted by both parties. The

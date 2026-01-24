@@ -207,7 +207,7 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
               <Shield className="h-4 w-4" />
               Arbiter Requested
             </h3>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3
               {escrow.arbiter ? (
                 <div className="flex items-center gap-3">
                   <UserAvatar name={escrow.arbiter.name} size="sm" />
@@ -225,7 +225,7 @@ export function EscrowDetailsCard({ escrow }: EscrowDetailsCardProps) {
               )}
               {escrow.arbiter_decision &&
                 escrow.arbiter_decision !== 'pending' && (
-                  <div className="mt-2 border-t border-amber-200 pt-2 dark:border-amber-900">
+                  <div className="mt-2 border-t border-amber-200 pt-2
                     <p className="text-xs font-medium">
                       Decision: {escrow.arbiter_decision}
                     </p>

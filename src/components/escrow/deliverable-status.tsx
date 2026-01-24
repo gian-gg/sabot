@@ -144,13 +144,13 @@ export function DeliverableStatus({
       case 'completed':
       case 'verified':
       case 'confirmed':
-        return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950';
+        return 'border-green-200 bg-green-50
       case 'in_progress':
-        return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950';
+        return 'border-blue-200 bg-blue-50
       case 'failed':
-        return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950';
+        return 'border-red-200 bg-red-50
       default:
-        return 'border-gray-200 dark:border-gray-800';
+        return 'border-gray-200
     }
   };
 

@@ -1,67 +1,99 @@
-import React from 'react';
-import Link from 'next/link';
-import { ROUTES } from '@/constants/routes';
-import {
-  Shield,
-  TrendingUp,
-  FileText,
-  CheckCircle,
-  MapPin,
-  AlertTriangle,
-  Users,
-  Lock,
-  Brain,
-  MessageSquare,
-  Activity,
-  Coins,
-  Zap,
-  Crown,
-  Check,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { AgreementLedger } from '@/components/root/agreement-ledger';
 import { MarketplaceCarousel } from '@/components/root/marketplace-carousel';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GetStartedButton from '@/components/user/get-started-button';
+import { ROUTES } from '@/constants/routes';
 import { getAgreements } from '@/lib/blockchain/readFunctions';
+import {
+  Activity,
+  AlertTriangle,
+  Brain,
+  Check,
+  CheckCircle,
+  Coins,
+  Crown,
+  FileText,
+  Lock,
+  MapPin,
+  MessageSquare,
+  Shield,
+  TrendingUp,
+  Users,
+  Zap,
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default async function Home() {
   const agreements = await getAgreements();
   return (
     <>
-      {/* Light Source Effect - Fixed at top, behind header */}
-      <div className="pointer-events-none fixed -top-[200px] left-1/2 z-0 h-[350px] w-[500px] -translate-x-1/2">
-        <div className="absolute top-0 left-1/2 h-[300px] w-[400px] -translate-x-1/2 rounded-full bg-white/10 blur-[100px]" />
-        <div className="absolute top-5 left-1/2 h-[200px] w-[250px] -translate-x-1/2 rounded-full bg-white/15 blur-[70px]" />
-        <div className="absolute top-10 left-1/2 h-[120px] w-[120px] -translate-x-1/2 rounded-full bg-white/20 blur-2xl" />
+      {/* Light Source Effect - Enhanced positioning for hero */}
+      <div className="pointer-events-none fixed -top-[150px] left-1/2 z-0 h-[400px] w-[600px] -translate-x-1/2">
+        <div className="absolute top-0 left-1/2 h-[350px] w-[500px] -translate-x-1/2 animate-pulse rounded-full bg-white/12 blur-[120px]" />
+        <div className="absolute top-10 left-1/2 h-[250px] w-[300px] -translate-x-1/2 rounded-full bg-[#01d06c]/10 blur-[80px]" />
+        <div className="absolute top-20 left-1/2 h-[150px] w-[150px] -translate-x-1/2 rounded-full bg-white/20 blur-3xl" />
       </div>
 
       {/* Main Content - Scrollable with top padding for fixed header */}
-      <div className="flex flex-col gap-20 overflow-x-hidden">
-        {/* Hero Section */}
-        <section className="relative shrink-0 px-6 pt-24 pb-8">
-          <div className="relative mx-auto max-w-[500px] text-center">
-            <h1 className="mb-3 leading-[1.2] font-medium tracking-tight text-white sm:text-5xl">
-              When trust is uncertain, bring in Sabot
+      <div className="flex flex-col gap-8 overflow-x-hidden">
+        {/* Hero Section - Enhanced */}
+        <section className="relative shrink-0 px-6 pt-32 pb-8 sm:pt-40 sm:pb-12">
+          <div className="relative mx-auto max-w-4xl text-center">
+            {/* Main Headline - Larger and bolder */}
+            <h1 className="mb-6 text-5xl leading-[1.1] font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              When trust is uncertain,
+              <br />
+              <span className="text-primary flex items-center justify-center select-none">
+                bring in
+                <div className="relative h-[1.8em] w-[4em]">
+                  <Image
+                    src="/logo-white.svg"
+                    alt="Sabot"
+                    fill
+                    className="pointer-events-none object-contain"
+                    priority
+                    draggable={false}
+                  />
+                </div>
+              </span>
             </h1>
-            {/* <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
+
+            {/* Tagline - Refined and concise */}
+            <p className="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-neutral-400 sm:text-lg lg:text-xl">
               Your third-party safety layer for verified, transparent, and
               scam-free online transactions.
-            </p> */}
-            <p className="mx-auto mb-6 max-w-[680px] text-sm leading-relaxed text-neutral-400 sm:text-base">
-              Your third-party safety layer transparent transactions.
             </p>
 
-            {/* CTA Button */}
-            <div className="flex items-center justify-center">
+            {/* CTA Button - Enhanced with better prominence */}
+            <div className="mb-12 flex items-center justify-center">
               <GetStartedButton />
+            </div>
+
+            {/* Trust Indicators - Feature highlights */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500 sm:gap-8 sm:text-base">
+              <div className="flex items-center gap-2">
+                <Brain className="text-primary h-4 w-4" />
+                <span>AI Workflows</span>
+              </div>
+              <div className="hidden h-4 w-px bg-neutral-800 sm:block" />
+              <div className="flex items-center gap-2">
+                <Shield className="text-primary h-4 w-4" />
+                <span>Blockchain-Verified</span>
+              </div>
+              <div className="hidden h-4 w-px bg-neutral-800 sm:block" />
+              <div className="flex items-center gap-2">
+                <Lock className="text-primary h-4 w-4" />
+                <span>Privacy First</span>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Agreement Ledger Preview */}
-        <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <section className="px-4 pb-12 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1100px]">
             <AgreementLedger agreements={agreements} />
           </div>
@@ -526,33 +558,6 @@ export default async function Home() {
             <div className="mt-8 text-center">
               <Button asChild size="lg" variant="outline">
                 <Link href="/tokens">View All Packages</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Documentation Section */}
-        <section
-          id="docs"
-          className="border-t border-neutral-800/50 bg-neutral-900/20 px-6 py-20"
-        >
-          <div className="mx-auto max-w-4xl text-center">
-            <FileText className="text-primary mx-auto mb-4 h-12 w-12" />
-            <h2 className="mb-4 text-3xl font-bold text-white">
-              Documentation
-            </h2>
-            <p className="mb-8 text-neutral-400">
-              Comprehensive guides for developers and users
-            </p>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Button variant="outline" asChild>
-                <Link href="#api">API Reference</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="#integration">Integration Guide</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="#sdk">SDK Documentation</Link>
               </Button>
             </div>
           </div>

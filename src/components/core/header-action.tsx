@@ -15,16 +15,5 @@ export default function HeaderAction() {
 
   if (!user.id) return null;
 
-  if (user.id && pathname === ROUTES.ROOT) {
-    return (
-      <Button size="sm" asChild>
-        <Link href={ROUTES.HOME.ROOT}>
-          <House />
-          Home
-        </Link>
-      </Button>
-    );
-  }
-
   return <UserComponent user={user} />;
 }

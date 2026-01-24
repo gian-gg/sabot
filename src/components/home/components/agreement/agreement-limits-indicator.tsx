@@ -263,7 +263,7 @@ export function AgreementLimitsIndicator({
                           className={`text-xs font-medium ${
                             isDestructive
                               ? 'text-destructive'
-                              : 'text-amber-700 dark:text-amber-600'
+                              : 'text-amber-700'
                           }`}
                         >
                           {warning.title}

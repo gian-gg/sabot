@@ -291,8 +291,8 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
 
       {/* Explanation section */}
       {explainingId === suggestion.id && explanationText[suggestion.id] && (
-        <div className="mb-3 rounded border border-blue-200/50 bg-blue-50 p-2 text-xs dark:bg-blue-950/20">
-          <p className="text-blue-900 dark:text-blue-200">
+        <div className="mb-3 rounded border border-blue-200/50 bg-blue-50 p-2 text-xs">
+          <p className="text-blue-900">
             {explanationText[suggestion.id]}
           </p>
         </div>
@@ -300,8 +300,8 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
 
       {/* Simplified text section */}
       {simplifyingId === suggestion.id && simplifiedText[suggestion.id] && (
-        <div className="mb-3 rounded border border-green-200/50 bg-green-50 p-2 text-xs dark:bg-green-950/20">
-          <p className="text-green-900 dark:text-green-200">
+        <div className="mb-3 rounded border border-green-200/50 bg-green-50 p-2 text-xs">
+          <p className="text-green-900">
             {simplifiedText[suggestion.id]}
           </p>
         </div>
@@ -365,7 +365,7 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
 
         {/* Error state */}
         {error && (
-          <div className="mb-4 rounded border border-red-200/50 bg-red-50 p-3 text-xs text-red-900 dark:bg-red-950/20 dark:text-red-200">
+          <div className="mb-4 rounded border border-red-200/50 bg-red-50 p-3 text-xs text-red-900">
             <p className="font-semibold">Analysis Error</p>
             <p>{error}</p>
           </div>
@@ -373,11 +373,11 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
 
         {/* Summary */}
         {summary && (
-          <div className="mb-4 rounded border border-blue-200/50 bg-blue-50 p-3 text-xs dark:bg-blue-950/20">
-            <p className="mb-1 font-semibold text-blue-900 dark:text-blue-200">
+          <div className="mb-4 rounded border border-blue-200/50 bg-blue-50 p-3 text-xs">
+            <p className="mb-1 font-semibold text-blue-900">
               Summary
             </p>
-            <p className="text-blue-800 dark:text-blue-300">{summary}</p>
+            <p className="text-blue-800">{summary}</p>
           </div>
         )}
 

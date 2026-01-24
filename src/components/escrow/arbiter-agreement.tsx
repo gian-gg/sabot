@@ -59,8 +59,8 @@ export function ArbiterAgreement({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
-          <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100
+          <Shield className="h-5 w-5 text-orange-600 />
         </div>
         <div>
           <h3 className="text-lg font-semibold">Arbiter Agreement Required</h3>
@@ -74,10 +74,10 @@ export function ArbiterAgreement({
       <Card
         className={`transition-colors ${
           isApproved
-            ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+            ? 'border-green-200 bg-green-50
             : isRejected
-              ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
-              : 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950'
+              ? 'border-red-200 bg-red-50
+              : 'border-orange-200 bg-orange-50
         }`}
       >
         <CardHeader>
@@ -107,19 +107,19 @@ export function ArbiterAgreement({
           {/* Status Badge */}
           <div className="flex items-center gap-2">
             {isApproved && (
-              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              <Badge className="bg-green-100 text-green-800
                 <CheckCircle2 className="mr-1 h-3 w-3" />
                 Approved
               </Badge>
             )}
             {isRejected && (
-              <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+              <Badge className="bg-red-100 text-red-800
                 <XCircle className="mr-1 h-3 w-3" />
                 Rejected
               </Badge>
             )}
             {isPending && (
-              <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              <Badge className="bg-yellow-100 text-yellow-800
                 <Clock className="mr-1 h-3 w-3" />
                 Pending Your Decision
               </Badge>

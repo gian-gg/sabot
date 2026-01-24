@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import type { VerificationStatus, UserRole } from '@/types/user';
 
+interface User {
+  id: string;
+  email: string;
+  image: string;
+  name: string;
+  verificationStatus: VerificationStatus;
+  role: UserRole;
+}
+
 interface UserState extends User {
   setId: (id: string) => void;
   setEmail: (email: string) => void;

@@ -169,7 +169,7 @@ export function ArbiterSelection({
               </div>
               <Badge
                 variant="secondary"
-                className="text-shadow-primary-foreground w-fit rounded-2xl bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                className="text-shadow-primary-foreground w-fit rounded-2xl bg-amber-100 px-3 py-1 text-amber-800"
               >
                 <Star className="mr-0.5 h-3 w-3" />
                 Top Rated
@@ -181,7 +181,7 @@ export function ArbiterSelection({
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
-                  className="cursor-pointer border-l-4 border-l-amber-200 transition-all hover:shadow-md dark:border-l-amber-800"
+                  className="cursor-pointer border-l-4 border-l-amber-200 transition-all hover:shadow-md"
                   onClick={() => handleProposeArbiter(candidate)}
                 >
                   <CardContent className="py-0 pl-10">
@@ -193,7 +193,7 @@ export function ArbiterSelection({
                               src={getArbiterImagePath(candidate.name)}
                               alt={candidate.name}
                             />
-                            <AvatarFallback className="bg-amber-100 text-sm dark:bg-amber-900">
+                            <AvatarFallback className="bg-amber-100 text-sm">
                               {candidate.name
                                 .split(' ')
                                 .map((n) => n[0])
@@ -268,7 +268,7 @@ export function ArbiterSelection({
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
-                  className="cursor-pointer border-l-4 border-l-blue-200 transition-all hover:shadow-md dark:border-l-blue-800"
+                  className="cursor-pointer border-l-4 border-l-blue-200 transition-all hover:shadow-md"
                   onClick={() => handleProposeArbiter(candidate)}
                 >
                   <CardContent className="p-4">
@@ -280,7 +280,7 @@ export function ArbiterSelection({
                               src={getArbiterImagePath(candidate.name)}
                               alt={candidate.name}
                             />
-                            <AvatarFallback className="bg-blue-100 text-sm dark:bg-blue-900">
+                            <AvatarFallback className="bg-blue-100 text-sm">
                               {candidate.name
                                 .split(' ')
                                 .map((n) => n[0])
@@ -349,9 +349,9 @@ export function ArbiterSelection({
 
       {/* Selected Arbiter */}
       {selectedArbiter && (
-        <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+        <Card className="border-green-200 bg-green-50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-green-800 dark:text-green-200">
+            <CardTitle className="flex items-center gap-2 text-lg text-green-800">
               <CheckCircle className="h-5 w-5" />
               Selected Arbiter
             </CardTitle>
@@ -363,7 +363,7 @@ export function ArbiterSelection({
                   src={getArbiterImagePath(selectedArbiter.name)}
                   alt={selectedArbiter.name}
                 />
-                <AvatarFallback className="bg-green-100 dark:bg-green-900">
+                <AvatarFallback className="bg-green-100">
                   {selectedArbiter.name
                     .split(' ')
                     .map((n) => n[0])

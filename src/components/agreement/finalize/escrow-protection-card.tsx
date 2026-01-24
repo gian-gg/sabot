@@ -153,8 +153,8 @@ export function EscrowProtectionCard({
       <div className="mb-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
-              <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-blue-100 p-2">
+              <Shield className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <h3 className="text-xl font-bold">Escrow Protection</h3>
@@ -214,7 +214,7 @@ export function EscrowProtectionCard({
               <span className="text-destructive">*</span>
             </Label>
             {inferredDeliverable && (
-              <p className="text-xs text-blue-600 dark:text-blue-400">
+              <p className="text-xs text-blue-600">
                 ✨ Auto-inferred from agreement terms (you can edit if needed)
               </p>
             )}
@@ -310,7 +310,7 @@ export function EscrowProtectionCard({
             </div>
 
             {/* Arbiter Required (Special Escrow Version) */}
-            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
+            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-4">
               <div className="space-y-0.5">
                 <Label htmlFor="arbiter" className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-amber-600" />
@@ -332,9 +332,9 @@ export function EscrowProtectionCard({
 
           {/* Arbiter Info */}
           {escrowData.arbiter_required && (
-            <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
+            <Alert className="border-amber-200 bg-amber-50">
               <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <AlertDescription className="text-amber-800">
                 <strong>Arbiter Escrow:</strong> Both parties must propose and
                 agree on an independent arbiter who will oversee this escrow
                 from the beginning. The arbiter can intervene at any time if

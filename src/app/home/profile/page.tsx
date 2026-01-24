@@ -308,7 +308,7 @@ export default function ProfilePage() {
                     id="bio"
                     value={formData.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value)}
-                    className="border-input dark:bg-input/30 placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    className="border-input placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     rows={3}
                   />
                 ) : (

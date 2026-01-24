@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 // @ts-nocheck
 
 /**
@@ -404,7 +404,7 @@ export async function listenToEscrowEvents(
       console.error('Escrow event callback error:', err);
     }
   };
-  /* eslint-enable no-console */
+   
 
   contract.on(eventName, listener);
 }

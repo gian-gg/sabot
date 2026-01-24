@@ -15,7 +15,7 @@ interface ProjectQuestionnaireProps {
 
 export function ProjectQuestionnaire({
   agreementId,
-  onComplete, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onComplete,  
 }: ProjectQuestionnaireProps) {
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);

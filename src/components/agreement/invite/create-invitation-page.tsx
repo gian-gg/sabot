@@ -306,7 +306,7 @@ export function CreateInvitationPage() {
               </Button>
             </div>
             <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
-              <p className="text-sm text-amber-600 dark:text-amber-400">
+              <p className="text-sm text-amber-600">
                 <strong>Important:</strong> Both you and your counterparty must
                 be verified users to proceed with the agreement. Unverified
                 users will be prompted to complete identity verification.

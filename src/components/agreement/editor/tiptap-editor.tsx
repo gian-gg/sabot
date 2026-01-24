@@ -28,7 +28,7 @@ interface TiptapEditorProps {
   editorRef?: React.RefObject<HTMLDivElement | null>;
   templateContent?: string;
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
-  ydoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  ydoc: any;  
   isConnected: boolean;
   signatureImage?: string | null;
 }
@@ -278,7 +278,7 @@ export function TiptapEditor({
           onDragOver={handleDragOver}
         >
           {/* TipTap Editor */}
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          <div className="prose prose-slate max-w-none">
             <EditorContent editor={editor} />
           </div>
         </div>

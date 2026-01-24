@@ -247,16 +247,16 @@ export function CreateTransactionPage() {
           <CardContent className="space-y-4">
             {error === 'database' && (
               <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
-                <p className="text-sm text-amber-600 dark:text-amber-400">
+                <p className="text-sm text-amber-600
                   <strong>Setup Required:</strong> Please run the database
                   migrations:
                 </p>
-                <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-amber-600 dark:text-amber-400">
+                <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-amber-600
                   <li>Open Supabase Dashboard → SQL Editor</li>
                   <li>Run migration files from supabase/migrations/</li>
                   <li>Refresh this page</li>
                 </ol>
-                <p className="mt-2 text-xs text-amber-600/80 dark:text-amber-400/80">
+                <p className="mt-2 text-xs text-amber-600/80
                   See docs/QUICK_START.md for detailed instructions
                 </p>
               </div>
@@ -393,7 +393,7 @@ export function CreateTransactionPage() {
               </Button>
             </div>
             <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
-              <p className="text-sm text-amber-600 dark:text-amber-400">
+              <p className="text-sm text-amber-600
                 <strong>Important:</strong> Both you and your counterparty must
                 be verified users to proceed with the transaction. Unverified
                 users will be prompted to complete identity verification.

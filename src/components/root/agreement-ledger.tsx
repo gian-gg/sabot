@@ -57,8 +57,8 @@ function decodeDetails(details: string): string {
 }
 
 export function AgreementLedger({ agreements }: AgreementLedgerProps) {
-  // Limit to 10 most recent agreements
-  const recentAgreements = agreements.slice(0, 10);
+  // Limit to 5 most recent agreements
+  const recentAgreements = agreements.slice(0, 5);
 
   return (
     <Card className="gap-0 border border-neutral-800/60 bg-linear-to-b from-neutral-900/40 to-neutral-950/60 p-0 shadow-2xl backdrop-blur-sm">
@@ -100,7 +100,7 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
               href="https://sepolia-blockscout.lisk.com/address/0x1f5b3538E15b39546f31B51183dEe09ed71c300a?tab=txs"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-2 rounded-lg border border-neutral-700/50 bg-neutral-800/30 px-3 py-2 transition-all hover:border-purple-500/50 hover:bg-purple-500/10"
+              className="group hidden items-center gap-2 rounded-lg border border-neutral-700/50 bg-neutral-800/30 px-3 py-2 transition-all hover:border-purple-500/50 hover:bg-purple-500/10 sm:flex"
             >
               <div className="flex items-center gap-2">
                 {/* Lisk Logo */}
@@ -193,6 +193,41 @@ export function AgreementLedger({ agreements }: AgreementLedgerProps) {
           )}
         </div>
       </CardContent>
+      {/* Mobile Footer - Lisk Link */}
+      <div className="border-t border-neutral-800/50 bg-neutral-900/40 p-3 sm:hidden">
+        <a
+          href="https://sepolia-blockscout.lisk.com/address/0x1f5b3538E15b39546f31B51183dEe09ed71c300a?tab=txs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-700/50 bg-neutral-800/30 px-3 py-2 transition-all hover:border-purple-500/50 hover:bg-purple-500/10"
+        >
+          <div className="flex items-center gap-2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="transition-transform group-hover:scale-110"
+            >
+              <path
+                d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 29C8.832 29 3 23.168 3 16S8.832 3 16 3s13 5.832 13 13-5.832 13-13 13z"
+                fill="#0981D1"
+              />
+              <path
+                d="M16 7c-4.963 0-9 4.037-9 9s4.037 9 9 9 9-4.037 9-9-4.037-9-9-9zm0 15c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"
+                fill="#0981D1"
+              />
+              <circle cx="16" cy="16" r="3" fill="#0981D1" />
+            </svg>
+
+            <span className="text-sm font-medium text-neutral-300">
+              View on Lisk Explorer
+            </span>
+          </div>
+          <ExternalLink className="h-3.5 w-3.5 text-neutral-500" />
+        </a>
+      </div>
     </Card>
   );
 }

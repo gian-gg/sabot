@@ -78,14 +78,6 @@ const Footer = () => {
                   Tokens
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/#docs"
-                  className="text-sm text-neutral-400 transition-colors hover:text-white"
-                >
-                  Documentation
-                </Link>
-              </li>
             </ul>
           </div>
 

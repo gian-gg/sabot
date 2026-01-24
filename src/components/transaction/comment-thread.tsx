@@ -56,7 +56,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   return (
     <div className={`${level > 0 ? 'mt-2 ml-4' : ''}`}>
-      <div className="bg-background border-border hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 flex space-x-2 rounded-lg border px-5 py-5 transition-colors">
+      <div className="bg-background border-border hover:bg-accent hover:text-accent-foreground flex space-x-2 rounded-lg border px-5 py-5 transition-colors">
         {/* User Avatar - matching participant pattern */}
         {comment.user_avatar_url ? (
           <Image
@@ -278,13 +278,13 @@ const CommentThread: React.FC<CommentThreadProps> = ({
   }
 
   return (
-    <Card className="bg-background dark:bg-input/30 dark:border-input mt-6 border shadow-xs">
+    <Card className="bg-background mt-6 border shadow-xs">
       <CardContent className="px-4">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <Button
               variant="ghost"
-              className="hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50 flex h-auto w-full items-center justify-between p-0"
+              className="hover:bg-accent hover:text-accent-foreground flex h-auto w-full items-center justify-between p-0"
             >
               <div className="flex items-center space-x-2">
                 <MessageSquare className="text-foreground h-5 w-5" />
@@ -369,7 +369,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           {/* Edit Modal */}
           {editingComment && (
             <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-              <Card className="bg-background dark:bg-input/30 dark:border-input w-full max-w-md">
+              <Card className="bg-background w-full max-w-md">
                 <CardContent>
                   <h4 className="mb-3 font-semibold">Edit Comment</h4>
 

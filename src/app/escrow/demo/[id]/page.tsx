@@ -466,10 +466,10 @@ export default function EscrowDemoPage() {
                     key={deliverable.id}
                     className={`transition-colors ${
                       isCompleted
-                        ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+                        ? 'border-green-200 bg-green-50
                         : isInProgress
-                          ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'
-                          : 'border-gray-200 dark:border-gray-800'
+                          ? 'border-blue-200 bg-blue-50
+                          : 'border-gray-200
                     }`}
                   >
                     <CardContent className="pt-4">
@@ -628,7 +628,7 @@ export default function EscrowDemoPage() {
 
         {/* Completion Section */}
         {allDeliverablesCompleted && (
-          <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+          <Card className="border-green-200 bg-green-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-800">
                 <CheckCircle2 className="h-5 w-5" />

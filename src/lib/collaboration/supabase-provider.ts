@@ -2,7 +2,7 @@
 
 import * as Y from 'yjs';
 import { createClient } from '@/lib/supabase/client';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Any = any;
 
 interface SupabaseProviderConfig {
@@ -18,11 +18,11 @@ interface SupabaseProviderConfig {
 export class SupabaseProvider {
   private ydoc: Y.Doc;
   private name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private supabase: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private channel: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private awareness: any;
   private isReady = false;
 
@@ -66,7 +66,7 @@ export class SupabaseProvider {
         }
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       this.channel.on('presence', { event: 'leave' }, ({}: any) => {
         // Handle user leaving
       });
@@ -117,12 +117,12 @@ export class SupabaseProvider {
 
   private syncPresence(): void {
     if (!this.channel) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const presences = this.channel.presenceState() as any;
     if (this.awareness) {
       Object.values(presences).forEach((presenceList: unknown) => {
         if (Array.isArray(presenceList)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           presenceList.forEach((p: any) => {
             if (p.user?.id !== this.getCurrentUserId()) {
               this.awareness.setLocalState(p.user);
@@ -149,7 +149,7 @@ export class SupabaseProvider {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private async getCurrentUser(): Promise<any> {
     try {
       const {
