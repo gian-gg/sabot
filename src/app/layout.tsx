@@ -1,4 +1,4 @@
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { ConditionalHeader } from '@/components/core/conditional-header';
@@ -38,7 +38,7 @@ export default async function RootLayout({
           <FooterWrapper />
         </ErrorBoundary>
 
-        <Toaster richColors theme="dark" />
+        <Toaster />
       </body>
     </html>
   );
