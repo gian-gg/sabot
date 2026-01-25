@@ -65,7 +65,12 @@ export function FilterDialog({
   };
 
   const handleApply = () => {
-    onFiltersChange(localFilters);
+    onFiltersChange({
+      ...localFilters,
+      // Whenever filters change, reset to page 1 to ensure results exist
+      // This logic actually belongs in the parent handler usually, but we pass full filters back
+      // The parent `handleFilterChange` already does `page: 1`
+    });
     onOpenChange(false);
   };
 

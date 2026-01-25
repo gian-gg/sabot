@@ -4,6 +4,16 @@ import CommentThread from '@/components/transaction/comment-thread';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { exportTransactionToPDF } from '@/lib/pdf/export-transaction';
 import { cn } from '@/lib/utils';
 import { formatDate, formatStatusLabel } from '@/lib/utils/helpers';
@@ -12,6 +22,10 @@ import type {
   TransactionDetails,
   TransactionStatus,
 } from '@/types/transaction';
+import {
+  deleteTransaction,
+  cancelTransaction,
+} from '@/lib/supabase/db/transactions';
 import {
   Activity,
   AlertCircle,
@@ -68,93 +82,87 @@ export function TransactionDetailsModal({
   open,
   onOpenChange,
   readOnly = false,
+  onTransactionUpdate,
 }: {
   transaction: TransactionDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   readOnly?: boolean;
+  onTransactionUpdate?: () => void;
 }) {
   const [isExporting, setIsExporting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmationType, setConfirmationType] = useState<
+    'delete' | 'cancel' | null
+  >(null);
   const user = useUserStore();
 
   if (!transaction) return null;
 
   const isCreator = transaction.creator_id === user.id;
 
-  const handleCancelTransaction = async () => {
-    if (!transaction?.id) return;
+  const handleCancelClick = () => setConfirmationType('cancel');
+  const handleDeleteClick = () => setConfirmationType('delete');
 
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this active transaction? This action cannot be undone.'
-    );
+  const confirmAction = async () => {
+    if (!transaction?.id || !confirmationType) return;
 
-    if (!confirmed) return;
+    if (confirmationType === 'cancel') {
+      setIsCancelling(true);
+      try {
+        const response = await cancelTransaction(transaction.id);
 
-    setIsCancelling(true);
-    try {
-      const response = await fetch(
-        `/api/transaction/${transaction.id}/cancel`,
-        {
-          method: 'POST',
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to cancel transaction');
         }
-      );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to cancel transaction');
+        toast.success('Transaction cancelled successfully');
+        onOpenChange(false);
+        if (onTransactionUpdate) {
+          onTransactionUpdate();
+        }
+        // For cancel, we might want to keep modal open to show status change, or close it.
+        // Usually safer to close or let parent handle re-render which might close or update modal content.
+        // Let's keep it open but update data if possible, but since we rely on parent query update,
+        // triggering update should refresh data.
+        // If modal content depends on 'transaction' prop from parent, it will update.
+      } catch (error) {
+        console.error('Failed to cancel transaction:', error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'Failed to cancel transaction'
+        );
+      } finally {
+        setIsCancelling(false);
+        setConfirmationType(null);
       }
+    } else if (confirmationType === 'delete') {
+      setIsDeleting(true);
+      try {
+        const response = await deleteTransaction(transaction.id);
 
-      toast.success('Transaction cancelled successfully');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to cancel transaction:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to cancel transaction'
-      );
-    } finally {
-      setIsCancelling(false);
-    }
-  };
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to delete transaction');
+        }
 
-  const handleDeleteTransaction = async () => {
-    if (!transaction?.id) return;
-
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this transaction? This action cannot be undone.'
-    );
-
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch('/api/transaction/bulk-delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionIds: [transaction.id],
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete transaction');
+        toast.success('Transaction deleted successfully');
+        onOpenChange(false);
+        if (onTransactionUpdate) {
+          onTransactionUpdate();
+        }
+      } catch (error) {
+        console.error('Failed to delete transaction:', error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'Failed to delete transaction'
+        );
+      } finally {
+        setIsDeleting(false);
+        setConfirmationType(null);
       }
-
-      toast.success('Transaction deleted successfully');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to delete transaction:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete transaction'
-      );
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -243,7 +251,7 @@ export function TransactionDetailsModal({
                     variant="outline"
                     size="sm"
                     className="h-7 border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
-                    onClick={handleCancelTransaction}
+                    onClick={handleCancelClick}
                     disabled={isCancelling}
                     title="Cancel transaction"
                   >
@@ -265,7 +273,7 @@ export function TransactionDetailsModal({
                       variant="outline"
                       size="sm"
                       className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
-                      onClick={handleDeleteTransaction}
+                      onClick={handleDeleteClick}
                       disabled={isDeleting}
                       title="Delete transaction"
                     >
@@ -392,8 +400,9 @@ export function TransactionDetailsModal({
                     </p>
                     <p className="text-sm font-semibold">
                       {(transaction.transaction_participants.length > 1 &&
-                        transaction.transaction_participants[1]
-                          .participant_name) ||
+                        transaction.transaction_participants.find(
+                          (p) => p.role !== 'creator'
+                        )?.participant_name) ||
                         'N/A'}
                     </p>
                   </div>
@@ -557,103 +566,86 @@ export function TransactionDetailsModal({
 
               {/* Participants Section */}
               {transaction.transaction_participants &&
-                transaction.transaction_participants.length > 1 && (
+                transaction.transaction_participants.length > 0 && (
                   <div>
                     <h3 className="mb-4 flex items-center gap-2 font-semibold">
                       <Users className="h-5 w-5" />
                       Participants
                     </h3>
                     <div className="border-border/50 space-y-3 rounded-lg border p-4">
-                      {/* Creator (Current User) - Static */}
-                      <div className="bg-muted/20 flex items-center gap-3 rounded-lg p-3">
-                        {user.image ? (
-                          <Image
-                            src={user.image}
-                            alt={user.name || 'User'}
-                            width={40}
-                            height={40}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="from-primary/20 flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br to-blue-500/20">
-                            <User className="h-5 w-5" />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold">
-                            {user.name || 'Unknown User'}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {user.email || 'No email'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <Badge
-                            variant="outline"
-                            className="border-blue-500/20 bg-blue-500/10 text-xs text-blue-500"
-                          >
-                            Creator (You)
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Other Participants - Dynamic */}
                       {transaction.transaction_participants
-                        .filter((participant) => participant.role !== 'creator')
-                        .map((participant) => (
-                          <div
-                            key={participant.id}
-                            className="bg-muted/20 flex items-center gap-3 rounded-lg p-3"
-                          >
-                            {participant.participant_avatar_url ||
-                            participant.avatar ? (
-                              <Image
-                                src={
-                                  participant.participant_avatar_url ||
-                                  participant.avatar ||
-                                  ''
-                                }
-                                alt={
-                                  participant.participant_name ||
-                                  participant.name ||
-                                  'User'
-                                }
-                                width={40}
-                                height={40}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="from-primary/20 flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br to-blue-500/20">
-                                <User className="h-5 w-5" />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold">
-                                {participant.participant_name ||
-                                  participant.name ||
-                                  'Unknown User'}
-                              </p>
-                              <p className="text-muted-foreground text-xs">
-                                {participant.participant_email ||
-                                  participant.email ||
-                                  'No email'}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <Badge
-                                variant="outline"
-                                className="border-purple-500/20 bg-purple-500/10 text-xs text-purple-500"
-                              >
-                                Invitee
-                              </Badge>
-                              {participant.screenshot_uploaded && (
-                                <p className="text-muted-foreground mt-1 text-xs">
-                                  Screenshot uploaded
-                                </p>
+                        .sort((a, b) => {
+                          // Sort creator first
+                          if (a.role === 'creator') return -1;
+                          if (b.role === 'creator') return 1;
+                          return 0;
+                        })
+                        .map((participant) => {
+                          const isCurrentUser = participant.user_id === user.id;
+                          const isRoleCreator = participant.role === 'creator';
+
+                          return (
+                            <div
+                              key={participant.id}
+                              className="bg-muted/20 flex items-center gap-3 rounded-lg p-3"
+                            >
+                              {participant.participant_avatar_url ||
+                              participant.avatar ? (
+                                <Image
+                                  src={
+                                    participant.participant_avatar_url ||
+                                    participant.avatar ||
+                                    ''
+                                  }
+                                  alt={
+                                    participant.participant_name ||
+                                    participant.name ||
+                                    'User'
+                                  }
+                                  width={40}
+                                  height={40}
+                                  className="h-10 w-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="from-primary/20 flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br to-blue-500/20">
+                                  <User className="h-5 w-5" />
+                                </div>
                               )}
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold">
+                                  {participant.participant_name ||
+                                    participant.name ||
+                                    'Unknown User'}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {participant.participant_email ||
+                                    participant.email ||
+                                    'No email'}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    'text-xs',
+                                    isRoleCreator
+                                      ? 'border-blue-500/20 bg-blue-500/10 text-blue-500'
+                                      : 'border-purple-500/20 bg-purple-500/10 text-purple-500'
+                                  )}
+                                >
+                                  {isRoleCreator ? 'Creator' : 'Invitee'}
+                                  {isCurrentUser && ' (You)'}
+                                </Badge>
+                                {!isRoleCreator &&
+                                  participant.screenshot_uploaded && (
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                      Screenshot uploaded
+                                    </p>
+                                  )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                     </div>
                   </div>
                 )}
@@ -909,7 +901,11 @@ export function TransactionDetailsModal({
               {transaction.transaction_participants.length > 1 && (
                 <Button variant="outline" className="flex-1" asChild>
                   <Link
-                    href={`mailto:${transaction.transaction_participants[1].participant_email}`}
+                    href={`mailto:${
+                      transaction.transaction_participants.find(
+                        (p) => p.role !== 'creator'
+                      )?.participant_email
+                    }`}
                     className="flex h-12 items-center justify-center gap-2"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
@@ -936,6 +932,55 @@ export function TransactionDetailsModal({
           </div>
         </div>
       </DialogContent>
+
+      <AlertDialog
+        open={!!confirmationType}
+        onOpenChange={(open) => {
+          if (!open && !isCancelling && !isDeleting) {
+            setConfirmationType(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmationType === 'cancel'
+                ? 'Cancel Transaction'
+                : 'Delete Transaction'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmationType === 'cancel'
+                ? 'Are you sure you want to cancel this active transaction? This action cannot be undone.'
+                : 'Are you sure you want to delete this transaction? This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling || isDeleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className={cn(
+                confirmationType === 'delete'
+                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-600'
+                  : 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-600'
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                confirmAction();
+              }}
+              disabled={isCancelling || isDeleting}
+            >
+              {confirmationType === 'cancel'
+                ? isCancelling
+                  ? 'Cancelling...'
+                  : 'Yes, Cancel Transaction'
+                : isDeleting
+                  ? 'Deleting...'
+                  : 'Yes, Delete Transaction'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

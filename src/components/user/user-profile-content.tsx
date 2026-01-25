@@ -126,7 +126,19 @@ export function UserProfileContent({
             ? children
             : hasTransactions && (
                 <TransactionsSection
-                  recentTransactions={transactions}
+                  transactions={transactions}
+                  totalCount={transactions.length}
+                  queryParams={{
+                    page: 1,
+                    pageSize: 10,
+                    search: '',
+                    status: 'all',
+                    type: 'all',
+                    dateRange: 'all',
+                    sortBy: 'created_at',
+                    sortOrder: 'desc',
+                  }}
+                  onQueryChange={() => {}}
                   readOnly={!isOwnProfile}
                 />
               )}

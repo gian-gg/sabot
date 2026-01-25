@@ -87,7 +87,9 @@ const TransactionItem = ({
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <span>
               {transaction.transaction_participants?.length > 1
-                ? transaction.transaction_participants[1].participant_name
+                ? transaction.transaction_participants.find(
+                    (p) => p.role !== 'creator'
+                  )?.participant_name || 'N/A'
                 : 'N/A'}
             </span>
             <span>•</span>

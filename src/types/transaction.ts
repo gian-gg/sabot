@@ -234,3 +234,23 @@ export interface UserRole {
   user_id: string;
   role: string;
 }
+
+export interface TransactionQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: TransactionStatus | 'all';
+  type?: 'all' | 'meetup' | 'delivery' | 'online';
+  dateRange?: 'all' | 'today' | 'week' | 'month' | 'year';
+  minAmount?: number;
+  maxAmount?: number;
+  sortBy?: 'created_at' | 'price' | 'item_name';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedTransactionResponse {
+  transactions: TransactionDetails[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
