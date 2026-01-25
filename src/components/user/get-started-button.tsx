@@ -1,10 +1,10 @@
 'use client';
 import { signInWithGoogle } from '@/lib/supabase/server';
-import { useUserStore } from '@/store/user/userStore';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
+import { useUserStore } from '@/store/user/userStore';
 
 const GetStartedButton = () => {
   const user = useUserStore();
@@ -29,12 +29,12 @@ const GetStartedButton = () => {
     });
   };
 
-  if (user.id) {
+  if (user?.id) {
     return (
       <Button
         type="button"
         variant="ghost"
-        className="h-10 min-w-[260px] bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+        className="h-10 min-w-[200px] bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
         asChild
       >
         <Link href="/user">

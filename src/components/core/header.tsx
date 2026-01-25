@@ -1,11 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import HeaderAction from '@/components/core/header-action';
 import Logo from '@/components/core/logo';
-import AdminButton from './admin-button';
-import { Menu, Shield, Zap, FileText, Coins, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -13,7 +10,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import AdminButton from './admin-button';
 
 export function Header() {
   const [mouseX, setMouseX] = useState(0);

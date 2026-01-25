@@ -11,11 +11,11 @@ export function createClient() {
 }
 
 export async function signOut() {
-  clearUser();
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signOut();
 
+  clearUser();
   if (error) {
     throw new Error(`Error signing out: ${error.message}`);
   }
