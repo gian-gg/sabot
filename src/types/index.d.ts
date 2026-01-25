@@ -1,6 +1,6 @@
-import type { VerificationStatus, UserRole } from './user';
+// Global type declarations
+// Note: Using inline import() to keep types working with declare global
 
-// Tell TypeScript this file contains global declarations
 export {};
 
 declare global {
@@ -21,7 +21,7 @@ declare global {
     email: string;
     image: string;
     name: string;
-    verificationStatus: VerificationStatus;
-    role: UserRole;
+    verificationStatus: import('./user').VerificationStatus;
+    role: import('./user').UserRole;
   }
 }

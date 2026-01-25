@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { HydrateUser } from '@/store/user/hydrate-userStore';
 import '@/styles/globals.css';
 import type { Metadata } from 'next';
+import type { AuthUser } from '@/types';
 import React from 'react';
 import { Toaster } from 'sonner';
 
@@ -12,18 +13,6 @@ export const metadata: Metadata = {
   title: 'sabot',
   description: '#hacktoberfest #listbuilderschallenge3',
 };
-
-interface AuthUser {
-  id: string;
-  user_metadata: {
-    avatar_url: string;
-    full_name: string;
-    email: string;
-  };
-  created_at: string;
-  updated_at: string;
-  last_sign_in_at: string | null;
-}
 
 export default async function RootLayout({
   children,

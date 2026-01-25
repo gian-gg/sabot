@@ -27,8 +27,9 @@ import { useRouter } from 'next/navigation';
 
 import { getInitials } from '@/lib/utils/helpers';
 import { ROUTES } from '@/constants/routes';
+import type { SimpleUser } from '@/types';
 
-export default function HeaderAction({ user }: { user: User }) {
+export default function HeaderAction({ user }: { user: SimpleUser }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 

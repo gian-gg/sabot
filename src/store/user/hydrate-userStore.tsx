@@ -3,18 +3,7 @@
 import { useEffect } from 'react';
 import { useUserStore } from '@/store/user/userStore';
 import type { UserVerificationData } from '@/types/user';
-
-interface AuthUser {
-  id: string;
-  user_metadata: {
-    avatar_url: string;
-    full_name: string;
-    email: string;
-  };
-  created_at: string;
-  updated_at: string;
-  last_sign_in_at: string | null;
-}
+import type { AuthUser } from '@/types';
 
 export function HydrateUser({
   user,
