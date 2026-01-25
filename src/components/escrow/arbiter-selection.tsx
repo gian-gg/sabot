@@ -148,8 +148,8 @@ export function ArbiterSelection({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100
-          <Shield className="h-5 w-5 text-orange-600 />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+          <Shield className="h-5 w-5 text-orange-600" />
         </div>
         <div>
           <h3 className="text-lg font-semibold">Arbiter Selection</h3>
@@ -190,14 +190,12 @@ export function ArbiterSelection({
 
       {/* Selected Arbiter */}
       {selectedArbiter && (
-        <Card className="border-green-200 bg-green-50
+        <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <p className="font-medium text-green-900
-                  Selected Arbiter
-                </p>
+                <p className="font-medium text-green-900">Selected Arbiter</p>
                 <div className="mt-1 flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
@@ -243,7 +241,7 @@ export function ArbiterSelection({
             className={`hover:bg-muted/50 pointer-events-auto relative cursor-pointer border-l-4 transition-colors ${
               selectedArbiterId === arbiter.id
                 ? 'border-l-primary ring-primary/20 ring-2'
-                : 'border-l-amber-200
+                : 'border-l-amber-200'
             }`}
           >
             <CardContent

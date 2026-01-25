@@ -194,12 +194,12 @@ export function RequestArbiterModal({
           )}
 
           {/* Important Notice */}
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4
-            <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-800
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-800">
               <AlertTriangle className="h-4 w-4" />
               Important Information
             </h4>
-            <ul className="space-y-1 text-xs text-amber-700
+            <ul className="space-y-1 text-xs text-amber-700">
               <li>
                 • The arbiter&apos;s decision is{' '}
                 <strong>final and binding</strong>

@@ -2,7 +2,7 @@
 
 import * as Y from 'yjs';
 import { createClient } from '@/lib/supabase/client';
- 
+
 type Any = any;
 
 interface SupabaseProviderConfig {
@@ -18,11 +18,11 @@ interface SupabaseProviderConfig {
 export class SupabaseProvider {
   private ydoc: Y.Doc;
   private name: string;
-   
+
   private supabase: any;
-   
+
   private channel: any;
-   
+
   private awareness: any;
   private isReady = false;
 
@@ -66,7 +66,6 @@ export class SupabaseProvider {
         }
       );
 
-       
       this.channel.on('presence', { event: 'leave' }, ({}: any) => {
         // Handle user leaving
       });
@@ -117,12 +116,11 @@ export class SupabaseProvider {
 
   private syncPresence(): void {
     if (!this.channel) return;
-     
+
     const presences = this.channel.presenceState() as any;
     if (this.awareness) {
       Object.values(presences).forEach((presenceList: unknown) => {
         if (Array.isArray(presenceList)) {
-           
           presenceList.forEach((p: any) => {
             if (p.user?.id !== this.getCurrentUserId()) {
               this.awareness.setLocalState(p.user);
@@ -149,7 +147,6 @@ export class SupabaseProvider {
     return null;
   }
 
-   
   private async getCurrentUser(): Promise<any> {
     try {
       const {

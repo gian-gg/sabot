@@ -1919,13 +1919,13 @@ export function CreateTransactionForm({
             )}
 
             {isDataExtracted && extractedData && (
-              <Alert className="border-blue-500 bg-blue-50
-                <AlertDescription className="text-blue-800
+              <Alert className="border-blue-500 bg-blue-50">
+                <AlertDescription className="text-blue-800">
                   ✅ Data automatically extracted from screenshots (Confidence:{' '}
                   {((extractedData.confidence || 0) * 100).toFixed(0)}%)
                   {extractedData.riskFlags &&
                     extractedData.riskFlags.length > 0 && (
-                      <span className="mt-1 block text-amber-600
+                      <span className="mt-1 block text-amber-600">
                         ⚠️ Risk flags detected:{' '}
                         {extractedData.riskFlags.join(', ')}
                       </span>
@@ -1937,8 +1937,8 @@ export function CreateTransactionForm({
             {/* Extraction Status Banner */}
             {isDataExtracted &&
               Object.values(fieldLocks).some((locked) => locked) && (
-                <Alert className="border-green-500 bg-green-50
-                  <AlertDescription className="text-green-800
+                <Alert className="border-green-500 bg-green-50">
+                  <AlertDescription className="text-green-800">
                     ✓ Some fields were extracted from screenshot analysis
                   </AlertDescription>
                 </Alert>
@@ -2312,8 +2312,8 @@ export function CreateTransactionForm({
                 fieldLocks.online_platform ||
                 fieldLocks.online_contact ||
                 fieldLocks.online_instructions) && (
-                <Alert className="border-green-500 bg-green-50
-                  <AlertDescription className="text-green-800
+                <Alert className="border-green-500 bg-green-50">
+                  <AlertDescription className="text-green-800">
                     ✓ Some fields were extracted from screenshot analysis
                   </AlertDescription>
                 </Alert>
@@ -2781,8 +2781,8 @@ export function CreateTransactionForm({
                   <CardHeader className="border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-blue-100 p-2
-                          <Shield className="h-5 w-5 text-blue-600 />
+                        <div className="rounded-lg bg-blue-100 p-2">
+                          <Shield className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
                           <CardTitle className="text-base">
@@ -2835,9 +2835,9 @@ export function CreateTransactionForm({
                           released when both parties have fully completed and
                           verified their respective parts of the transaction.
                         </p>
-                        <Alert className="border-blue-200
+                        <Alert className="border-blue-200">
                           <Shield className="h-5 w-5 text-blue-400" />
-                          <AlertDescription className="text-sm text-blue-800
+                          <AlertDescription className="text-sm text-blue-800">
                             With escrow protection, funds and deliverables are
                             held safely until both parties fulfill their
                             obligations.
@@ -2855,8 +2855,8 @@ export function CreateTransactionForm({
                   <CardHeader className="border-b">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-amber-100 p-2
-                          <Shield className="h-5 w-5 text-amber-600 />
+                        <div className="rounded-lg bg-amber-100 p-2">
+                          <Shield className="h-5 w-5 text-amber-600" />
                         </div>
                         <div>
                           <CardTitle className="text-base">
@@ -2898,9 +2898,9 @@ export function CreateTransactionForm({
                           and mediate in case of disputes. This provides an
                           extra layer of security and trust.
                         </p>
-                        <Alert className="border-amber-200
-                          <Shield className="h-5 w-5 text-amber-400!" />
-                          <AlertDescription className="text-sm text-amber-800
+                        <Alert className="border-amber-200">
+                          <Shield className="h-5 w-5 text-amber-400" />
+                          <AlertDescription className="text-sm text-amber-800">
                             An arbiter is a neutral third party who can help
                             resolve disputes and ensure fair outcomes for both
                             parties.
@@ -3006,9 +3006,9 @@ export function CreateTransactionForm({
                 )}
 
                 {escrowEnabled && (
-                  <Alert className="border-green-200 bg-green-50
+                  <Alert className="border-green-200 bg-green-50">
                     <Shield className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="text-green-800
+                    <AlertDescription className="text-green-800">
                       <strong>Escrow Protection Enabled</strong>
                       <br />
                       {escrowData.deliverables.length} deliverable(s) protected
@@ -3017,9 +3017,9 @@ export function CreateTransactionForm({
                 )}
 
                 {arbiterEnabled && (
-                  <Alert className="border-amber-200 bg-amber-50
-                    <Shield className="h-4 w-4 text-amber-600!" />
-                    <AlertDescription className="flex flex-row text-amber-800
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <Shield className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="flex flex-row text-amber-800">
                       <strong>Arbiter Oversight Enabled</strong> (Independent
                       third-party mediation included)
                     </AlertDescription>

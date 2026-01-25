@@ -1,4 +1,3 @@
- 
 // @ts-nocheck
 
 /**
@@ -404,7 +403,6 @@ export async function listenToEscrowEvents(
       console.error('Escrow event callback error:', err);
     }
   };
-   
 
   contract.on(eventName, listener);
 }

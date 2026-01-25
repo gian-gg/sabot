@@ -15,7 +15,7 @@ interface ProjectQuestionnaireProps {
 
 export function ProjectQuestionnaire({
   agreementId,
-  onComplete,  
+  onComplete,
 }: ProjectQuestionnaireProps) {
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);

@@ -84,18 +84,18 @@ function getEventDescription(event: EscrowEvent): string {
 function getEventColor(eventType: EscrowEvent['event_type']): string {
   switch (eventType) {
     case 'completed':
-      return 'text-green-600 bg-green-100
+      return 'text-green-600 bg-green-100';
     case 'initiator_confirmed':
     case 'participant_confirmed':
-      return 'text-blue-600 bg-blue-100
+      return 'text-blue-600 bg-blue-100';
     case 'arbiter_requested':
     case 'arbiter_assigned':
     case 'disputed':
-      return 'text-amber-600 bg-amber-100
+      return 'text-amber-600 bg-amber-100';
     case 'cancelled':
-      return 'text-gray-600 bg-gray-100
+      return 'text-gray-600 bg-gray-100';
     default:
-      return 'text-gray-600 bg-gray-100
+      return 'text-gray-600 bg-gray-100';
   }
 }
 

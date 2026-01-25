@@ -134,8 +134,8 @@ export function TransactionActivePage({
         icon: CheckCircle2,
         text: 'Screenshots Uploaded',
         color: 'text-green-600',
-        bgColor: 'bg-green-50
-        borderColor: 'border-green-200
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
       };
     }
     if (hasUploadedScreenshot) {
@@ -143,16 +143,16 @@ export function TransactionActivePage({
         icon: Clock,
         text: 'Waiting for Other Party',
         color: 'text-amber-600',
-        bgColor: 'bg-amber-50
-        borderColor: 'border-amber-200
+        bgColor: 'bg-amber-50',
+        borderColor: 'border-amber-200',
       };
     }
     return {
       icon: Upload,
       text: 'Upload Required',
       color: 'text-blue-600',
-      bgColor: 'bg-blue-50
-      borderColor: 'border-blue-200
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
     };
   };
 
@@ -266,9 +266,9 @@ export function TransactionActivePage({
                   <Shield className="h-4 w-4 text-green-600" />
                   Escrow Protection
                 </h3>
-                <Alert className="border-green-200 bg-green-50
+                <Alert className="border-green-200 bg-green-50">
                   <Shield className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-sm text-green-800
+                  <AlertDescription className="text-sm text-green-800">
                     <strong>Protected Transaction</strong>
                     <br />
                     This transaction is protected by escrow with{' '}
@@ -288,9 +288,7 @@ export function TransactionActivePage({
                   <div className="flex items-center gap-3">
                     <div
                       className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                        hasUploadedScreenshot
-                          ? 'bg-green-100
-                          : 'bg-muted'
+                        hasUploadedScreenshot ? 'bg-green-100' : 'bg-muted'
                       }`}
                     >
                       {hasUploadedScreenshot ? (
@@ -314,9 +312,7 @@ export function TransactionActivePage({
                   <div className="flex items-center gap-3">
                     <div
                       className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                        otherPartyUploaded
-                          ? 'bg-green-100
-                          : 'bg-muted'
+                        otherPartyUploaded ? 'bg-green-100' : 'bg-muted'
                       }`}
                     >
                       {otherPartyUploaded ? (

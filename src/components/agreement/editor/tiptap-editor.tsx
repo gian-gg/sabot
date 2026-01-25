@@ -28,7 +28,7 @@ interface TiptapEditorProps {
   editorRef?: React.RefObject<HTMLDivElement | null>;
   templateContent?: string;
   onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
-  ydoc: any;  
+  ydoc: any;
   isConnected: boolean;
   signatureImage?: string | null;
 }

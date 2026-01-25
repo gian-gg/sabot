@@ -70,8 +70,7 @@ const DELIVERABLE_TYPES = [
     icon: Wrench,
     description: 'Work, consulting, maintenance',
     requiresArbiter: true,
-    color:
-      'bg-blue-50 border-blue-200 text-blue-800
+    color: 'bg-blue-50 border-blue-200 text-blue-800',
   },
   {
     value: 'item',
@@ -79,8 +78,7 @@ const DELIVERABLE_TYPES = [
     icon: Package,
     description: 'Goods, products, merchandise',
     requiresArbiter: true,
-    color:
-      'bg-green-50 border-green-200 text-green-800
+    color: 'bg-green-50 border-green-200 text-green-800',
   },
   {
     value: 'digital',
@@ -88,8 +86,7 @@ const DELIVERABLE_TYPES = [
     icon: Monitor,
     description: 'Files, software, digital content',
     requiresArbiter: false,
-    color:
-      'bg-purple-50 border-purple-200 text-purple-800
+    color: 'bg-purple-50 border-purple-200 text-purple-800',
   },
   {
     value: 'document',
@@ -97,8 +94,7 @@ const DELIVERABLE_TYPES = [
     icon: FileText,
     description: 'Papers, certificates, contracts',
     requiresArbiter: true,
-    color:
-      'bg-orange-50 border-orange-200 text-orange-800
+    color: 'bg-orange-50 border-orange-200 text-orange-800',
   },
   {
     value: 'cash',
@@ -106,8 +102,7 @@ const DELIVERABLE_TYPES = [
     icon: CreditCard,
     description: 'Physical cash transactions',
     requiresArbiter: true,
-    color:
-      'bg-red-50 border-red-200 text-red-800
+    color: 'bg-red-50 border-red-200 text-red-800',
   },
   {
     value: 'digital_transfer',
@@ -115,8 +110,7 @@ const DELIVERABLE_TYPES = [
     icon: Smartphone,
     description: 'Online payments, transfers',
     requiresArbiter: false,
-    color:
-      'bg-cyan-50 border-cyan-200 text-cyan-800
+    color: 'bg-cyan-50 border-cyan-200 text-cyan-800',
   },
 ];
 

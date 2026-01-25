@@ -110,11 +110,11 @@ export const TemplateUtils = {
   getDifficultyColor(difficulty: Template['difficulty']): string {
     switch (difficulty) {
       case 'beginner':
-        return 'bg-green-100 text-green-800
+        return 'bg-green-100 text-green-800';
       case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800
+        return 'bg-yellow-100 text-yellow-800';
       case 'advanced':
-        return 'bg-red-100 text-red-800
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -138,12 +138,10 @@ export const TemplateUtils = {
    */
   getCategoryColor(category: Template['category']): string {
     const colors: Record<Template['category'], string> = {
-      business: 'bg-blue-100 text-blue-800
-      confidentiality:
-        'bg-purple-100 text-purple-800
-      employment:
-        'bg-indigo-100 text-indigo-800
-      other: 'bg-gray-100 text-gray-800
+      business: 'bg-blue-100 text-blue-800',
+      confidentiality: 'bg-purple-100 text-purple-800',
+      employment: 'bg-indigo-100 text-indigo-800',
+      other: 'bg-gray-100 text-gray-800',
     };
     return colors[category];
   },

@@ -292,18 +292,14 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
       {/* Explanation section */}
       {explainingId === suggestion.id && explanationText[suggestion.id] && (
         <div className="mb-3 rounded border border-blue-200/50 bg-blue-50 p-2 text-xs">
-          <p className="text-blue-900">
-            {explanationText[suggestion.id]}
-          </p>
+          <p className="text-blue-900">{explanationText[suggestion.id]}</p>
         </div>
       )}
 
       {/* Simplified text section */}
       {simplifyingId === suggestion.id && simplifiedText[suggestion.id] && (
         <div className="mb-3 rounded border border-green-200/50 bg-green-50 p-2 text-xs">
-          <p className="text-green-900">
-            {simplifiedText[suggestion.id]}
-          </p>
+          <p className="text-green-900">{simplifiedText[suggestion.id]}</p>
         </div>
       )}
 
@@ -374,9 +370,7 @@ export function AiAssistant({ editorContent = '' }: AiAssistantProps) {
         {/* Summary */}
         {summary && (
           <div className="mb-4 rounded border border-blue-200/50 bg-blue-50 p-3 text-xs">
-            <p className="mb-1 font-semibold text-blue-900">
-              Summary
-            </p>
+            <p className="mb-1 font-semibold text-blue-900">Summary</p>
             <p className="text-blue-800">{summary}</p>
           </div>
         )}

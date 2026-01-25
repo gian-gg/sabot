@@ -37,7 +37,7 @@ export function AnalysisComplete({
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
   // Extract the actual analysis data (handle both nested and flat structures)
-   
+
   const flattenedAnalyses = analyses.map((analysis: any) => {
     // If the data is nested under extracted_data, flatten it
     if ('extracted_data' in analysis && analysis.extracted_data) {

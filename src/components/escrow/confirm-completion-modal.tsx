@@ -133,8 +133,8 @@ export function ConfirmCompletionModal({
           )}
 
           {/* Warning */}
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3
-            <p className="text-sm text-amber-800
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm text-amber-800">
               <strong>Important:</strong> By confirming, you acknowledge that
               you have received the agreed deliverables and are satisfied with
               the transaction.

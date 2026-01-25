@@ -354,7 +354,6 @@ export function DataConflictResolver({
 
   // If only one analysis, auto-resolve
   if (analyses.length === 1) {
-     
     const { source, screenshotId, ...data } = analyses[0];
     return (
       <div className="space-y-4">
