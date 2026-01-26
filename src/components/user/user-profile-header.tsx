@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { UserQRCode } from './user-qr-code';
 
 interface UserProfileHeaderProps {
   user: {
@@ -216,13 +217,15 @@ export function UserProfileHeader({
                   <Copy className="mr-2 size-4" />
                   Copy Profile Link
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => toast.info('QR Code feature coming soon')}
-                  className="cursor-pointer focus:bg-neutral-800 focus:text-white"
-                >
-                  <QrCode className="mr-2 size-4" />
-                  Show QR Code
-                </DropdownMenuItem>
+                <UserQRCode user={user}>
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    className="cursor-pointer focus:bg-neutral-800 focus:text-white"
+                  >
+                    <QrCode className="mr-2 size-4" />
+                    Show QR Code
+                  </DropdownMenuItem>
+                </UserQRCode>
               </DropdownMenuContent>
             </DropdownMenu>
 
