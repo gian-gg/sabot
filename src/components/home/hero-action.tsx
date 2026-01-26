@@ -25,14 +25,8 @@ import {
 
 import { useRegisterWallet } from '@/hooks/useRegisterWallet';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
 import { Handshake } from 'lucide-react';
+import { CreateActionModal } from './create-action-modal';
 import {
   getTransactionLimitsStatus,
   type TransactionLimitsStatus,
@@ -145,103 +139,16 @@ const HeroAction = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button disabled={transactionDisabled}>
-            <Plus className="size-4" />
-            Create
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="bottom">
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <DropdownMenuItem
-                  disabled={transactionDisabled}
-                  asChild={!transactionDisabled}
-                >
-                  {!transactionDisabled ? (
-                    <Link
-                      href={ROUTES.TRANSACTION.INVITE}
-                      className="flex items-center gap-2"
-                    >
-                      <BadgeCheck className="h-4 w-4" />
-                      <span>Transaction</span>
-                      {limits && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          ({limits.pending.current}/{limits.pending.max})
-                        </span>
-                      )}
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <BadgeCheck className="h-4 w-4" />
-                      <span>Transaction</span>
-                      {limits && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          ({limits.pending.current}/{limits.pending.max})
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </DropdownMenuItem>
-              </TooltipTrigger>
-              {transactionLimitHit && (
-                <TooltipContent side="right" className="max-w-xs">
-                  <p>{limitTooltip}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <DropdownMenuItem
-                  disabled={agreementDisabled}
-                  asChild={!agreementDisabled}
-                >
-                  {!agreementDisabled ? (
-                    <Link
-                      href={ROUTES.AGREEMENT.INVITE}
-                      className="flex items-center gap-2"
-                    >
-                      <Handshake className="h-4 w-4" />
-                      <span>Agreement</span>
-                      {agreementLimits && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          (
-                          {agreementLimits.waiting.current +
-                            agreementLimits.inProgress.current}
-                          /5)
-                        </span>
-                      )}
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Handshake className="h-4 w-4" />
-                      <span>Agreement</span>
-                      {agreementLimits && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          (
-                          {agreementLimits.waiting.current +
-                            agreementLimits.inProgress.current}
-                          /5)
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </DropdownMenuItem>
-              </TooltipTrigger>
-              {agreementLimitHit && (
-                <TooltipContent side="right" className="max-w-xs">
-                  <p>{agreementLimitTooltip}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <CreateActionModal
+        limits={limits}
+        agreementLimits={agreementLimits}
+        loading={loading}
+      >
+        <Button disabled={transactionDisabled && agreementDisabled}>
+          <Plus className="size-4" />
+          Create
+        </Button>
+      </CreateActionModal>
 
       {/* Warning indicator when limits are near or hit */}
       {(limits || agreementLimits) && (
