@@ -228,15 +228,6 @@ export function UserProfileHeader({
                 </UserQRCode>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {isOwnProfile && user.verificationStatus !== 'complete' && (
-              <Button size="sm" className="flex-1 sm:flex-none" asChild>
-                <Link href={ROUTES.USER.VERIFY}>
-                  Verify Now
-                  <ChevronRight className="ml-1 size-4" />
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
       </CardContent>

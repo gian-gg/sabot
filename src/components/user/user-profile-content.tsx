@@ -81,20 +81,6 @@ export function UserProfileContent({
         />
       )}
 
-      {/* Own profile verification alert */}
-      {!isVerified && isOwnProfile && (
-        <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-200">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
-          <AlertTitle className="text-amber-200">
-            Complete verification
-          </AlertTitle>
-          <AlertDescription className="text-amber-300/80">
-            Verify your identity to unlock full access to transactions and
-            contracts.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* No Transactions Alert (only for public view) */}
       {isVerified && !hasTransactions && !isOwnProfile && (
         <ProfileAlert
@@ -107,19 +93,21 @@ export function UserProfileContent({
       {/* Content Section (Transactions/Activity) */}
       {(isVerified || isOwnProfile) && (
         <div className="mt-10">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                {isOwnProfile ? 'Your Activity' : 'Transaction History'}
-              </h2>
-              <p className="text-sm text-neutral-400">
-                {isOwnProfile
-                  ? 'Manage your transactions and agreements'
-                  : 'Recent transactions with this user'}
-              </p>
+          {isVerified && (
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {isOwnProfile ? 'Your Activity' : 'Transaction History'}
+                </h2>
+                <p className="text-sm text-neutral-400">
+                  {isOwnProfile
+                    ? 'Manage your transactions and agreements'
+                    : 'Recent transactions with this user'}
+                </p>
+              </div>
+              {heroAction}
             </div>
-            {heroAction}
-          </div>
+          )}
 
           {/* Render children (tabs for own profile) or direct transaction list (public profile) */}
           {children
