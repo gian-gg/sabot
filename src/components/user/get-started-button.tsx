@@ -34,7 +34,7 @@ const GetStartedButton = () => {
       <Button
         type="button"
         variant="ghost"
-        className="h-10 min-w-[200px] bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100"
+        className="h-10 min-w-[200px] bg-white px-8 text-sm font-medium text-black hover:text-white"
         asChild
       >
         <Link href="/user">
@@ -48,7 +48,7 @@ const GetStartedButton = () => {
     <Button
       type="button"
       variant="ghost"
-      className="h-10 min-w-[260px] bg-white px-8 text-sm font-medium text-black hover:bg-neutral-100 disabled:opacity-70"
+      className="h-10 min-w-[260px] bg-white px-8 text-sm font-medium text-black hover:text-white disabled:opacity-70"
       onClick={handleClick}
       disabled={isPending}
     >
