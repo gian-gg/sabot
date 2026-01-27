@@ -1,4 +1,8 @@
-export type VerificationStatus = 'not-started' | 'pending' | 'complete';
+export type VerificationStatus =
+  | 'rejected'
+  | 'pending'
+  | 'verified'
+  | 'not-started';
 
 export type UserRole = 'user' | 'admin';
 

@@ -46,18 +46,7 @@ const UserProfilePage = async ({
         name: profile.name,
         email: profile.email || '', // Show email if available
         image: profile.avatar,
-        verificationStatus: profile.isVerified ? 'complete' : 'not-started',
-      }}
-      stats={{
-        transactionCount: allTransactions.length,
-        // Use mock data for now to match /user page
-        rating: 4.8,
-        trustScore: 95,
-        completedDeals: allTransactions.filter((t) => t.status === 'completed')
-          .length,
-        pendingDeals: allTransactions.filter(
-          (t) => t.status === 'active' || t.status === 'pending'
-        ).length,
+        verificationStatus: profile.isVerified ? 'verified' : 'not-started',
       }}
       transactions={allTransactions}
       isOwnProfile={false}

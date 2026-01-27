@@ -35,74 +35,25 @@ export async function updateUserVerificationStatus(
 ): Promise<boolean> {
   const supabase = await createClient();
 
-  const { data, error: updateError } = await supabase
-    .from('user_data')
-    .update({ verification_status: status })
-    .eq('id', userId)
-    .select('id');
+  const { error } = await supabase.from('user_data').upsert(
+    {
+      id: userId,
+      verification_status: status,
+      role: 'user',
+    },
+    { onConflict: 'id' }
+  );
 
-  console.log(userId, updateError);
-
-  if (updateError) {
-    console.error('Error updating user verification status:', updateError);
+  if (error) {
+    console.error(
+      `❌ Supabase Upsert Error for user ${userId}:`,
+      error.message
+    );
     return false;
   }
 
-  // If updateError is null, check if any data was returned.
-  // No data means no row was found to update.
-  if (!data || data.length === 0) {
-    // Row doesn't exist, so create it
-    const { error: insertError } = await supabase.from('user_data').insert({
-      id: userId,
-      verification_status: status,
-      role: 'user', // default role
-    });
-
-    if (insertError) {
-      console.error('Error creating user verification status:', insertError);
-      return false;
-    }
-  }
-
+  console.log(`✅ user_data ${status} for ${userId}`);
   return true;
-}
-
-// Batch fetch verification status for many users
-export async function getUsersVerificationMap(
-  userIds: string[]
-): Promise<Record<string, VerificationStatus>> {
-  const unique = Array.from(new Set(userIds)).filter(Boolean);
-  if (unique.length === 0) return {};
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('user_data')
-    .select('id, verification_status')
-    .in('id', unique);
-
-  if (error || !data) {
-    // Fallback: mark unknowns as not-started
-    return Object.fromEntries(
-      unique.map((id) => [id, 'not-started' as VerificationStatus])
-    );
-  }
-
-  type UserDataRow = {
-    id: string;
-    verification_status: VerificationStatus | null;
-  };
-  const rows = data as UserDataRow[];
-  const map: Record<string, VerificationStatus> = Object.fromEntries(
-    rows.map(({ id, verification_status }) => [
-      id,
-      (verification_status ?? 'not-started') as VerificationStatus,
-    ])
-  );
-  // Ensure every id has an entry
-  for (const id of unique) {
-    if (!map[id]) map[id] = 'not-started';
-  }
-  return map;
 }
 
 export async function getEncryptedKey(userId: string): Promise<string | null> {

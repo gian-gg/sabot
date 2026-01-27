@@ -45,11 +45,11 @@ const HeroAction = () => {
     useState<AgreementLimitsStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useRegisterWallet(user.verificationStatus === 'complete');
+  useRegisterWallet(user.verificationStatus === 'verified');
 
   // Fetch transaction and agreement limits
   useEffect(() => {
-    if (user.id && user.verificationStatus === 'complete') {
+    if (user.id && user.verificationStatus === 'verified') {
       Promise.all([
         getTransactionLimitsStatus(user.id),
         getAgreementLimitsStatus(user.id),
@@ -69,7 +69,7 @@ const HeroAction = () => {
     }
   }, [user.id, user.verificationStatus]);
 
-  if (user.verificationStatus === 'not-started') {
+  if (!user.verificationStatus || user.verificationStatus === 'rejected') {
     return (
       <Button asChild>
         <Link href={ROUTES.USER.VERIFY} className="flex items-center gap-2">

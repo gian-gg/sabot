@@ -53,7 +53,6 @@ export type {
 export { PRICE_CONSTRAINTS, validatePrice } from './transaction';
 
 export * from './user';
-export * from './verify';
 
 export interface SimpleUser {
   id: string;

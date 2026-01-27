@@ -29,6 +29,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { UserQRCode } from './user-qr-code';
+import type { VerificationStatus } from '@/types/user';
 
 interface UserProfileHeaderProps {
   user: {
@@ -37,7 +38,7 @@ interface UserProfileHeaderProps {
     email: string;
     image?: string;
     role?: 'admin' | 'user';
-    verificationStatus?: 'complete' | 'pending' | 'not-started';
+    verificationStatus?: VerificationStatus;
   };
   isOwnProfile?: boolean;
 }
@@ -48,7 +49,7 @@ export function UserProfileHeader({
 }: UserProfileHeaderProps) {
   const getVerificationBadge = () => {
     switch (user.verificationStatus) {
-      case 'complete':
+      case 'verified':
         return (
           <Badge className="border-primary/50 bg-primary/20 text-primary gap-1.5">
             <Shield className="size-3" />

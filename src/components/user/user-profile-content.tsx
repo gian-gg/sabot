@@ -2,12 +2,12 @@
 
 import TransactionsSection from '@/components/home/components/transactions/transactions-section';
 import { ProfileAlert } from '@/components/profile/profile-alert';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { UserProfileHeader } from '@/components/user/user-profile-header';
 import { ROUTES } from '@/constants/routes';
 import type { TransactionDetails } from '@/types/transaction';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import type { VerificationStatus } from '@/types/user';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 
@@ -18,7 +18,7 @@ interface UserProfileContentProps {
     email: string;
     image?: string;
     role?: 'admin' | 'user';
-    verificationStatus?: 'complete' | 'pending' | 'not-started';
+    verificationStatus?: VerificationStatus;
   };
   transactions: TransactionDetails[];
   isOwnProfile?: boolean;
@@ -36,10 +36,10 @@ export function UserProfileContent({
   showBackButton = false,
 }: UserProfileContentProps) {
   const hasTransactions = transactions.length > 0;
-  const isVerified = user.verificationStatus === 'complete';
+  const isVerified = user.verificationStatus === 'verified';
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-[70vh] space-y-8">
       {/* Back Button */}
       {showBackButton && (
         <div>

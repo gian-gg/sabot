@@ -4,14 +4,11 @@ import AgreementsSection from '@/components/home/components/agreement/agreements
 import TransactionsSection from '@/components/home/components/transactions/transactions-section';
 import { GasFeeWarningDialog } from '@/components/home/gas-fee-warning-dialog';
 import { TabNavigation } from '@/components/home/tab-navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { IdentityVerificationRequired } from '@/components/user/identity-verification-required';
+import { VerificationInstructions } from '@/components/user/verification-instructions';
 import { UserProfileContent } from '@/components/user/user-profile-content';
-import { ROUTES } from '@/constants/routes';
 import { useUserStore } from '@/store/user/userStore';
-import { ArrowRight, Shield } from 'lucide-react';
-import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import HeroAction from '@/components/home/hero-action';
@@ -120,7 +117,7 @@ export default function UserPage() {
               ))}
             </div>
           </div>
-        ) : user.verificationStatus === 'complete' ? (
+        ) : user.verificationStatus === 'verified' ? (
           <>
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="mt-6">
@@ -140,43 +137,13 @@ export default function UserPage() {
             </div>
           </>
         ) : (
-          <div className="mt-8">
-            <Card className="group relative w-full overflow-hidden border-neutral-800 bg-black/40 p-0 transition-colors hover:border-neutral-700">
-              <div className="bg-grid-white/[0.02] absolute inset-0 z-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent opacity-50" />
-
-              <div className="relative z-10 flex flex-col items-center justify-between gap-6 p-6 sm:flex-row sm:p-8">
-                <div className="flex flex-1 flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-                  <div className="shrink-0 pt-1">
-                    <div className="flex size-14 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
-                      <Shield className="size-7 text-amber-500" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h2 className="text-lg font-semibold tracking-tight text-white">
-                      Identity Verification Required
-                    </h2>
-                    <p className="max-w-xl text-sm leading-relaxed text-neutral-400">
-                      Unlock full platform capabilities including higher limits,
-                      trust badges, and premium features by verifying your
-                      identity.
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 w-full shrink-0 px-6 font-medium shadow-[0_0_20px_-5px_rgba(var(--primary),0.3)] transition-all sm:w-auto"
-                  asChild
-                >
-                  <Link href={ROUTES.USER.VERIFY}>
-                    Verify Identity
-                    <ArrowRight className="ml-2 size-4" />
-                  </Link>
-                </Button>
-              </div>
-            </Card>
-          </div>
+          <>
+            <IdentityVerificationRequired
+              userId={user.id}
+              status={user.verificationStatus}
+            />
+            <VerificationInstructions />
+          </>
         )}
       </UserProfileContent>
     </>
