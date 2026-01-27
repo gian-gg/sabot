@@ -1,7 +1,6 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
-import { clearUser } from '@/store/user/userStore';
 
 export function createClient() {
   return createBrowserClient(
@@ -15,7 +14,6 @@ export async function signOut() {
 
   const { error } = await supabase.auth.signOut();
 
-  clearUser();
   if (error) {
     throw new Error(`Error signing out: ${error.message}`);
   }

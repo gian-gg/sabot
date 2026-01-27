@@ -3,9 +3,9 @@
 import {
   BadgeCheck,
   Bell,
+  CirclePoundSterling,
   CreditCard,
   LogOut,
-  CirclePoundSterling,
 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,12 +21,12 @@ import {
 import Link from 'next/link';
 
 import { signOut } from '@/lib/supabase/client';
-import { toast } from 'sonner';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { getInitials } from '@/lib/utils/helpers';
 import { ROUTES } from '@/constants/routes';
+import { getInitials } from '@/lib/utils/helpers';
 import type { SimpleUser } from '@/types';
 
 export default function HeaderAction({ user }: { user: SimpleUser }) {
@@ -38,7 +38,8 @@ export default function HeaderAction({ user }: { user: SimpleUser }) {
     toast.promise(signOut(), {
       loading: 'Signing out...',
       success: () => {
-        router.push(ROUTES.ROOT);
+        window.location.href = ROUTES.ROOT;
+
         return 'Signed out successfully!';
       },
       error: (error: Error) => {
