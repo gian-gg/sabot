@@ -1,6 +1,6 @@
 'use server';
 
-import { getUserProfile } from '@/lib/supabase/db/profile';
+import { getUserEmailFromID } from '@/lib/supabase/db/user';
 import { sendEmail } from './index';
 
 /**
@@ -35,14 +35,13 @@ function getApprovedEmailHTML(userName: string): string {
     
     .email-card {
       background-color: #252525;
-      border: 1px solid #2d2d2d;
-      border-radius: 12px;
+      border: 2px solid #2d2d2d;
       overflow: hidden;
     }
     
     .email-header {
       background: linear-gradient(135deg, #01d06c 0%, #00b85d 100%);
-      padding: 40px 30px;
+      padding: 50px 30px;
       text-align: center;
     }
     
@@ -53,25 +52,7 @@ function getApprovedEmailHTML(userName: string): string {
       color: #1a1a1a;
     }
     
-    .checkmark-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      background-color: #1a1a1a;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .checkmark {
-      width: 32px;
-      height: 32px;
-      border-left: 4px solid #01d06c;
-      border-bottom: 4px solid #01d06c;
-      transform: rotate(-45deg);
-      margin-bottom: 8px;
-    }
+
     
     .email-body {
       padding: 40px 30px;
@@ -94,11 +75,12 @@ function getApprovedEmailHTML(userName: string): string {
     .cta-button {
       display: inline-block;
       background-color: #01d06c;
-      color: #1a1a1a;
+      color: #ffffff;
       text-decoration: none;
       padding: 14px 32px;
-      border-radius: 6px;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       font-size: 15px;
       margin: 20px 0;
       transition: opacity 0.2s ease;
@@ -110,8 +92,7 @@ function getApprovedEmailHTML(userName: string): string {
     
     .features-list {
       background-color: #1e1e1e;
-      border: 1px solid #2d2d2d;
-      border-radius: 8px;
+      border: 2px solid #2d2d2d;
       padding: 20px 24px;
       margin: 24px 0;
     }
@@ -153,9 +134,6 @@ function getApprovedEmailHTML(userName: string): string {
   <div class="email-container">
     <div class="email-card">
       <div class="email-header">
-        <div class="checkmark-icon">
-          <div class="checkmark"></div>
-        </div>
         <h1>Verification Approved!</h1>
       </div>
       
@@ -193,7 +171,7 @@ function getApprovedEmailHTML(userName: string): string {
         </p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://sabot.app'}/user" class="cta-button">
+          <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://sabot.app'}/user" class="cta-button">
             View Your Profile
           </a>
         </center>
@@ -204,7 +182,6 @@ function getApprovedEmailHTML(userName: string): string {
       </div>
       
       <div class="email-footer">
-        <p class="footer-text"><span class="brand-name">SABOT</span> - Secure Transaction Platform</p>
         <p class="footer-text">© ${new Date().getFullYear()} SABOT. All rights reserved.</p>
       </div>
     </div>
@@ -246,16 +223,15 @@ function getRejectedEmailHTML(userName: string): string {
     
     .email-card {
       background-color: #252525;
-      border: 1px solid #2d2d2d;
-      border-radius: 12px;
+      border: 2px solid #2d2d2d;
       overflow: hidden;
     }
     
     .email-header {
-      background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
-      padding: 40px 30px;
+      background: linear-gradient(135deg, #3d1f1f 0%, #2d1515 100%);
+      padding: 50px 30px;
       text-align: center;
-      border-bottom: 2px solid #3d3d3d;
+      border-bottom: 3px solid #ff4444;
     }
     
     .email-header h1 {
@@ -265,20 +241,7 @@ function getRejectedEmailHTML(userName: string): string {
       color: #f9f9f9;
     }
     
-    .alert-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 20px;
-      background-color: #1a1a1a;
-      border: 2px solid #3d3d3d;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: 700;
-      color: #888;
-    }
+
     
     .email-body {
       padding: 40px 30px;
@@ -300,8 +263,7 @@ function getRejectedEmailHTML(userName: string): string {
     
     .info-box {
       background-color: #1e1e1e;
-      border-left: 4px solid #01d06c;
-      border-radius: 6px;
+      border-left: 5px solid #ff4444;
       padding: 20px 24px;
       margin: 24px 0;
     }
@@ -322,8 +284,7 @@ function getRejectedEmailHTML(userName: string): string {
     
     .reasons-list {
       background-color: #1e1e1e;
-      border: 1px solid #2d2d2d;
-      border-radius: 8px;
+      border: 2px solid #2d2d2d;
       padding: 20px 24px;
       margin: 24px 0;
     }
@@ -345,12 +306,13 @@ function getRejectedEmailHTML(userName: string): string {
     
     .cta-button {
       display: inline-block;
-      background-color: #01d06c;
-      color: #1a1a1a;
+      background-color: #ff4444;
+      color: #ffffff;
       text-decoration: none;
       padding: 14px 32px;
-      border-radius: 6px;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       font-size: 15px;
       margin: 20px 0;
       transition: opacity 0.2s ease;
@@ -382,7 +344,6 @@ function getRejectedEmailHTML(userName: string): string {
   <div class="email-container">
     <div class="email-card">
       <div class="email-header">
-        <div class="alert-icon">!</div>
         <h1>Verification Update</h1>
       </div>
       
@@ -429,7 +390,7 @@ function getRejectedEmailHTML(userName: string): string {
         </p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://sabot.app'}/verify" class="cta-button">
+          <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://sabot.app'}/user" class="cta-button">
             Try Verification Again
           </a>
         </center>
@@ -441,7 +402,6 @@ function getRejectedEmailHTML(userName: string): string {
       </div>
       
       <div class="email-footer">
-        <p class="footer-text"><span class="brand-name">SABOT</span> - Secure Transaction Platform</p>
         <p class="footer-text">© ${new Date().getFullYear()} SABOT. All rights reserved.</p>
       </div>
     </div>
@@ -458,16 +418,16 @@ export async function sendApprovedEmail(userId: string): Promise<boolean> {
   try {
     console.log(`📧 Sending approved email to user: ${userId}`);
 
-    // Fetch user profile to get email and name
-    const userProfile = await getUserProfile(userId);
+    // Fetch user email and name by ID
+    const userData = await getUserEmailFromID(userId);
 
-    if (!userProfile || !userProfile.email) {
+    if (!userData || !userData.email) {
       console.error(`❌ No email found for user ${userId}`);
       return false;
     }
 
-    const userName = userProfile.name || 'User';
-    const userEmail = userProfile.email;
+    const userName = userData.name;
+    const userEmail = userData.email;
 
     // Send email
     await sendEmail(
@@ -492,16 +452,16 @@ export async function sendRejectedEmail(userId: string): Promise<boolean> {
   try {
     console.log(`📧 Sending rejected email to user: ${userId}`);
 
-    // Fetch user profile to get email and name
-    const userProfile = await getUserProfile(userId);
+    // Fetch user email and name by ID
+    const userData = await getUserEmailFromID(userId);
 
-    if (!userProfile || !userProfile.email) {
+    if (!userData || !userData.email) {
       console.error(`❌ No email found for user ${userId}`);
       return false;
     }
 
-    const userName = userProfile.name || 'User';
-    const userEmail = userProfile.email;
+    const userName = userData.name;
+    const userEmail = userData.email;
 
     // Send email
     await sendEmail(

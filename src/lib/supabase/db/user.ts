@@ -1,8 +1,32 @@
 'use server';
 
 import { createClient } from '../server';
+import { createAdminClient } from '../admin';
 import type { UserVerificationData, VerificationStatus } from '@/types/user';
 import type { UserRole, DBTransaction } from '@/types/transaction';
+
+export async function getUserEmailFromID(
+  userId: string
+): Promise<{ email: string; name: string } | null> {
+  try {
+    const supabaseAdmin = createAdminClient();
+
+    const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (error || !data.user) {
+      console.error(`❌ Error fetching user ${userId}:`, error);
+      return null;
+    }
+
+    return {
+      email: data.user.email || '',
+      name: data.user.user_metadata?.name || 'User',
+    };
+  } catch (error) {
+    console.error(`❌ Error in getUserEmailFromID:`, error);
+    return null;
+  }
+}
 
 export async function getUserVerificationData(
   userId: string
