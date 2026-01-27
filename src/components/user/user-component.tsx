@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  BadgeCheck,
-  Bell,
-  CirclePoundSterling,
-  CreditCard,
-  LogOut,
-} from 'lucide-react';
+import { User2, CirclePoundSterling, CreditCard, LogOut } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -21,7 +15,6 @@ import {
 import Link from 'next/link';
 
 import { signOut } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -30,7 +23,6 @@ import { getInitials } from '@/lib/utils/helpers';
 import type { SimpleUser } from '@/types';
 
 export default function HeaderAction({ user }: { user: SimpleUser }) {
-  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
   function handleSignOut() {
@@ -49,19 +41,10 @@ export default function HeaderAction({ user }: { user: SimpleUser }) {
     });
   }
 
-  function handleNotifications() {
-    toast('No new notifications', {
-      action: {
-        label: 'View',
-        onClick: () => router.push(ROUTES.REPORTS),
-      },
-    });
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-lg focus:outline-none">
+        <button className="cursor-pointer rounded-lg focus:outline-none">
           <Avatar className="h-8 w-8 rounded-lg text-xs">
             {user.image ? (
               <AvatarImage src={user.image} alt={user.name} />
@@ -79,20 +62,22 @@ export default function HeaderAction({ user }: { user: SimpleUser }) {
         sideOffset={4}
       >
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="h-8 w-8 rounded-lg border">
-              {user.image ? (
-                <AvatarImage src={user.image} alt={user.name} />
-              ) : null}
-              <AvatarFallback className="rounded-lg">
-                {getInitials(user.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs">{user.email}</span>
+          <Link href={ROUTES.USER.ROOT}>
+            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <Avatar className="h-8 w-8 rounded-lg border">
+                {user.image ? (
+                  <AvatarImage src={user.image} alt={user.name} />
+                ) : null}
+                <AvatarFallback className="rounded-lg">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs">{user.email}</span>
+              </div>
             </div>
-          </div>
+          </Link>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -106,18 +91,16 @@ export default function HeaderAction({ user }: { user: SimpleUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href={ROUTES.USER.ROOT}>
-              <BadgeCheck />
-              Account
+            <Link href="#">
+              <User2 />
+              Profile
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(ROUTES.WALLET)}>
-            <CreditCard />
-            Wallet
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleNotifications}>
-            <Bell />
-            Notifications
+          <DropdownMenuItem asChild>
+            <Link href={ROUTES.WALLET}>
+              <CreditCard />
+              Wallet
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
