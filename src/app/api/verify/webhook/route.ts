@@ -1,4 +1,5 @@
 import { updateUserVerificationStatus } from '@/lib/supabase/db/user';
+import { sendApprovedEmail, sendRejectedEmail } from '@/lib/email/verify';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -47,10 +48,27 @@ export async function POST(req: Request) {
 
     console.log(`✅ User ${userId} successfully updated to "${dbStatus}"`);
 
+    // 4. Send Email Notifications
+    // Email failures should not break the webhook response
+    try {
+      if (dbStatus === 'verified') {
+        await sendApprovedEmail(userId);
+        console.log(`📧 Approved email sent to user ${userId}`);
+      } else if (dbStatus === 'rejected') {
+        await sendRejectedEmail(userId);
+        console.log(`📧 Rejected email sent to user ${userId}`);
+      }
+    } catch (emailError) {
+      console.error(`⚠️  Email sending failed for user ${userId}:`, emailError);
+      // Don't throw - we still want to return 200 to Didit
+    }
+
     // Always return 200 to Didit to acknowledge receipt
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (error: any) {
-    console.error('💥 Webhook Processing Error:', error.message);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    console.error('💥 Webhook Processing Error:', errorMessage);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
