@@ -104,16 +104,6 @@ export default function UserPage() {
           role: user.role,
           verificationStatus: user.verificationStatus,
         }}
-        stats={{
-          transactionCount: transactionsTotalCount,
-          rating: 4.8,
-          trustScore: 95,
-          completedDeals: transactions.filter((t) => t.status === 'completed')
-            .length, // Note: This might be inaccurate if paginated, but acceptable for now
-          pendingDeals: transactions.filter(
-            (t) => t.status === 'active' || t.status === 'pending'
-          ).length, // Note: This might be inaccurate if paginated
-        }}
         transactions={transactions}
         isOwnProfile={true}
         heroAction={<HeroAction />}

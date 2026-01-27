@@ -20,13 +20,6 @@ interface UserProfileContentProps {
     role?: 'admin' | 'user';
     verificationStatus?: 'complete' | 'pending' | 'not-started';
   };
-  stats: {
-    transactionCount: number;
-    rating: number;
-    trustScore: number;
-    completedDeals: number;
-    pendingDeals: number;
-  };
   transactions: TransactionDetails[];
   isOwnProfile?: boolean;
   heroAction?: React.ReactNode;
@@ -36,7 +29,6 @@ interface UserProfileContentProps {
 
 export function UserProfileContent({
   user,
-  stats,
   transactions,
   isOwnProfile = false,
   heroAction,
@@ -66,11 +58,7 @@ export function UserProfileContent({
       )}
 
       {/* User Profile Header */}
-      <UserProfileHeader
-        user={user}
-        stats={stats}
-        isOwnProfile={isOwnProfile}
-      />
+      <UserProfileHeader user={user} isOwnProfile={isOwnProfile} />
 
       {/* Alerts for unverified users */}
       {!isVerified && !isOwnProfile && (

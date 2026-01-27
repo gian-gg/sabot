@@ -24,8 +24,6 @@ import {
   QrCode,
   Share2,
   Shield,
-  Star,
-  TrendingUp,
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -41,27 +39,11 @@ interface UserProfileHeaderProps {
     role?: 'admin' | 'user';
     verificationStatus?: 'complete' | 'pending' | 'not-started';
   };
-  stats?: {
-    transactionCount: number;
-    rating: number;
-    trustScore: number;
-    completedDeals: number;
-    pendingDeals: number;
-  };
   isOwnProfile?: boolean;
 }
 
-const DEFAULT_STATS = {
-  transactionCount: 0,
-  rating: 0,
-  trustScore: 0,
-  completedDeals: 0,
-  pendingDeals: 0,
-};
-
 export function UserProfileHeader({
   user,
-  stats = DEFAULT_STATS,
   isOwnProfile = false,
 }: UserProfileHeaderProps) {
   const getVerificationBadge = () => {
@@ -143,25 +125,6 @@ export function UserProfileHeader({
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-1 sm:justify-start">
                 {getVerificationBadge()}
-                {stats.rating > 0 && (
-                  <>
-                    <div className="flex items-center gap-1.5 text-sm text-neutral-400">
-                      <Star className="fill-primary text-primary size-4" />
-                      <span className="font-semibold text-white">
-                        {stats.rating}
-                      </span>
-                      <span>rating</span>
-                    </div>
-                    <div className="h-4 w-px bg-neutral-700" />
-                    <div className="flex items-center gap-1.5 text-sm text-neutral-400">
-                      <TrendingUp className="text-primary size-4" />
-                      <span className="font-semibold text-white">
-                        {stats.trustScore}%
-                      </span>
-                      <span>trust</span>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
