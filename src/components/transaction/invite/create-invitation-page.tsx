@@ -31,6 +31,7 @@ import {
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
+import { sendTransactionInviteWithCurrentUser } from '@/lib/email/transactions';
 
 export function CreateTransactionPage() {
   const router = useRouter();
@@ -197,13 +198,29 @@ export function CreateTransactionPage() {
   const handleSendInvitation = async () => {
     if (!email) return;
     setSending(true);
-    // TODO: Integrate with email service (Resend/SendGrid)
-    await new Promise((r) => setTimeout(r, 1200));
-    console.log('Sending invitation to:', email);
-    toast.success(`Invitation sent to ${email}`);
-    setSending(false);
-    setDialogOpen(false);
-    setEmail('');
+
+    try {
+      // Send the transaction invite email (server action handles getting current user)
+      const result = await sendTransactionInviteWithCurrentUser(
+        email,
+        transactionLink
+      );
+
+      if (result.success) {
+        toast.success(`Invitation sent to ${email}`);
+        setDialogOpen(false);
+        setEmail('');
+      } else {
+        toast.error(
+          result.error || 'Failed to send invitation. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      toast.error('Failed to send invitation. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleCopy = async () => {
