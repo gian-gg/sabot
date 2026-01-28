@@ -67,7 +67,7 @@ export async function getUserProfile(
     if (!userExists) return null;
 
     const isVerified =
-      verificationResult.data?.verification_status === 'complete';
+      verificationResult.data?.verification_status === 'verified';
     const userInfo = creatorTransactions[0] || {};
     const baseProfile = {
       id: userId,

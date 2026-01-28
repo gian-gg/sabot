@@ -21,6 +21,7 @@ interface ReviewTransactionInvitationProps {
   onAccept: () => void;
   onDecline: () => void;
   accepting?: boolean;
+  disabled?: boolean;
 }
 
 export function ReviewTransactionInvitation({
@@ -28,6 +29,7 @@ export function ReviewTransactionInvitation({
   onAccept,
   onDecline,
   accepting = false,
+  disabled = false,
 }: ReviewTransactionInvitationProps) {
   return (
     <Card>
@@ -87,11 +89,15 @@ export function ReviewTransactionInvitation({
             variant="outline"
             onClick={onDecline}
             className="flex-1 bg-transparent"
-            disabled={accepting}
+            disabled={accepting || disabled}
           >
             Decline
           </Button>
-          <Button onClick={onAccept} className="flex-1" disabled={accepting}>
+          <Button
+            onClick={onAccept}
+            className="flex-1"
+            disabled={accepting || disabled}
+          >
             {accepting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

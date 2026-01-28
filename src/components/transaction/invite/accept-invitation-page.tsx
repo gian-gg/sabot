@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ROUTES } from '@/constants/routes';
 import {
@@ -15,6 +16,8 @@ import { toast } from 'sonner';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { getUserVerificationData } from '@/lib/supabase/db/user';
+import type { VerificationStatus } from '@/types/user';
 
 interface AcceptTransactionPageProps {
   transactionId: string;
@@ -39,6 +42,8 @@ export function AcceptTransactionPage({
   const [error, setError] = useState<string | null>(null);
   const [isSelfInvite, setIsSelfInvite] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus | null>(null);
 
   useEffect(() => {
     const fetchInviterData = async () => {
@@ -94,6 +99,12 @@ export function AcceptTransactionPage({
           isVerified: true,
           completedTransactions: 0,
         });
+
+        // Fetch current user's verification status
+        if (user) {
+          const verificationData = await getUserVerificationData(user.id);
+          setVerificationStatus(verificationData.verification_status);
+        }
 
         console.log('✅ Inviter state set:', {
           id: data.creator_id,
@@ -270,12 +281,55 @@ export function AcceptTransactionPage({
             You&apos;ve been invited to a verified transaction
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Verification Blocking Error */}
+          {verificationStatus && verificationStatus !== 'verified' && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Verification Required to Accept</AlertTitle>
+              <AlertDescription>
+                {verificationStatus === 'not-started' && (
+                  <>
+                    You must verify your identity before accepting transaction
+                    invitations. Both parties must be verified to participate.{' '}
+                    <Link
+                      href="/user"
+                      className="font-semibold underline underline-offset-4"
+                    >
+                      Verify your identity now
+                    </Link>{' '}
+                    to continue.
+                  </>
+                )}
+                {verificationStatus === 'pending' && (
+                  <>
+                    Your identity verification is currently pending review. You
+                    cannot accept invitations until verification is complete.
+                    Please check back soon.
+                  </>
+                )}
+                {verificationStatus === 'rejected' && (
+                  <>
+                    Your previous verification attempt was rejected. Please{' '}
+                    <Link
+                      href="/user"
+                      className="font-semibold underline underline-offset-4"
+                    >
+                      complete verification
+                    </Link>{' '}
+                    before accepting transaction invitations.
+                  </>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <ReviewTransactionInvitation
             inviter={inviter}
             onAccept={handleAcceptInvite}
             onDecline={handleDecline}
             accepting={accepting}
+            disabled={verificationStatus !== 'verified'}
           />
         </CardContent>
       </Card>
