@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAgreementStatus } from '@/hooks/useAgreementStatus';
 import { toast } from 'sonner';
+import { sendAgreementInviteWithCurrentUser } from '@/lib/email/agreements';
 
 export function CreateInvitationPage() {
   const router = useRouter();
@@ -168,15 +169,26 @@ export function CreateInvitationPage() {
   const handleSendInvitation = async () => {
     if (!email) return;
     setSending(true);
+
     try {
-      // TODO: Implement email sending via backend
-      console.log('Sending invitation to:', email);
-      toast.success(`Invitation sent to ${email}`);
-      setDialogOpen(false);
-      setEmail('');
-    } catch (err) {
-      console.error('Error sending invitation:', err);
-      toast.error('Failed to send invitation');
+      // Send the agreement invite email (server action handles getting current user)
+      const result = await sendAgreementInviteWithCurrentUser(
+        email,
+        agreementLink
+      );
+
+      if (result.success) {
+        toast.success(`Invitation sent to ${email}`);
+        setDialogOpen(false);
+        setEmail('');
+      } else {
+        toast.error(
+          result.error || 'Failed to send invitation. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      toast.error('Failed to send invitation. Please try again.');
     } finally {
       setSending(false);
     }
