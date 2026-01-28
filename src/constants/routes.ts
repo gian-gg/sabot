@@ -9,6 +9,7 @@ export const ROUTES = {
   USER: {
     ROOT: '/user',
     VERIFY: '/user/verify',
+    SETTINGS: '/user/settings',
     ADMIN: '/user/admin',
     VIEW: (id: string) => `/user/${id}`,
   },

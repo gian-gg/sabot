@@ -1,6 +1,11 @@
 'use client';
 
-import { User2, CirclePoundSterling, CreditCard, LogOut } from 'lucide-react';
+import {
+  Settings,
+  CirclePoundSterling,
+  CreditCard,
+  LogOut,
+} from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -91,9 +96,9 @@ export default function HeaderAction({ user }: { user: SimpleUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="#">
-              <User2 />
-              Profile
+            <Link href={ROUTES.USER.SETTINGS}>
+              <Settings />
+              Settings
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

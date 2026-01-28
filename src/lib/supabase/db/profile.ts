@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '../server';
+import { uploadToBucket } from '../storage';
 import type { PublicUserProfile, ProfileTransaction } from '@/types/profile';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -255,4 +256,113 @@ function determineTransactionType(
   if (name.includes('electronics')) return 'electronics';
   if (name.includes('service')) return 'services';
   return 'home-goods';
+}
+
+/**
+ * Updates a user's display name
+ * @param userId - The user's ID
+ * @param displayName - The new display name
+ * @returns Success status
+ */
+export async function updateUserDisplayName(
+  userId: string,
+  displayName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Verify the authenticated user matches the userId
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id !== userId) {
+      return {
+        success: false,
+        error: 'Unauthorized: You can only update your own profile',
+      };
+    }
+
+    // Update the user_metadata in Supabase Auth
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { full_name: displayName },
+    });
+
+    if (authError) {
+      console.error('Failed to update user display name:', authError);
+      return { success: false, error: authError.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error updating display name:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Uploads a user's profile picture to Supabase Storage and updates their profile
+ * @param userId - The user's ID
+ * @param file - The image file to upload (as base64 data URL)
+ * @returns Success status and the new image URL
+ */
+export async function uploadProfilePicture(
+  userId: string,
+  file: string // base64 data URL from cropper
+): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
+  try {
+    const supabase = await createClient();
+
+    // Verify the authenticated user matches the userId
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id !== userId) {
+      return {
+        success: false,
+        error: 'Unauthorized: You can only update your own profile',
+      };
+    }
+
+    // Convert base64 data URL to Blob
+    const response = await fetch(file);
+    const blob = await response.blob();
+
+    // Generate a unique filename
+    const fileName = `profile-${userId}.jpg`;
+
+    // Upload to Supabase Storage
+    const { publicUrl } = await uploadToBucket({
+      bucket: 'avatars',
+      content: blob,
+      fileName,
+      pathPrefix: userId,
+      contentType: 'image/jpeg',
+      upsert: true, // Allow overwriting existing profile pictures
+    });
+
+    if (!publicUrl) {
+      return { success: false, error: 'Failed to get public URL' };
+    }
+
+    // Update the user_metadata with the new image URL
+    const { error: authError } = await supabase.auth.updateUser({
+      data: { avatar_url: publicUrl },
+    });
+
+    if (authError) {
+      console.error('Failed to update user profile picture:', authError);
+      return { success: false, error: authError.message };
+    }
+
+    return { success: true, imageUrl: publicUrl };
+  } catch (error) {
+    console.error('Unexpected error uploading profile picture:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 }
