@@ -107,26 +107,26 @@ export function CreateActionModal({
                     }`}
                   >
                     <Card
-                      className={`group relative flex h-full flex-col justify-between overflow-hidden border-neutral-800 bg-neutral-900/40 p-6 transition-all duration-300 ${
+                      className={`group relative flex h-full flex-col justify-between overflow-hidden border-neutral-800 bg-neutral-900/40 p-4 transition-all duration-300 sm:p-6 ${
                         transactionDisabled
                           ? 'opacity-50'
                           : 'hover:border-primary/50 hover:shadow-primary/10 cursor-pointer hover:bg-neutral-900/80 hover:shadow-2xl'
                       }`}
                     >
-                      <div className="mb-6">
-                        <div className="bg-primary/10 text-primary ring-primary/20 group-hover:bg-primary/20 mb-4 flex size-12 items-center justify-center rounded-xl ring-1 transition-all group-hover:scale-110">
-                          <BadgeCheck className="size-6" />
+                      <div className="mb-4 sm:mb-6">
+                        <div className="bg-primary/10 text-primary ring-primary/20 group-hover:bg-primary/20 mb-3 flex size-10 items-center justify-center rounded-xl ring-1 transition-all group-hover:scale-110 sm:mb-4 sm:size-12">
+                          <BadgeCheck className="size-5 sm:size-6" />
                         </div>
-                        <h3 className="group-hover:text-primary mb-2 text-lg font-bold text-white transition-colors">
+                        <h3 className="group-hover:text-primary mb-1 text-base font-bold text-white transition-colors sm:mb-2 sm:text-lg">
                           Transaction
                         </h3>
-                        <p className="text-sm leading-relaxed text-neutral-400">
+                        <p className="text-xs leading-relaxed text-neutral-400 sm:text-sm">
                           Create a secure, escrow-backed transaction for buying
                           or selling items with fraud protection.
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-neutral-800/50 pt-4">
+                      <div className="flex items-center justify-between border-t border-neutral-800/50 pt-3 sm:pt-4">
                         {limits ? (
                           <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
                             <span
@@ -169,26 +169,26 @@ export function CreateActionModal({
                     }`}
                   >
                     <Card
-                      className={`group relative flex h-full flex-col justify-between overflow-hidden border-neutral-800 bg-neutral-900/40 p-6 transition-all duration-300 ${
+                      className={`group relative flex h-full flex-col justify-between overflow-hidden border-neutral-800 bg-neutral-900/40 p-4 transition-all duration-300 sm:p-6 ${
                         agreementDisabled
                           ? 'opacity-50'
                           : 'cursor-pointer hover:border-purple-500/50 hover:bg-neutral-900/80 hover:shadow-2xl hover:shadow-purple-500/10'
                       }`}
                     >
-                      <div className="mb-6">
-                        <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 ring-1 ring-purple-500/20 transition-all group-hover:scale-110 group-hover:bg-purple-500/20">
-                          <Handshake className="size-6" />
+                      <div className="mb-4 sm:mb-6">
+                        <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 ring-1 ring-purple-500/20 transition-all group-hover:scale-110 group-hover:bg-purple-500/20 sm:mb-4 sm:size-12">
+                          <Handshake className="size-5 sm:size-6" />
                         </div>
-                        <h3 className="mb-2 text-lg font-bold text-white transition-colors group-hover:text-purple-500">
+                        <h3 className="mb-1 text-base font-bold text-white transition-colors group-hover:text-purple-500 sm:mb-2 sm:text-lg">
                           Agreement
                         </h3>
-                        <p className="text-sm leading-relaxed text-neutral-400">
+                        <p className="text-xs leading-relaxed text-neutral-400 sm:text-sm">
                           Draft a formal service contract or partnership
                           agreement with clear terms and milestones.
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-neutral-800/50 pt-4">
+                      <div className="flex items-center justify-between border-t border-neutral-800/50 pt-3 sm:pt-4">
                         {agreementLimits ? (
                           <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
                             <span
