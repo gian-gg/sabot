@@ -400,11 +400,7 @@ export default function TransactionsSection({
                     <TransactionItem
                       key={transaction.id}
                       transaction={transaction}
-                      onClick={
-                        readOnly
-                          ? undefined
-                          : () => handleTransactionClick(transaction)
-                      }
+                      onClick={() => handleTransactionClick(transaction)}
                     />
                   ))}
 

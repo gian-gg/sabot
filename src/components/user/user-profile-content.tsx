@@ -84,10 +84,22 @@ export function UserProfileContent({
           {isVerified && (
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="hidden text-xl font-bold text-white sm:block">
+                <h2
+                  className={
+                    isOwnProfile
+                      ? 'hidden text-xl font-bold text-white sm:block'
+                      : 'text-xl font-bold text-white'
+                  }
+                >
                   {isOwnProfile ? 'Your Activity' : 'Transaction History'}
                 </h2>
-                <p className="hidden text-sm text-neutral-400 sm:block">
+                <p
+                  className={
+                    isOwnProfile
+                      ? 'hidden text-sm text-neutral-400 sm:block'
+                      : 'text-sm text-neutral-400'
+                  }
+                >
                   {isOwnProfile
                     ? 'Manage your transactions and agreements'
                     : 'Recent transactions with this user'}

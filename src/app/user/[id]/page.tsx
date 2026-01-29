@@ -31,6 +31,11 @@ const UserProfilePage = async ({
     getTransactionDetailsByUserID(id),
   ]);
 
+  // Filter to show only completed transactions for public profiles
+  const completedTransactions = allTransactions.filter(
+    (transaction) => transaction.status === 'completed'
+  );
+
   if (!profile) {
     return (
       <div className="container mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 md:px-8">
@@ -48,7 +53,7 @@ const UserProfilePage = async ({
         image: profile.avatar,
         verificationStatus: profile.isVerified ? 'verified' : 'not-started',
       }}
-      transactions={allTransactions}
+      transactions={completedTransactions}
       isOwnProfile={false}
       showBackButton={true}
     />
