@@ -30,8 +30,10 @@ import type { AgreementWithParticipants } from '@/types/agreement';
 
 export default function AgreementsSection({
   recentAgreements,
+  onAgreementUpdate,
 }: {
   recentAgreements: AgreementWithParticipants[];
+  onAgreementUpdate?: () => void;
 }) {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -291,6 +293,7 @@ export default function AgreementsSection({
         agreement={selectedAgreement}
         open={isDetailsModalOpen}
         onOpenChange={setIsDetailsModalOpen}
+        onAgreementUpdate={onAgreementUpdate}
       />
     </div>
   );

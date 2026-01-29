@@ -6,6 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { AgreementStatus } from '@/types/agreement';
 import {
   CheckCircle2,
@@ -23,6 +33,7 @@ import { toast } from 'sonner';
 import { formatDate, formatAgreementStatusLabel } from '@/lib/utils/helpers';
 import type { AgreementWithParticipants } from '@/types/agreement';
 import { useUserStore } from '@/store/user/userStore';
+import { cancelAgreement } from '@/lib/supabase/db/agreements';
 
 const statusIcons: Record<AgreementStatus, React.ElementType> = {
   waiting_for_participant: Users,
@@ -43,12 +54,15 @@ export function AgreementDetailsModal({
   agreement,
   open,
   onOpenChange,
+  onAgreementUpdate,
 }: {
   agreement: AgreementWithParticipants | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAgreementUpdate?: () => void;
 }) {
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelAlert, setShowCancelAlert] = useState(false);
   const user = useUserStore();
 
   if (!agreement) return null;
@@ -57,30 +71,24 @@ export function AgreementDetailsModal({
   const StatusIcon = statusIcons[agreement.status];
   const inviteLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/agreement/accept?id=${agreement.id}`;
 
+  const handleCancelClick = () => setShowCancelAlert(true);
+
   const handleCancelAgreement = async () => {
     if (!agreement?.id) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this agreement? This action cannot be undone.'
-    );
-
-    if (!confirmed) return;
-
     setIsCancelling(true);
     try {
-      const response = await fetch(`/api/agreement/${agreement.id}/cancel`, {
-        method: 'POST',
-      });
+      const response = await cancelAgreement(agreement.id);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to cancel agreement');
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to cancel agreement');
       }
 
       toast.success('Agreement cancelled successfully');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      onOpenChange(false);
+      if (onAgreementUpdate) {
+        onAgreementUpdate();
+      }
     } catch (error) {
       console.error('Failed to cancel agreement:', error);
       toast.error(
@@ -88,6 +96,7 @@ export function AgreementDetailsModal({
       );
     } finally {
       setIsCancelling(false);
+      setShowCancelAlert(false);
     }
   };
 
@@ -116,20 +125,22 @@ export function AgreementDetailsModal({
                   {formatAgreementStatusLabel(agreement.status)}
                 </Badge>
 
-                {/* Cancel Button - only for non-finalized agreements */}
-                {isCreator && agreement.status !== 'finalized' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
-                    onClick={handleCancelAgreement}
-                    disabled={isCancelling}
-                    title="Cancel agreement"
-                  >
-                    <X className="mr-1.5 h-3.5 w-3.5" />
-                    {isCancelling ? 'Cancelling...' : 'Cancel'}
-                  </Button>
-                )}
+                {/* Cancel Button - only for non-finalized/non-cancelled agreements */}
+                {isCreator &&
+                  agreement.status !== 'finalized' &&
+                  agreement.status !== 'cancelled' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                      onClick={handleCancelClick}
+                      disabled={isCancelling}
+                      title="Cancel agreement"
+                    >
+                      <X className="mr-1.5 h-3.5 w-3.5" />
+                      {isCancelling ? 'Cancelling...' : 'Cancel'}
+                    </Button>
+                  )}
               </div>
             </div>
 
@@ -414,6 +425,29 @@ export function AgreementDetailsModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Cancel Alert Dialog */}
+      <AlertDialog open={showCancelAlert} onOpenChange={setShowCancelAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Agreement</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this agreement? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelAgreement}
+              disabled={isCancelling}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isCancelling ? 'Cancelling...' : 'Yes, cancel agreement'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

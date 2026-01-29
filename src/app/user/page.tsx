@@ -42,7 +42,7 @@ export default function UserPage() {
       sortOrder: 'desc',
     });
 
-  // Reusable fetch function
+  // Reusable fetch function for transactions
   const refreshTransactions = useCallback(async () => {
     if (!user.id) return;
     setTransactionsLoading(true);
@@ -60,6 +60,17 @@ export default function UserPage() {
     }
   }, [user.id, transactionQueryParams]);
 
+  // Reusable fetch function for agreements
+  const refreshAgreements = useCallback(async () => {
+    if (!user.id) return;
+    try {
+      const recentAgreements = await getAgreementsByUserID(user.id);
+      setAgreements(recentAgreements);
+    } catch (error) {
+      console.error('Error fetching agreements:', error);
+    }
+  }, [user.id]);
+
   // Data fetching effect
   useEffect(() => {
     if (user.id) {
@@ -72,10 +83,7 @@ export default function UserPage() {
     const fetchAgreements = async () => {
       if (!user.id) return;
       try {
-        const recentAgreements = await getAgreementsByUserID(user.id);
-        setAgreements(recentAgreements);
-      } catch (error) {
-        console.error('Error fetching agreements:', error);
+        await refreshAgreements();
       } finally {
         setLoading(false);
       }
@@ -84,7 +92,7 @@ export default function UserPage() {
     if (user.id) {
       fetchAgreements();
     }
-  }, [user.id]);
+  }, [user.id, refreshAgreements]);
 
   const handleQueryChange = (newParams: TransactionQueryParams) => {
     setTransactionQueryParams(newParams);
@@ -163,7 +171,10 @@ export default function UserPage() {
                 />
               )}
               {activeTab === 'agreements' && (
-                <AgreementsSection recentAgreements={agreements} />
+                <AgreementsSection
+                  recentAgreements={agreements}
+                  onAgreementUpdate={refreshAgreements}
+                />
               )}
             </div>
           </>
