@@ -305,10 +305,9 @@ export async function deleteTransaction(
     }
 
     const deletableStatuses = [
-      'waiting_for_participant',
-      'both_joined',
-      'screenshots_uploaded',
       'pending',
+      'waiting_for_participant',
+      'cancelled',
     ];
 
     if (!deletableStatuses.includes(transaction.status)) {
@@ -380,7 +379,13 @@ export async function cancelTransaction(
       };
     }
 
-    if (transaction.status !== 'active') {
+    const cancellableStatuses = [
+      'active',
+      'both_joined',
+      'screenshots_uploaded',
+    ];
+
+    if (!cancellableStatuses.includes(transaction.status)) {
       return {
         success: false,
         error: 'Only active transactions can be cancelled',

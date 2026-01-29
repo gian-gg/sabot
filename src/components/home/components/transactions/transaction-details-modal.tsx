@@ -5,6 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -245,41 +251,58 @@ export function TransactionDetailsModal({
                   {formatStatusLabel(transaction.status)}
                 </Badge>
 
-                {/* Cancel Button - only for active status */}
-                {!readOnly && isCreator && transaction.status === 'active' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
-                    onClick={handleCancelClick}
-                    disabled={isCancelling}
-                    title="Cancel transaction"
-                  >
-                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                    {isCancelling ? 'Cancelling...' : 'Cancel'}
-                  </Button>
-                )}
-
-                {/* Delete Button - only for early-stage statuses */}
+                {/* Cancel Button - for active transactions with participant engagement */}
                 {!readOnly &&
                   isCreator &&
-                  [
-                    'waiting_for_participant',
-                    'both_joined',
-                    'screenshots_uploaded',
-                    'pending',
-                  ].includes(transaction.status) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
-                      onClick={handleDeleteClick}
-                      disabled={isDeleting}
-                      title="Delete transaction"
-                    >
-                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                      {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
+                  ['active', 'both_joined', 'screenshots_uploaded'].includes(
+                    transaction.status
+                  ) && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700"
+                            onClick={handleCancelClick}
+                            disabled={isCancelling}
+                          >
+                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                            {isCancelling ? 'Cancelling...' : 'Cancel'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Cancel this active transaction</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                {/* Delete Button - only for early-stage transactions */}
+                {!readOnly &&
+                  isCreator &&
+                  ['pending', 'waiting_for_participant', 'cancelled'].includes(
+                    transaction.status
+                  ) && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700"
+                            onClick={handleDeleteClick}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Permanently delete this transaction</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
               </div>
             </div>
