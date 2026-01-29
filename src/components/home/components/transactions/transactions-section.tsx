@@ -2,13 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { CardDescription, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -18,27 +12,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  ArrowUpDown,
   CheckCircle2,
   DollarSign,
   Filter,
+  Inbox,
+  Loader2,
   Search,
   TrendingUp,
   Users,
   X,
-  Loader2,
-  ArrowUpDown,
-  Inbox,
 } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import AreaChartComponent from './area-chart-component';
 import { FilterDialog, type TransactionFilters } from './filter-dialog';
-import PieChartComponent from './pie-chart-component';
+import { Pagination } from './pagination';
 import StatsCard from './stats-card';
 import { TransactionDetailsModal } from './transaction-details-modal';
 import TransactionItem from './transaction-item';
 import { TransactionItemSkeleton } from './transaction-item-skeleton';
-import { Pagination } from './pagination';
 
 import type {
   TransactionDetails,
