@@ -82,18 +82,18 @@ export function UserProfileContent({
       {(isVerified || isOwnProfile) && (
         <div className="mt-10">
           {isVerified && (
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="hidden text-xl font-bold text-white sm:block">
                   {isOwnProfile ? 'Your Activity' : 'Transaction History'}
                 </h2>
-                <p className="text-sm text-neutral-400">
+                <p className="hidden text-sm text-neutral-400 sm:block">
                   {isOwnProfile
                     ? 'Manage your transactions and agreements'
                     : 'Recent transactions with this user'}
                 </p>
               </div>
-              {heroAction}
+              <div className="w-full sm:w-auto">{heroAction}</div>
             </div>
           )}
 

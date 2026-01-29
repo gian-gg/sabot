@@ -14,14 +14,16 @@ const StatsCard = ({
   description: string;
 }) => {
   return (
-    <Card className="border-border/40 from-card to-card/50 bg-linear-to-br">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="text-primary h-4 w-4" />
+    <Card className="border-border/40 from-card to-card/50 gap-0 bg-linear-to-br p-4 md:gap-4 md:p-6">
+      <CardHeader className="flex flex-row items-center justify-between p-0">
+        <CardTitle className="text-xs font-medium sm:text-sm">
+          {title}
+        </CardTitle>
+        <Icon className="text-primary/50" />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="text-muted-foreground flex items-center text-xs">
+      <CardContent className="p-0">
+        <div className="text-xl font-bold sm:text-2xl">{value}</div>
+        <div className="text-muted-foreground flex items-center text-[10px] sm:text-xs">
           <span>{description}</span>
         </div>
       </CardContent>

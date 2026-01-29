@@ -27,6 +27,7 @@ import {
   X,
   Loader2,
   ArrowUpDown,
+  Inbox,
 } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 
@@ -36,6 +37,7 @@ import PieChartComponent from './pie-chart-component';
 import StatsCard from './stats-card';
 import { TransactionDetailsModal } from './transaction-details-modal';
 import TransactionItem from './transaction-item';
+import { TransactionItemSkeleton } from './transaction-item-skeleton';
 import { Pagination } from './pagination';
 
 import type {
@@ -223,9 +225,9 @@ export default function TransactionsSection({
   }, [filters]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           Icon={DollarSign}
           title="Total Volume"
@@ -257,47 +259,42 @@ export default function TransactionsSection({
 
       {/* Main Content Tabs */}
       <div className="flex h-full w-full flex-col gap-4">
-        <div className="grid gap-4 lg:grid-cols-7">
-          {/* Transaction Volume Chart */}
-          <AreaChartComponent transactionVolumeData={transactionVolumeData} />
-
-          {/* Status Distribution */}
-          <PieChartComponent statusDistributionData={statusDistributionData} />
-        </div>
+        {/* Transaction Volume Chart */}
+        <AreaChartComponent transactionVolumeData={transactionVolumeData} />
 
         {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  Recent Transactions
-                  {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                </CardTitle>
-                <CardDescription>
-                  {readOnly
-                    ? 'Latest transaction activity'
-                    : 'Your latest transaction activity'}
-                </CardDescription>
+        <div className="mt-6 min-h-[600px] space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Recent Transactions
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              </CardTitle>
+              <CardDescription>
+                {readOnly
+                  ? 'Latest transaction activity'
+                  : 'Your latest transaction activity'}
+              </CardDescription>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-auto">
+                <Search className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+                <Input
+                  placeholder="Search..."
+                  className="bg-background h-10 w-full pl-9 sm:w-[250px]"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                />
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="relative">
-                  <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-                  <Input
-                    placeholder="Search..."
-                    className="h-9 w-full pl-8 sm:w-[200px]"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                  />
-                </div>
+              <div className="flex w-full gap-2 sm:w-auto">
                 <Select
                   value={`${queryParams.sortBy}-${queryParams.sortOrder}`}
                   onValueChange={handleSortChange}
                 >
-                  <SelectTrigger className="h-9 w-[160px]">
+                  <SelectTrigger className="flex-1 sm:w-[160px] sm:flex-none">
                     <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5" />
+                      <ArrowUpDown className="h-4 w-4" />
                       <SelectValue placeholder="Sort by" />
                     </div>
                   </SelectTrigger>
@@ -313,9 +310,8 @@ export default function TransactionsSection({
                 </Select>
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => setIsFilterDialogOpen(true)}
-                  className="h-9"
+                  className="flex-1 sm:flex-none"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Filter
@@ -330,8 +326,9 @@ export default function TransactionsSection({
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+
+          <div>
             {/* Active Filters Display */}
             {activeFilterCount > 0 && (
               <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -400,24 +397,22 @@ export default function TransactionsSection({
             )}
 
             <div className="space-y-3">
-              {transactions.length > 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TransactionItemSkeleton key={i} />
+                ))
+              ) : transactions.length > 0 ? (
                 <>
                   {transactions.map((transaction) => (
-                    <div
+                    <TransactionItem
                       key={transaction.id}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="flex-1">
-                        <TransactionItem
-                          transaction={transaction}
-                          onClick={
-                            readOnly
-                              ? undefined
-                              : () => handleTransactionClick(transaction)
-                          }
-                        />
-                      </div>
-                    </div>
+                      transaction={transaction}
+                      onClick={
+                        readOnly
+                          ? undefined
+                          : () => handleTransactionClick(transaction)
+                      }
+                    />
                   ))}
 
                   <div className="mt-6">
@@ -432,17 +427,17 @@ export default function TransactionsSection({
                   </div>
                 </>
               ) : (
-                <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
-                  <Search className="mb-3 h-12 w-12 opacity-20" />
-                  <p className="text-sm">No transactions found</p>
+                <div className="text-muted-foreground flex min-h-[600px] flex-col items-center justify-center rounded-lg border-2 py-12 text-center">
+                  <Inbox className="mb-3 h-12 w-12 opacity-20" />
+                  <p className="text-sm font-semibold">No transactions found</p>
                   <p className="text-xs">
-                    Try adjusting your search or filters
+                    Create a new transaction to get started.
                   </p>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Modals */}

@@ -13,12 +13,12 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
 
   return (
     <div className="border-border border-b">
-      <div className="flex gap-8">
+      <div className="flex w-full sm:w-auto sm:justify-start sm:gap-8">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`relative cursor-pointer pb-4 text-sm font-medium transition-colors ${
+            className={`relative flex-1 cursor-pointer pb-4 text-center text-sm font-medium transition-colors sm:flex-none sm:text-left ${
               activeTab === tab.id
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

@@ -35,13 +35,13 @@ const PieChartComponent = ({
   }[];
 }) => {
   return (
-    <Card className="lg:col-span-3">
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Status Distribution</CardTitle>
         <CardDescription>Breakdown by transaction status</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px]">
+        <ChartContainer config={chartConfig} className="h-[200px] sm:h-[300px]">
           <RechartsPieChart>
             <Pie
               data={statusDistributionData}

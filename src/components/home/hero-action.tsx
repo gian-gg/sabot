@@ -2,10 +2,10 @@
 
 import { ROUTES } from '@/constants/routes';
 import { useUserStore } from '@/store/user/userStore';
-import { BadgeCheck, Clock, Plus, AlertCircle } from 'lucide-react';
+import { AlertCircle, BadgeCheck, Clock, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
-import { useState, useEffect } from 'react';
 
 import {
   Tooltip,
@@ -25,18 +25,17 @@ import {
 
 import { useRegisterWallet } from '@/hooks/useRegisterWallet';
 
-import { Handshake } from 'lucide-react';
-import { CreateActionModal } from './create-action-modal';
-import {
-  getTransactionLimitsStatus,
-  type TransactionLimitsStatus,
-} from '@/lib/supabase/db/transactions';
 import {
   getAgreementLimitsStatus,
   type AgreementLimitsStatus,
 } from '@/lib/supabase/db/agreements';
-import { TransactionLimitsIndicator } from './components/transactions/transaction-limits-indicator';
+import {
+  getTransactionLimitsStatus,
+  type TransactionLimitsStatus,
+} from '@/lib/supabase/db/transactions';
 import { AgreementLimitsIndicator } from './components/agreement/agreement-limits-indicator';
+import { TransactionLimitsIndicator } from './components/transactions/transaction-limits-indicator';
+import { CreateActionModal } from './create-action-modal';
 
 const HeroAction = () => {
   const user = useUserStore();
@@ -138,14 +137,17 @@ const HeroAction = () => {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full items-center gap-2 sm:w-auto">
       <CreateActionModal
         limits={limits}
         agreementLimits={agreementLimits}
         loading={loading}
       >
-        <Button disabled={transactionDisabled && agreementDisabled}>
-          <Plus className="size-4" />
+        <Button
+          disabled={transactionDisabled && agreementDisabled}
+          className="w-full text-base sm:w-auto"
+        >
+          <Plus className="mr-2 size-4" />
           Create
         </Button>
       </CreateActionModal>

@@ -39,14 +39,14 @@ export function Pagination({
 
   return (
     <div className="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row">
-      <div className="text-muted-foreground text-sm">
+      <div className="text-muted-foreground text-center text-sm sm:text-left">
         Showing <span className="font-medium">{startItem}</span> to{' '}
         <span className="font-medium">{endItem}</span> of{' '}
         <span className="font-medium">{totalCount}</span> results
       </div>
 
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
+      <div className="flex w-full flex-col-reverse items-center gap-4 sm:w-auto sm:flex-row sm:gap-6 lg:gap-8">
+        <div className="hidden items-center space-x-2 sm:flex">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={pageSize.toString()}
@@ -72,10 +72,10 @@ export function Pagination({
           Page {page} of {Math.max(totalPages, 1)}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
             variant="outline"
-            className="flex h-8 w-8 p-0"
+            className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => onPageChange(1)}
             disabled={page === 1 || isLoading}
           >
@@ -84,7 +84,7 @@ export function Pagination({
           </Button>
           <Button
             variant="outline"
-            className="flex h-8 w-8 p-0"
+            className="flex h-10 flex-1 items-center justify-center p-0 sm:h-8 sm:w-8 sm:flex-none"
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1 || isLoading}
           >
@@ -93,7 +93,7 @@ export function Pagination({
           </Button>
           <Button
             variant="outline"
-            className="flex h-8 w-8 p-0"
+            className="flex h-10 flex-1 items-center justify-center p-0 sm:h-8 sm:w-8 sm:flex-none"
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages || totalPages === 0 || isLoading}
           >
@@ -102,7 +102,7 @@ export function Pagination({
           </Button>
           <Button
             variant="outline"
-            className="flex h-8 w-8 p-0"
+            className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => onPageChange(totalPages)}
             disabled={page === totalPages || totalPages === 0 || isLoading}
           >
