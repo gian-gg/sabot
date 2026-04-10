@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const AUTH_GET_USER_TIMEOUT_MS = 2500;
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -34,21 +36,24 @@ export async function updateSession(request: NextRequest) {
   // issues with users being randomly logged out.
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
+  try {
+    const authResult = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), AUTH_GET_USER_TIMEOUT_MS);
+      }),
+    ]);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/error')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+    if (authResult === null) {
+      console.warn(
+        `[middleware] auth.getUser() timed out after ${AUTH_GET_USER_TIMEOUT_MS}ms for ${request.nextUrl.pathname}`
+      );
+    }
+  } catch (error) {
+    console.error(
+      `[middleware] auth.getUser() failed for ${request.nextUrl.pathname}`,
+      error
+    );
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
