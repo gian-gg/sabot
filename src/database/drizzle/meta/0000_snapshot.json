@@ -1,0 +1,183 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.agreement_content": {
+      "name": "agreement_content",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuid_generate_v4()"
+        },
+        "agreement_id": {
+          "name": "agreement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "idea_blocks": {
+          "name": "idea_blocks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creator_response": {
+          "name": "creator_response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "participant_response": {
+          "name": "participant_response",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creator_blocks": {
+          "name": "creator_blocks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "participant_blocks": {
+          "name": "participant_blocks",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merged_at": {
+          "name": "merged_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creator_approved": {
+          "name": "creator_approved",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "participant_approved": {
+          "name": "participant_approved",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_agreement_content_agreement": {
+          "name": "idx_agreement_content_agreement",
+          "columns": [
+            {
+              "expression": "agreement_id",
+              "asc": true,
+              "nulls": "last",
+              "opclass": "uuid_ops",
+              "isExpression": false
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agreement_content_agreement_id_fkey": {
+          "name": "agreement_content_agreement_id_fkey",
+          "tableFrom": "agreement_content",
+          "tableTo": "agreements",
+          "schemaTo": "public",
+          "columnsFrom": ["agreement_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {
+        "Users can view content of their agreements": {
+          "name": "Users can view content of their agreements",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": ["public"],
+          "using": "((EXISTS ( SELECT 1\n   FROM agreement_participants\n  WHERE ((agreement_participants.agreement_id = agreement_content.agreement_id) AND (agreement_participants.user_id = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM agreements\n  WHERE ((agreements.id = agreement_content.agreement_id) AND (agreements.creator_id = auth.uid())))))"
+        },
+        "Users can insert content for their agreements": {
+          "name": "Users can insert content for their agreements",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": ["public"]
+        },
+        "Users can update content of their agreements": {
+          "name": "Users can update content of their agreements",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": ["public"]
+        }
+      },
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {
+    "public.STATUS": {
+      "name": "STATUS",
+      "values": ["not-started", "pending", "complete"],
+      "schema": "public"
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "values": ["user", "admin"],
+      "schema": "public"
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}
